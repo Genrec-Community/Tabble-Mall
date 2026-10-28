@@ -93,6 +93,45 @@ jobs:
       - run: make api-client
       - run: git diff --exit-code frontend/openapi.json frontend/src/lib/api
 
+  # The whole IAM journey in a real browser: admin -> org owner -> store owner -> customer.
+  e2e:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s
+          --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: frontend/package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - run: sudo apt-get update && sudo apt-get install -y nginx && sudo systemctl stop nginx
+      - run: cd backend && uv sync --frozen
+      - run: cd frontend && pnpm install --frozen-lockfile
+      - run: cd frontend && pnpm exec playwright install --with-deps chromium
+      - run: make e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: e2e-results
+          path: |
+            frontend/test-results
+            /tmp/mallt-e2e/*.log
+
   docker:
     runs-on: ubuntu-latest
     steps:

@@ -49,5 +49,8 @@ api-client:
 seed-admin:
 	cd backend && uv run python -m mallt.cli seed-admin
 
+# Needs Postgres on localhost:5432 (user postgres / password test), uv, pnpm and nginx. The stack
+# (API + web + nginx on :8080) is started and stopped by Playwright via infra/e2e/local-stack.sh.
+# Set PLAYWRIGHT_CHROMIUM_PATH to reuse an installed browser; E2E_SKIP_BUILD=1 to skip the build.
 e2e:
 	cd frontend && pnpm exec playwright test

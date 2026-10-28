@@ -23,3 +23,8 @@ out/
 .idea/
 .vscode/
 *.log
+
+# e2e
+frontend/e2e/.state.json
+frontend/test-results/
+frontend/playwright-report/

@@ -27,7 +27,7 @@ MallT is a multi-tenant mall ordering platform.
 |---|---|
 | Backend | Python 3.13, FastAPI, SQLAlchemy 2.0 async (asyncpg), Alembic, Pydantic v2, ARQ worker |
 | Frontend | Next.js App Router, TypeScript (strict), Tailwind, shadcn/ui, TanStack Query, pnpm |
-| Data | PostgreSQL 17 (dev: **Neon**, prod: **AWS RDS**), Redis (dev: container, prod: ElastiCache) |
+| Data | PostgreSQL 17 (dev: **Neon**, prod: **AWS RDS**) · Redis is **optional** (`REDIS_URL`; dev: container, prod: ElastiCache) |
 | Files | S3 API only (dev: **Neon Object Storage**, prod: **AWS S3 + CloudFront**) |
 | Edge | Nginx (routing, compression, rate limits, WebSocket upgrade) |
 | Runtime | Docker: one `docker-compose.yml`, separate image per service |
@@ -75,7 +75,8 @@ exists, these targets are the contract to implement.
 
 | Command | Does |
 |---|---|
-| `make dev` | `docker compose up` (nginx, web, api, worker, redis) against Neon |
+| `make dev` | `docker compose up` (nginx, web, api) against Neon; no Redis needed |
+| `make dev-redis` | the same plus Redis and the ARQ worker |
 | `make test` | backend pytest (local Postgres 17 container) + frontend vitest |
 | `make lint` | ruff check + ruff format --check + mypy + eslint + tsc --noEmit |
 | `make fmt` | auto-format backend and frontend |
@@ -83,7 +84,7 @@ exists, these targets are the contract to implement.
 | `make migration m="msg"` | `alembic revision --autogenerate -m "msg"` (always review the output) |
 | `make api-client` | regenerate `frontend/src/lib/api` from FastAPI's OpenAPI |
 | `make seed-admin` | create the first Platform Admin |
-| `make e2e` | Playwright against the running stack |
+| `make e2e` | Playwright; it starts API + web + nginx itself (`infra/e2e/local-stack.sh`) and needs local Postgres |
 
 Run `make lint test` before every commit that touches code.
 
@@ -98,6 +99,10 @@ Run `make lint test` before every commit that touches code.
     `service`.
   - Never import another module's `repository` or `models`.
   - Cross-domain side effects go through events or worker jobs.
+- **Redis is optional.** Everything that wants a fast key-value store (OTPs, rate limits, the
+  permission cache) goes through `core/kv.py` (`KV`): Redis when `REDIS_URL` is set, otherwise a
+  Postgres table. Never import `redis` anywhere else, and never make a feature require it. Tests
+  run on both backends.
 - **Async everywhere.** No blocking I/O in request handlers. Run any CPU-heavy
   or slow work (SMS, webhooks, PDFs, timeouts) as an ARQ job.
 - **Config:** use only `pydantic-settings` and environment variables. Never
@@ -153,6 +158,13 @@ Run `make lint test` before every commit that touches code.
   `store.product.write`). The premade roles (Platform Admin, Org Owner, Org
   Manager, Store Owner, Store Staff) are seeded by migration. The matrix lives
   in spec §5.2.
+- **Staff management follows one rule:** you may manage someone only if you could have granted each
+  of their roles yourself (`GRANT_RULES` in `core/rbac.py`, plus holding every permission in the
+  role). Owners can create owners; managers can't create managers or owners; nobody manages
+  themselves; an organization always keeps one active owner.
+- **Commission** (`commission_bps`) is MallT's revenue, so only `platform.org.manage` may edit it.
+- **Anything that changes roles, status or passwords must call `AuthzService.invalidate(staff_id)`**
+  (Redis caches a principal for 60 s). Tests that change those by raw SQL must call it too.
 - **Audit:** every staff mutation writes an append-only audit log row.
 - **Tests:** every new tenant-scoped endpoint gets a **cross-tenant test**.
   Staff of org A must get 404 (not 403) for org B's resources, so the
@@ -208,6 +220,10 @@ Run `make lint test` before every commit that touches code.
   - Route guards check the session.
   - The UI hides actions the user lacks permission for, but the backend is
     still the authority.
+- Dashboards nest: a higher role may open the dashboards beneath it (an org owner manages a
+  store's team from the store's pages), never the reverse (`lib/auth/home.ts`).
+- The public mall page is cached for 60 s. Anything that changes a mall or its stores must call
+  `refreshMallPage(slug)` (a Server Action using `updateTag`) so customers see it at once.
 - Store theming is limited to design tokens: CSS variables from the store's
   theme plus a fixed template. Never render store-supplied HTML or CSS.
 - Accessible by default: semantic HTML, labelled inputs, keyboard navigable.
@@ -263,5 +279,6 @@ Run `make lint test` before every commit that touches code.
 - Hand-edit the generated API client or an applied migration.
 - Commit production secrets, or log OTPs, tokens, passwords, pickup codes
   or API keys.
+- Make a feature depend on Redis being present.
 - Add a dependency, framework or AWS service not listed above without
   approval.

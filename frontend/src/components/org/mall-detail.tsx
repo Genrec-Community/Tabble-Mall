@@ -25,9 +25,15 @@ import {
   type MallOut,
   type StoreOut,
 } from "@/lib/api";
+import { refreshMallPage } from "@/app/actions/revalidate";
 import { ApiError, unwrap } from "@/lib/api-error";
 import { useStaffSession } from "@/lib/auth/staff-session";
 import { slugify } from "@/lib/slug";
+
+/** Customers see the mall page from a cache; tell it something changed. Never blocks the UI. */
+const refreshPublic = (slug: string) => {
+  void refreshMallPage(slug).catch(() => undefined);
+};
 
 const oops = (fallback: string) => (err: unknown) =>
   toast.error(err instanceof ApiError ? (err.detail ?? err.title) : fallback);
@@ -42,11 +48,17 @@ export function MallDetail() {
   const canMall = can("org.mall.manage", scope);
   const canStores = can("org.store.manage", scope);
 
-  const refreshStores = () => queryClient.invalidateQueries({ queryKey: ["stores", mallId] });
+  const refreshStores = () => {
+    if (mall.data) refreshPublic(mall.data.slug);
+    return queryClient.invalidateQueries({ queryKey: ["stores", mallId] });
+  };
   const mallStatus = useMutation({
     mutationFn: async (suspend: boolean) =>
       unwrap(suspend ? await mallsSuspendMall({ path: { mall_id: mallId } }) : await mallsActivateMall({ path: { mall_id: mallId } })),
-    onSuccess: (m) => queryClient.setQueryData(["mall", mallId], m),
+    onSuccess: (m) => {
+      queryClient.setQueryData(["mall", mallId], m);
+      refreshPublic(m.slug);
+    },
     onError: oops("Could not change the mall's status."),
   });
   const storeStatus = useMutation({
@@ -110,12 +122,12 @@ export function MallDetail() {
           ))}
         </div>
         <p className="mt-2 text-sm">
-          Customer page: <Link className="font-mono underline" href={publicPath}>{publicPath}</Link>{" "}
+          Customer page: <Link className="font-mono underline" href={publicPath} prefetch={false}>{publicPath}</Link>{" "}
           <Button variant="ghost" size="sm" onClick={() => navigator.clipboard.writeText(`${window.location.origin}${publicPath}`).then(() => toast.success("Link copied."))}>Copy link</Button>
         </p>
       </div>
 
-      {canMall && <EditMallForm key={`${m.name}-${m.city}-${m.address}`} mall={m} onSaved={(updated) => queryClient.setQueryData(["mall", mallId], updated)} />}
+      {canMall && <EditMallForm key={`${m.name}-${m.city}-${m.address}`} mall={m} onSaved={(updated) => { queryClient.setQueryData(["mall", mallId], updated); refreshPublic(updated.slug); }} />}
 
       <section className="space-y-3">
         <div className="flex items-center justify-between">

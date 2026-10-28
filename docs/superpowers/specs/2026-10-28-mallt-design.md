@@ -508,3 +508,28 @@ tested, and UI polish is a separate later pass.
 Exact table and column names, endpoint paths beyond the conventions above,
 UI component design within shadcn/ui, choice of minor libraries, and test
 fixture design. Follow `AGENTS.md`.
+
+---
+
+## 13. Implementation notes (M0 + M1, as built)
+
+Where the build refined or departed from the text above. The owner has seen the first two.
+
+1. **Redis is optional (owner).** `REDIS_URL` empty → a Postgres table (`kv_store`) backs OTPs, rate
+   limits and counters, and jobs run inline; with Redis, the permission cache and session checks
+   use it. Same code, same tests on both.
+2. **Commission is platform-only.** §5.2 gave `org.billing.manage` to Org Owners, but commission
+   is MallT's own revenue, so editing `commission_bps` (org and per-store override) requires
+   `platform.org.manage`. Org Owners can see it, not change it. *(Engineering call; easy to revert
+   in `tenancy/service.py`.)*
+3. **Who may grant which role** is an explicit table (`GRANT_RULES`), because "hold every
+   permission in the role" alone would let an Org Manager mint more Org Managers. Org Managers
+   therefore cannot create Store Owners either (Store Owners can submit KYC, managers cannot).
+4. **Stores gained `description`** so Store Owners have a profile field they may edit without being
+   able to rename the store.
+5. **Dashboards nest**: higher roles can open the dashboards beneath them.
+6. **Public mall page** is cached 60 s and purged on change (`updateTag` via a Server Action).
+7. **Dev environment**: Neon project `mallt-dev` (Singapore, Postgres 17), storage bucket
+   `mallt-dev`; production secrets stay out of git.
+8. **Not built yet** (per plan): catalog, cart, orders, payments, real-time, GST invoices, store
+   theming, email password reset.
