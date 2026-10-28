@@ -12,7 +12,10 @@ from mallt.core.errors import install_error_handlers
 from mallt.core.kv import make_kv
 from mallt.core.logging import RequestIdMiddleware, configure_logging
 from mallt.modules.health.router import router as health_router
+from mallt.modules.iam.customer_router import customer_router
+from mallt.modules.iam.google import make_google_verifier
 from mallt.modules.iam.router import staff_router
+from mallt.modules.iam.sms import make_sms_sender
 from mallt.modules.staff.router import router as staff_mgmt_router
 from mallt.modules.tenancy.router import routers as tenancy_routers
 
@@ -44,6 +47,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.settings = settings
     app.state.engine = engine
     app.state.kv = kv
+    app.state.sms = make_sms_sender(settings)
+    app.state.google = make_google_verifier(settings)
     app.state.session_factory = async_sessionmaker(engine, expire_on_commit=False)
     app.add_middleware(
         CORSMiddleware,
@@ -56,6 +61,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     install_error_handlers(app)
     app.include_router(health_router)
     app.include_router(staff_router)
+    app.include_router(customer_router)
     for router in tenancy_routers:
         app.include_router(router)
     app.include_router(staff_mgmt_router)

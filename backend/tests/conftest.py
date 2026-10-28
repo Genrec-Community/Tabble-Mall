@@ -14,6 +14,7 @@ from mallt.core.db import make_engine
 from mallt.core.kv import KV, PostgresKV, RedisKV
 from mallt.main import create_app
 from tests.dbtools import TEST_DATABASE_URL, TEST_REDIS_URL, alembic_config, ensure_database
+from tests.factories import FakeGoogle, FakeSms
 
 
 @pytest.fixture(scope="session")
@@ -83,8 +84,15 @@ class _Echo(BaseModel):
 
 
 @pytest.fixture
-async def app(settings: Settings, db_conn: AsyncConnection) -> AsyncIterator[FastAPI]:
+def sms() -> FakeSms:
+    return FakeSms()
+
+
+@pytest.fixture
+async def app(settings: Settings, db_conn: AsyncConnection, sms: FakeSms) -> AsyncIterator[FastAPI]:
     app = create_app(settings)
+    app.state.sms = sms
+    app.state.google = FakeGoogle()
     # The real get_session runs unchanged; each request gets its own session whose
     # commit/rollback are savepoints inside the test's outer transaction.
     app.state.session_factory = async_sessionmaker(

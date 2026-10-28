@@ -25,7 +25,7 @@ from mallt.modules.iam.authz import AuthzService, Principal
 from mallt.modules.iam.models import StaffUser
 from mallt.modules.iam.repository import IamRepository
 from mallt.modules.iam.schemas import GrantOut, StaffMe
-from mallt.modules.iam.sessions import SessionInfo, SessionService
+from mallt.modules.iam.sessions import SessionInfo, SessionService, SuspendedOnRefresh
 from mallt.modules.iam.users import normalize_username
 
 LOGIN_LIMIT = 10
@@ -37,13 +37,6 @@ class TokenPair:
     access_token: str
     refresh_token: str
     expires_in: int
-
-
-class SuspendedOnRefresh(Unauthorized):
-    commit_on_error = True  # keep the family revocation made just before this is raised
-
-    def __init__(self) -> None:
-        super().__init__("account_suspended", "This account is suspended.")
 
 
 @cache

@@ -41,6 +41,56 @@ export type AssignmentOut = {
 };
 
 /**
+ * CustomerMe
+ */
+export type CustomerMe = {
+    /**
+     * Email
+     */
+    email: string | null;
+    /**
+     * Has Phone
+     */
+    has_phone: boolean;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Name
+     */
+    name: string | null;
+    /**
+     * Phone Masked
+     */
+    phone_masked: string | null;
+};
+
+/**
+ * CustomerUpdate
+ */
+export type CustomerUpdate = {
+    /**
+     * Email
+     */
+    email?: string | null;
+    /**
+     * Name
+     */
+    name?: string | null;
+};
+
+/**
+ * GoogleLogin
+ */
+export type GoogleLogin = {
+    /**
+     * Id Token
+     */
+    id_token: string;
+};
+
+/**
  * GrantOut
  */
 export type GrantOut = {
@@ -225,6 +275,40 @@ export type OrgUpdate = {
      * Name
      */
     name?: string | null;
+};
+
+/**
+ * OtpRequest
+ */
+export type OtpRequest = {
+    /**
+     * Phone
+     */
+    phone: string;
+};
+
+/**
+ * OtpRequested
+ */
+export type OtpRequested = {
+    /**
+     * Expires In
+     */
+    expires_in: number;
+};
+
+/**
+ * OtpVerify
+ */
+export type OtpVerify = {
+    /**
+     * Otp
+     */
+    otp: string;
+    /**
+     * Phone
+     */
+    phone: string;
 };
 
 /**
@@ -662,6 +746,179 @@ export type ValidationError = {
      */
     type: string;
 };
+
+export type AuthCustomerGoogleLoginData = {
+    body: GoogleLogin;
+    path?: never;
+    query?: never;
+    url: '/api/v1/auth/customer/google';
+};
+
+export type AuthCustomerGoogleLoginErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AuthCustomerGoogleLoginError = AuthCustomerGoogleLoginErrors[keyof AuthCustomerGoogleLoginErrors];
+
+export type AuthCustomerGoogleLoginResponses = {
+    /**
+     * Successful Response
+     */
+    200: TokenOut;
+};
+
+export type AuthCustomerGoogleLoginResponse = AuthCustomerGoogleLoginResponses[keyof AuthCustomerGoogleLoginResponses];
+
+export type AuthCustomerLogoutData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/auth/customer/logout';
+};
+
+export type AuthCustomerLogoutResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type AuthCustomerLogoutResponse = AuthCustomerLogoutResponses[keyof AuthCustomerLogoutResponses];
+
+export type AuthCustomerMeData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/auth/customer/me';
+};
+
+export type AuthCustomerMeResponses = {
+    /**
+     * Successful Response
+     */
+    200: CustomerMe;
+};
+
+export type AuthCustomerMeResponse = AuthCustomerMeResponses[keyof AuthCustomerMeResponses];
+
+export type AuthCustomerUpdateMeData = {
+    body: CustomerUpdate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/auth/customer/me';
+};
+
+export type AuthCustomerUpdateMeErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AuthCustomerUpdateMeError = AuthCustomerUpdateMeErrors[keyof AuthCustomerUpdateMeErrors];
+
+export type AuthCustomerUpdateMeResponses = {
+    /**
+     * Successful Response
+     */
+    200: CustomerMe;
+};
+
+export type AuthCustomerUpdateMeResponse = AuthCustomerUpdateMeResponses[keyof AuthCustomerUpdateMeResponses];
+
+export type AuthCustomerRequestOtpData = {
+    body: OtpRequest;
+    path?: never;
+    query?: never;
+    url: '/api/v1/auth/customer/otp/request';
+};
+
+export type AuthCustomerRequestOtpErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AuthCustomerRequestOtpError = AuthCustomerRequestOtpErrors[keyof AuthCustomerRequestOtpErrors];
+
+export type AuthCustomerRequestOtpResponses = {
+    /**
+     * Successful Response
+     */
+    202: OtpRequested;
+};
+
+export type AuthCustomerRequestOtpResponse = AuthCustomerRequestOtpResponses[keyof AuthCustomerRequestOtpResponses];
+
+export type AuthCustomerVerifyOtpData = {
+    body: OtpVerify;
+    path?: never;
+    query?: never;
+    url: '/api/v1/auth/customer/otp/verify';
+};
+
+export type AuthCustomerVerifyOtpErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AuthCustomerVerifyOtpError = AuthCustomerVerifyOtpErrors[keyof AuthCustomerVerifyOtpErrors];
+
+export type AuthCustomerVerifyOtpResponses = {
+    /**
+     * Successful Response
+     */
+    200: TokenOut;
+};
+
+export type AuthCustomerVerifyOtpResponse = AuthCustomerVerifyOtpResponses[keyof AuthCustomerVerifyOtpResponses];
+
+export type AuthCustomerLinkPhoneData = {
+    body: OtpVerify;
+    path?: never;
+    query?: never;
+    url: '/api/v1/auth/customer/phone/verify';
+};
+
+export type AuthCustomerLinkPhoneErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AuthCustomerLinkPhoneError = AuthCustomerLinkPhoneErrors[keyof AuthCustomerLinkPhoneErrors];
+
+export type AuthCustomerLinkPhoneResponses = {
+    /**
+     * Successful Response
+     */
+    200: TokenOut;
+};
+
+export type AuthCustomerLinkPhoneResponse = AuthCustomerLinkPhoneResponses[keyof AuthCustomerLinkPhoneResponses];
+
+export type AuthCustomerRefreshData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/auth/customer/refresh';
+};
+
+export type AuthCustomerRefreshResponses = {
+    /**
+     * Successful Response
+     */
+    200: TokenOut;
+};
+
+export type AuthCustomerRefreshResponse = AuthCustomerRefreshResponses[keyof AuthCustomerRefreshResponses];
 
 export type AuthStaffLoginData = {
     body: StaffLogin;

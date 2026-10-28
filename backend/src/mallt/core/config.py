@@ -31,6 +31,8 @@ class Settings(BaseSettings):
     fast2sms_api_key: str = ""
     google_client_id: str = ""
     otp_pepper: str = "dev-only-insecure-otp-pepper-change-me-0123456789"
+    # Makes OTPs predictable for end-to-end tests. Only honoured when env == "test".
+    e2e_fixed_otp: str | None = None
 
     s3_endpoint_url: str | None = None
     s3_region: str = "us-east-1"

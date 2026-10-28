@@ -6,8 +6,10 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from mallt.core.enums import ActiveStatus
+from mallt.core.errors import AppError, Unauthorized
 from mallt.core.rbac import Scope
 from mallt.core.security import hash_password
+from mallt.modules.iam.google import GoogleIdentity
 from mallt.modules.iam.models import Role, RoleAssignment, StaffUser
 from mallt.modules.tenancy.models import Mall, Organization, Store
 
@@ -17,6 +19,32 @@ DEFAULT_PASSWORD = "Passw0rd!!"
 @cache
 def _default_hash() -> str:
     return hash_password(DEFAULT_PASSWORD)  # hashing is slow; do it once per test run
+
+
+class FakeSms:
+    """Captures OTPs instead of sending them."""
+
+    def __init__(self, *, fail: bool = False) -> None:
+        self.sent: list[tuple[str, str]] = []
+        self.fail = fail
+
+    async def send_otp(self, phone: str, otp: str) -> None:
+        if self.fail:
+            raise AppError("sms_failed", "boom", status=502)
+        self.sent.append((phone, otp))
+
+    def last_otp(self, phone: str) -> str:
+        return next(otp for p, otp in reversed(self.sent) if p == phone)
+
+
+class FakeGoogle:
+    """Maps a made-up id_token string to an identity: 'sub|email|name'."""
+
+    async def verify(self, id_token: str) -> GoogleIdentity:
+        if not id_token.startswith("good:"):
+            raise Unauthorized("invalid_google_token", "Google sign-in failed.")
+        sub, email, name = id_token.removeprefix("good:").split("|")
+        return GoogleIdentity(sub=sub, email=email or None, name=name or None)
 
 
 class MemoryKV:

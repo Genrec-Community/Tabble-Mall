@@ -2,9 +2,10 @@ from fastapi import APIRouter, Depends, Request, Response, status
 
 from mallt.core.config import Settings
 from mallt.core.db import SessionDep
-from mallt.core.errors import Forbidden, Unauthorized
+from mallt.core.errors import Unauthorized
 from mallt.core.logging import get_client_ip
 from mallt.modules.iam.deps import ClaimsDep, KvDep, SettingsDep, Staff, StaffAny
+from mallt.modules.iam.http import clear_refresh_cookie, require_csrf, set_refresh_cookie
 from mallt.modules.iam.schemas import (
     PasswordChange,
     SessionOut,
@@ -16,37 +17,10 @@ from mallt.modules.iam.schemas import (
 )
 from mallt.modules.iam.staff_auth import StaffAuthService, TokenPair
 
-COOKIE_PATH = "/api/v1/auth"
-STAFF_COOKIE = "mallt_srt"
-
-
-def require_csrf(request: Request) -> None:
-    """Cookie-authenticated endpoints need a header a cross-site form cannot send."""
-    if request.headers.get("x-requested-with") != "mallt":
-        raise Forbidden("csrf", "Missing X-Requested-With header.")
-
-
-def set_refresh_cookie(
-    response: Response, settings: Settings, name: str, value: str, max_age: int
-) -> None:
-    response.set_cookie(
-        name,
-        value,
-        max_age=max_age,
-        httponly=True,
-        samesite="lax",
-        secure=settings.cookie_secure,
-        path=COOKIE_PATH,
-    )
-
-
-def clear_refresh_cookie(response: Response, settings: Settings, name: str) -> None:
-    response.delete_cookie(
-        name, httponly=True, samesite="lax", secure=settings.cookie_secure, path=COOKIE_PATH
-    )
-
-
 staff_router = APIRouter(prefix="/api/v1/auth/staff", tags=["auth"])
+
+
+STAFF_COOKIE = "mallt_srt"
 
 
 def _tokens(response: Response, settings: Settings, pair: TokenPair) -> TokenOut:

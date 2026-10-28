@@ -31,6 +31,13 @@ class RefreshReuse(Unauthorized):
         super().__init__("refresh_reuse", "Session reuse detected. Please sign in again.")
 
 
+class SuspendedOnRefresh(Unauthorized):
+    commit_on_error = True  # keep the family revocation made just before this is raised
+
+    def __init__(self) -> None:
+        super().__init__("account_suspended", "This account is suspended.")
+
+
 @dataclass(frozen=True)
 class SessionInfo:
     id: uuid.UUID

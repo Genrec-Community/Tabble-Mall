@@ -3,11 +3,13 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from sqlalchemy import func, select, update
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from mallt.core.enums import ActiveStatus, IdentityKind
 from mallt.core.rbac import Scope, ScopeType
 from mallt.modules.iam.models import (
+    Customer,
     RefreshToken,
     Role,
     RoleAssignment,
@@ -213,3 +215,33 @@ class SessionRepository:
             .order_by(RefreshToken.created_at, RefreshToken.id)
         )
         return list((await self.session.execute(stmt)).scalars())
+
+
+class CustomerRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self.session = session
+
+    async def create(self, customer: Customer) -> Customer | None:
+        """Insert; None means a unique value (phone or Google id) was taken a moment ago."""
+        try:
+            async with self.session.begin_nested():
+                self.session.add(customer)
+                await self.session.flush()
+        except IntegrityError:
+            return None
+        return customer
+
+    async def get(self, customer_id: uuid.UUID) -> Customer | None:
+        return await self.session.get(Customer, customer_id)
+
+    async def by_phone(self, phone: str) -> Customer | None:
+        stmt = select(Customer).where(Customer.phone == phone)
+        return (await self.session.execute(stmt)).scalar_one_or_none()
+
+    async def by_google_sub(self, sub: str) -> Customer | None:
+        stmt = select(Customer).where(Customer.google_sub == sub)
+        return (await self.session.execute(stmt)).scalar_one_or_none()
+
+    async def delete(self, customer: Customer) -> None:
+        await self.session.delete(customer)
+        await self.session.flush()

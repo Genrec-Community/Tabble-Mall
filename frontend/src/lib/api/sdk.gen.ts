@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AuthStaffChangePasswordData, AuthStaffChangePasswordErrors, AuthStaffChangePasswordResponses, AuthStaffLoginData, AuthStaffLoginErrors, AuthStaffLoginResponses, AuthStaffLogoutAllData, AuthStaffLogoutAllResponses, AuthStaffLogoutData, AuthStaffLogoutResponses, AuthStaffMeData, AuthStaffMeResponses, AuthStaffRefreshData, AuthStaffRefreshResponses, AuthStaffSessionsData, AuthStaffSessionsResponses, AuthStaffTotpConfirmData, AuthStaffTotpConfirmErrors, AuthStaffTotpConfirmResponses, AuthStaffTotpSetupData, AuthStaffTotpSetupResponses, HealthGetHealthData, HealthGetHealthResponses, HealthGetReadyData, HealthGetReadyResponses, MallsActivateMallData, MallsActivateMallErrors, MallsActivateMallResponses, MallsCreateMallData, MallsCreateMallErrors, MallsCreateMallResponses, MallsGetMallData, MallsGetMallErrors, MallsGetMallResponses, MallsListMallsData, MallsListMallsErrors, MallsListMallsResponses, MallsSuspendMallData, MallsSuspendMallErrors, MallsSuspendMallResponses, MallsUpdateMallData, MallsUpdateMallErrors, MallsUpdateMallResponses, OrgsActivateOrgData, OrgsActivateOrgErrors, OrgsActivateOrgResponses, OrgsCreateOrgData, OrgsCreateOrgErrors, OrgsCreateOrgResponses, OrgsGetOrgData, OrgsGetOrgErrors, OrgsGetOrgResponses, OrgsListOrgsData, OrgsListOrgsErrors, OrgsListOrgsResponses, OrgsSuspendOrgData, OrgsSuspendOrgErrors, OrgsSuspendOrgResponses, OrgsUpdateOrgData, OrgsUpdateOrgErrors, OrgsUpdateOrgResponses, PublicGetPublicMallData, PublicGetPublicMallErrors, PublicGetPublicMallResponses, StaffActivateStaffData, StaffActivateStaffErrors, StaffActivateStaffResponses, StaffAssignRoleData, StaffAssignRoleErrors, StaffAssignRoleResponses, StaffCreateMallStaffData, StaffCreateMallStaffErrors, StaffCreateMallStaffResponses, StaffCreateOrgStaffData, StaffCreateOrgStaffErrors, StaffCreateOrgStaffResponses, StaffCreateStoreStaffData, StaffCreateStoreStaffErrors, StaffCreateStoreStaffResponses, StaffListMallStaffData, StaffListMallStaffErrors, StaffListMallStaffResponses, StaffListOrgStaffData, StaffListOrgStaffErrors, StaffListOrgStaffResponses, StaffListRolesData, StaffListRolesResponses, StaffListStoreStaffData, StaffListStoreStaffErrors, StaffListStoreStaffResponses, StaffResetStaffPasswordData, StaffResetStaffPasswordErrors, StaffResetStaffPasswordResponses, StaffRevokeRoleData, StaffRevokeRoleErrors, StaffRevokeRoleResponses, StaffSuspendStaffData, StaffSuspendStaffErrors, StaffSuspendStaffResponses, StoresActivateStoreData, StoresActivateStoreErrors, StoresActivateStoreResponses, StoresCreateStoreData, StoresCreateStoreErrors, StoresCreateStoreResponses, StoresGetStoreData, StoresGetStoreErrors, StoresGetStoreResponses, StoresListStoresData, StoresListStoresErrors, StoresListStoresResponses, StoresSuspendStoreData, StoresSuspendStoreErrors, StoresSuspendStoreResponses, StoresUpdateStoreData, StoresUpdateStoreErrors, StoresUpdateStoreResponses } from './types.gen';
+import type { AuthCustomerGoogleLoginData, AuthCustomerGoogleLoginErrors, AuthCustomerGoogleLoginResponses, AuthCustomerLinkPhoneData, AuthCustomerLinkPhoneErrors, AuthCustomerLinkPhoneResponses, AuthCustomerLogoutData, AuthCustomerLogoutResponses, AuthCustomerMeData, AuthCustomerMeResponses, AuthCustomerRefreshData, AuthCustomerRefreshResponses, AuthCustomerRequestOtpData, AuthCustomerRequestOtpErrors, AuthCustomerRequestOtpResponses, AuthCustomerUpdateMeData, AuthCustomerUpdateMeErrors, AuthCustomerUpdateMeResponses, AuthCustomerVerifyOtpData, AuthCustomerVerifyOtpErrors, AuthCustomerVerifyOtpResponses, AuthStaffChangePasswordData, AuthStaffChangePasswordErrors, AuthStaffChangePasswordResponses, AuthStaffLoginData, AuthStaffLoginErrors, AuthStaffLoginResponses, AuthStaffLogoutAllData, AuthStaffLogoutAllResponses, AuthStaffLogoutData, AuthStaffLogoutResponses, AuthStaffMeData, AuthStaffMeResponses, AuthStaffRefreshData, AuthStaffRefreshResponses, AuthStaffSessionsData, AuthStaffSessionsResponses, AuthStaffTotpConfirmData, AuthStaffTotpConfirmErrors, AuthStaffTotpConfirmResponses, AuthStaffTotpSetupData, AuthStaffTotpSetupResponses, HealthGetHealthData, HealthGetHealthResponses, HealthGetReadyData, HealthGetReadyResponses, MallsActivateMallData, MallsActivateMallErrors, MallsActivateMallResponses, MallsCreateMallData, MallsCreateMallErrors, MallsCreateMallResponses, MallsGetMallData, MallsGetMallErrors, MallsGetMallResponses, MallsListMallsData, MallsListMallsErrors, MallsListMallsResponses, MallsSuspendMallData, MallsSuspendMallErrors, MallsSuspendMallResponses, MallsUpdateMallData, MallsUpdateMallErrors, MallsUpdateMallResponses, OrgsActivateOrgData, OrgsActivateOrgErrors, OrgsActivateOrgResponses, OrgsCreateOrgData, OrgsCreateOrgErrors, OrgsCreateOrgResponses, OrgsGetOrgData, OrgsGetOrgErrors, OrgsGetOrgResponses, OrgsListOrgsData, OrgsListOrgsErrors, OrgsListOrgsResponses, OrgsSuspendOrgData, OrgsSuspendOrgErrors, OrgsSuspendOrgResponses, OrgsUpdateOrgData, OrgsUpdateOrgErrors, OrgsUpdateOrgResponses, PublicGetPublicMallData, PublicGetPublicMallErrors, PublicGetPublicMallResponses, StaffActivateStaffData, StaffActivateStaffErrors, StaffActivateStaffResponses, StaffAssignRoleData, StaffAssignRoleErrors, StaffAssignRoleResponses, StaffCreateMallStaffData, StaffCreateMallStaffErrors, StaffCreateMallStaffResponses, StaffCreateOrgStaffData, StaffCreateOrgStaffErrors, StaffCreateOrgStaffResponses, StaffCreateStoreStaffData, StaffCreateStoreStaffErrors, StaffCreateStoreStaffResponses, StaffListMallStaffData, StaffListMallStaffErrors, StaffListMallStaffResponses, StaffListOrgStaffData, StaffListOrgStaffErrors, StaffListOrgStaffResponses, StaffListRolesData, StaffListRolesResponses, StaffListStoreStaffData, StaffListStoreStaffErrors, StaffListStoreStaffResponses, StaffResetStaffPasswordData, StaffResetStaffPasswordErrors, StaffResetStaffPasswordResponses, StaffRevokeRoleData, StaffRevokeRoleErrors, StaffRevokeRoleResponses, StaffSuspendStaffData, StaffSuspendStaffErrors, StaffSuspendStaffResponses, StoresActivateStoreData, StoresActivateStoreErrors, StoresActivateStoreResponses, StoresCreateStoreData, StoresCreateStoreErrors, StoresCreateStoreResponses, StoresGetStoreData, StoresGetStoreErrors, StoresGetStoreResponses, StoresListStoresData, StoresListStoresErrors, StoresListStoresResponses, StoresSuspendStoreData, StoresSuspendStoreErrors, StoresSuspendStoreResponses, StoresUpdateStoreData, StoresUpdateStoreErrors, StoresUpdateStoreResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -17,6 +17,81 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
      */
     meta?: keyof ClientMeta extends never ? Record<string, unknown> : ClientMeta;
 };
+
+/**
+ * Customer Google Login
+ */
+export const authCustomerGoogleLogin = <ThrowOnError extends boolean = false>(options: Options<AuthCustomerGoogleLoginData, ThrowOnError>): RequestResult<AuthCustomerGoogleLoginResponses, AuthCustomerGoogleLoginErrors, ThrowOnError> => (options.client ?? client).post<AuthCustomerGoogleLoginResponses, AuthCustomerGoogleLoginErrors, ThrowOnError>({
+    url: '/api/v1/auth/customer/google',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Customer Logout
+ */
+export const authCustomerLogout = <ThrowOnError extends boolean = false>(options?: Options<AuthCustomerLogoutData, ThrowOnError>): RequestResult<AuthCustomerLogoutResponses, unknown, ThrowOnError> => (options?.client ?? client).post<AuthCustomerLogoutResponses, unknown, ThrowOnError>({ url: '/api/v1/auth/customer/logout', ...options });
+
+/**
+ * Customer Me
+ */
+export const authCustomerMe = <ThrowOnError extends boolean = false>(options?: Options<AuthCustomerMeData, ThrowOnError>): RequestResult<AuthCustomerMeResponses, unknown, ThrowOnError> => (options?.client ?? client).get<AuthCustomerMeResponses, unknown, ThrowOnError>({ url: '/api/v1/auth/customer/me', ...options });
+
+/**
+ * Customer Update Me
+ */
+export const authCustomerUpdateMe = <ThrowOnError extends boolean = false>(options: Options<AuthCustomerUpdateMeData, ThrowOnError>): RequestResult<AuthCustomerUpdateMeResponses, AuthCustomerUpdateMeErrors, ThrowOnError> => (options.client ?? client).patch<AuthCustomerUpdateMeResponses, AuthCustomerUpdateMeErrors, ThrowOnError>({
+    url: '/api/v1/auth/customer/me',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Customer Request Otp
+ */
+export const authCustomerRequestOtp = <ThrowOnError extends boolean = false>(options: Options<AuthCustomerRequestOtpData, ThrowOnError>): RequestResult<AuthCustomerRequestOtpResponses, AuthCustomerRequestOtpErrors, ThrowOnError> => (options.client ?? client).post<AuthCustomerRequestOtpResponses, AuthCustomerRequestOtpErrors, ThrowOnError>({
+    url: '/api/v1/auth/customer/otp/request',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Customer Verify Otp
+ */
+export const authCustomerVerifyOtp = <ThrowOnError extends boolean = false>(options: Options<AuthCustomerVerifyOtpData, ThrowOnError>): RequestResult<AuthCustomerVerifyOtpResponses, AuthCustomerVerifyOtpErrors, ThrowOnError> => (options.client ?? client).post<AuthCustomerVerifyOtpResponses, AuthCustomerVerifyOtpErrors, ThrowOnError>({
+    url: '/api/v1/auth/customer/otp/verify',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Customer Link Phone
+ */
+export const authCustomerLinkPhone = <ThrowOnError extends boolean = false>(options: Options<AuthCustomerLinkPhoneData, ThrowOnError>): RequestResult<AuthCustomerLinkPhoneResponses, AuthCustomerLinkPhoneErrors, ThrowOnError> => (options.client ?? client).post<AuthCustomerLinkPhoneResponses, AuthCustomerLinkPhoneErrors, ThrowOnError>({
+    url: '/api/v1/auth/customer/phone/verify',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Customer Refresh
+ */
+export const authCustomerRefresh = <ThrowOnError extends boolean = false>(options?: Options<AuthCustomerRefreshData, ThrowOnError>): RequestResult<AuthCustomerRefreshResponses, unknown, ThrowOnError> => (options?.client ?? client).post<AuthCustomerRefreshResponses, unknown, ThrowOnError>({ url: '/api/v1/auth/customer/refresh', ...options });
 
 /**
  * Staff Login
