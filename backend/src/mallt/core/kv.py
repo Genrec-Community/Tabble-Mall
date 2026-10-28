@@ -19,6 +19,8 @@ if TYPE_CHECKING:
 
 
 class KV(Protocol):
+    fast: bool  # True when reads are cheap enough to use as a cache (Redis, not Postgres)
+
     async def incr_window(self, key: str, window_s: int) -> tuple[int, int]:
         """Fixed-window counter. Returns (count_in_window, seconds_until_window_ends)."""
 
@@ -38,6 +40,7 @@ class KV(Protocol):
 
 class RedisKV:
     prefix = "mallt:"
+    fast = True
 
     def __init__(self, client: Redis) -> None:
         self.r = client
@@ -78,6 +81,8 @@ class RedisKV:
 
 
 class PostgresKV:
+    fast = False
+
     def __init__(self, engine: AsyncEngine) -> None:
         self.engine = engine
 
