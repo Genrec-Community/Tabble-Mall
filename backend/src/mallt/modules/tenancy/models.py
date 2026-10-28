@@ -45,5 +45,6 @@ class Store(IdMixin, TimestampMixin, Base):
     status: Mapped[ActiveStatus] = mapped_column(
         text_enum(ActiveStatus, "store_status"), default=ActiveStatus.ACTIVE
     )
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
     # Per-store commission override in basis points; NULL means use the organization's.
     commission_bps: Mapped[int | None] = mapped_column(Integer, nullable=True)

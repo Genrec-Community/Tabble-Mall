@@ -5,6 +5,11 @@ export type ClientOptions = {
 };
 
 /**
+ * ActiveStatus
+ */
+export type ActiveStatus = 'active' | 'suspended';
+
+/**
  * GrantOut
  */
 export type GrantOut = {
@@ -42,6 +47,188 @@ export type HttpValidationError = {
 };
 
 /**
+ * MallCreate
+ */
+export type MallCreate = {
+    /**
+     * Address
+     */
+    address?: string | null;
+    /**
+     * City
+     */
+    city?: string | null;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Slug
+     */
+    slug: string;
+};
+
+/**
+ * MallOut
+ */
+export type MallOut = {
+    /**
+     * Address
+     */
+    address: string | null;
+    /**
+     * City
+     */
+    city: string | null;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Organization Id
+     */
+    organization_id: string;
+    /**
+     * Slug
+     */
+    slug: string;
+    status: ActiveStatus;
+};
+
+/**
+ * MallUpdate
+ */
+export type MallUpdate = {
+    /**
+     * Address
+     */
+    address?: string | null;
+    /**
+     * City
+     */
+    city?: string | null;
+    /**
+     * Name
+     */
+    name?: string | null;
+};
+
+/**
+ * OrgCreate
+ */
+export type OrgCreate = {
+    /**
+     * Name
+     */
+    name: string;
+    owner: OwnerCreate;
+    /**
+     * Slug
+     */
+    slug: string;
+};
+
+/**
+ * OrgCreatedOut
+ */
+export type OrgCreatedOut = {
+    org: OrgOut;
+    /**
+     * Owner Username
+     */
+    owner_username: string;
+    /**
+     * Temp Password
+     */
+    temp_password: string;
+};
+
+/**
+ * OrgOut
+ */
+export type OrgOut = {
+    /**
+     * Accept Timeout S
+     */
+    accept_timeout_s: number;
+    /**
+     * Commission Bps
+     */
+    commission_bps: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Slug
+     */
+    slug: string;
+    status: ActiveStatus;
+};
+
+/**
+ * OrgUpdate
+ */
+export type OrgUpdate = {
+    /**
+     * Accept Timeout S
+     */
+    accept_timeout_s?: number | null;
+    /**
+     * Commission Bps
+     */
+    commission_bps?: number | null;
+    /**
+     * Name
+     */
+    name?: string | null;
+};
+
+/**
+ * OwnerCreate
+ */
+export type OwnerCreate = {
+    /**
+     * Display Name
+     */
+    display_name: string;
+    /**
+     * Email
+     */
+    email?: string | null;
+    /**
+     * Username
+     */
+    username: string;
+};
+
+/**
+ * Page[OrgOut]
+ */
+export type PageOrgOut = {
+    /**
+     * Items
+     */
+    items: Array<OrgOut>;
+    /**
+     * Next Cursor
+     */
+    next_cursor?: string | null;
+};
+
+/**
  * PasswordChange
  */
 export type PasswordChange = {
@@ -53,6 +240,46 @@ export type PasswordChange = {
      * New Password
      */
     new_password: string;
+};
+
+/**
+ * PublicMallOut
+ */
+export type PublicMallOut = {
+    /**
+     * City
+     */
+    city: string | null;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Slug
+     */
+    slug: string;
+    /**
+     * Stores
+     */
+    stores: Array<PublicStoreOut>;
+};
+
+/**
+ * PublicStoreOut
+ */
+export type PublicStoreOut = {
+    /**
+     * Description
+     */
+    description: string | null;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Slug
+     */
+    slug: string;
 };
 
 /**
@@ -146,6 +373,77 @@ export type StatusOut = {
      * Status
      */
     status: string;
+};
+
+/**
+ * StoreCreate
+ */
+export type StoreCreate = {
+    /**
+     * Description
+     */
+    description?: string | null;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Slug
+     */
+    slug: string;
+};
+
+/**
+ * StoreOut
+ */
+export type StoreOut = {
+    /**
+     * Commission Bps
+     */
+    commission_bps: number | null;
+    /**
+     * Description
+     */
+    description: string | null;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Mall Id
+     */
+    mall_id: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Organization Id
+     */
+    organization_id: string;
+    /**
+     * Slug
+     */
+    slug: string;
+    status: ActiveStatus;
+};
+
+/**
+ * StoreUpdate
+ */
+export type StoreUpdate = {
+    /**
+     * Commission Bps
+     */
+    commission_bps?: number | null;
+    /**
+     * Description
+     */
+    description?: string | null;
+    /**
+     * Name
+     */
+    name?: string | null;
 };
 
 /**
@@ -407,6 +705,459 @@ export type HealthGetHealthResponses = {
 
 export type HealthGetHealthResponse = HealthGetHealthResponses[keyof HealthGetHealthResponses];
 
+export type MallsGetMallData = {
+    body?: never;
+    path: {
+        /**
+         * Mall Id
+         */
+        mall_id: string;
+    };
+    query?: never;
+    url: '/api/v1/malls/{mall_id}';
+};
+
+export type MallsGetMallErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type MallsGetMallError = MallsGetMallErrors[keyof MallsGetMallErrors];
+
+export type MallsGetMallResponses = {
+    /**
+     * Successful Response
+     */
+    200: MallOut;
+};
+
+export type MallsGetMallResponse = MallsGetMallResponses[keyof MallsGetMallResponses];
+
+export type MallsUpdateMallData = {
+    body: MallUpdate;
+    path: {
+        /**
+         * Mall Id
+         */
+        mall_id: string;
+    };
+    query?: never;
+    url: '/api/v1/malls/{mall_id}';
+};
+
+export type MallsUpdateMallErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type MallsUpdateMallError = MallsUpdateMallErrors[keyof MallsUpdateMallErrors];
+
+export type MallsUpdateMallResponses = {
+    /**
+     * Successful Response
+     */
+    200: MallOut;
+};
+
+export type MallsUpdateMallResponse = MallsUpdateMallResponses[keyof MallsUpdateMallResponses];
+
+export type MallsActivateMallData = {
+    body?: never;
+    path: {
+        /**
+         * Mall Id
+         */
+        mall_id: string;
+    };
+    query?: never;
+    url: '/api/v1/malls/{mall_id}/activate';
+};
+
+export type MallsActivateMallErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type MallsActivateMallError = MallsActivateMallErrors[keyof MallsActivateMallErrors];
+
+export type MallsActivateMallResponses = {
+    /**
+     * Successful Response
+     */
+    200: MallOut;
+};
+
+export type MallsActivateMallResponse = MallsActivateMallResponses[keyof MallsActivateMallResponses];
+
+export type StoresListStoresData = {
+    body?: never;
+    path: {
+        /**
+         * Mall Id
+         */
+        mall_id: string;
+    };
+    query?: never;
+    url: '/api/v1/malls/{mall_id}/stores';
+};
+
+export type StoresListStoresErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type StoresListStoresError = StoresListStoresErrors[keyof StoresListStoresErrors];
+
+export type StoresListStoresResponses = {
+    /**
+     * Response Stores List Stores
+     *
+     * Successful Response
+     */
+    200: Array<StoreOut>;
+};
+
+export type StoresListStoresResponse = StoresListStoresResponses[keyof StoresListStoresResponses];
+
+export type StoresCreateStoreData = {
+    body: StoreCreate;
+    path: {
+        /**
+         * Mall Id
+         */
+        mall_id: string;
+    };
+    query?: never;
+    url: '/api/v1/malls/{mall_id}/stores';
+};
+
+export type StoresCreateStoreErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type StoresCreateStoreError = StoresCreateStoreErrors[keyof StoresCreateStoreErrors];
+
+export type StoresCreateStoreResponses = {
+    /**
+     * Successful Response
+     */
+    201: StoreOut;
+};
+
+export type StoresCreateStoreResponse = StoresCreateStoreResponses[keyof StoresCreateStoreResponses];
+
+export type MallsSuspendMallData = {
+    body?: never;
+    path: {
+        /**
+         * Mall Id
+         */
+        mall_id: string;
+    };
+    query?: never;
+    url: '/api/v1/malls/{mall_id}/suspend';
+};
+
+export type MallsSuspendMallErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type MallsSuspendMallError = MallsSuspendMallErrors[keyof MallsSuspendMallErrors];
+
+export type MallsSuspendMallResponses = {
+    /**
+     * Successful Response
+     */
+    200: MallOut;
+};
+
+export type MallsSuspendMallResponse = MallsSuspendMallResponses[keyof MallsSuspendMallResponses];
+
+export type OrgsListOrgsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Cursor
+         */
+        cursor?: string | null;
+        /**
+         * Limit
+         */
+        limit?: number;
+    };
+    url: '/api/v1/orgs';
+};
+
+export type OrgsListOrgsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type OrgsListOrgsError = OrgsListOrgsErrors[keyof OrgsListOrgsErrors];
+
+export type OrgsListOrgsResponses = {
+    /**
+     * Successful Response
+     */
+    200: PageOrgOut;
+};
+
+export type OrgsListOrgsResponse = OrgsListOrgsResponses[keyof OrgsListOrgsResponses];
+
+export type OrgsCreateOrgData = {
+    body: OrgCreate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/orgs';
+};
+
+export type OrgsCreateOrgErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type OrgsCreateOrgError = OrgsCreateOrgErrors[keyof OrgsCreateOrgErrors];
+
+export type OrgsCreateOrgResponses = {
+    /**
+     * Successful Response
+     */
+    201: OrgCreatedOut;
+};
+
+export type OrgsCreateOrgResponse = OrgsCreateOrgResponses[keyof OrgsCreateOrgResponses];
+
+export type OrgsGetOrgData = {
+    body?: never;
+    path: {
+        /**
+         * Org Id
+         */
+        org_id: string;
+    };
+    query?: never;
+    url: '/api/v1/orgs/{org_id}';
+};
+
+export type OrgsGetOrgErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type OrgsGetOrgError = OrgsGetOrgErrors[keyof OrgsGetOrgErrors];
+
+export type OrgsGetOrgResponses = {
+    /**
+     * Successful Response
+     */
+    200: OrgOut;
+};
+
+export type OrgsGetOrgResponse = OrgsGetOrgResponses[keyof OrgsGetOrgResponses];
+
+export type OrgsUpdateOrgData = {
+    body: OrgUpdate;
+    path: {
+        /**
+         * Org Id
+         */
+        org_id: string;
+    };
+    query?: never;
+    url: '/api/v1/orgs/{org_id}';
+};
+
+export type OrgsUpdateOrgErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type OrgsUpdateOrgError = OrgsUpdateOrgErrors[keyof OrgsUpdateOrgErrors];
+
+export type OrgsUpdateOrgResponses = {
+    /**
+     * Successful Response
+     */
+    200: OrgOut;
+};
+
+export type OrgsUpdateOrgResponse = OrgsUpdateOrgResponses[keyof OrgsUpdateOrgResponses];
+
+export type OrgsActivateOrgData = {
+    body?: never;
+    path: {
+        /**
+         * Org Id
+         */
+        org_id: string;
+    };
+    query?: never;
+    url: '/api/v1/orgs/{org_id}/activate';
+};
+
+export type OrgsActivateOrgErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type OrgsActivateOrgError = OrgsActivateOrgErrors[keyof OrgsActivateOrgErrors];
+
+export type OrgsActivateOrgResponses = {
+    /**
+     * Successful Response
+     */
+    200: OrgOut;
+};
+
+export type OrgsActivateOrgResponse = OrgsActivateOrgResponses[keyof OrgsActivateOrgResponses];
+
+export type MallsListMallsData = {
+    body?: never;
+    path: {
+        /**
+         * Org Id
+         */
+        org_id: string;
+    };
+    query?: never;
+    url: '/api/v1/orgs/{org_id}/malls';
+};
+
+export type MallsListMallsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type MallsListMallsError = MallsListMallsErrors[keyof MallsListMallsErrors];
+
+export type MallsListMallsResponses = {
+    /**
+     * Response Malls List Malls
+     *
+     * Successful Response
+     */
+    200: Array<MallOut>;
+};
+
+export type MallsListMallsResponse = MallsListMallsResponses[keyof MallsListMallsResponses];
+
+export type MallsCreateMallData = {
+    body: MallCreate;
+    path: {
+        /**
+         * Org Id
+         */
+        org_id: string;
+    };
+    query?: never;
+    url: '/api/v1/orgs/{org_id}/malls';
+};
+
+export type MallsCreateMallErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type MallsCreateMallError = MallsCreateMallErrors[keyof MallsCreateMallErrors];
+
+export type MallsCreateMallResponses = {
+    /**
+     * Successful Response
+     */
+    201: MallOut;
+};
+
+export type MallsCreateMallResponse = MallsCreateMallResponses[keyof MallsCreateMallResponses];
+
+export type OrgsSuspendOrgData = {
+    body?: never;
+    path: {
+        /**
+         * Org Id
+         */
+        org_id: string;
+    };
+    query?: never;
+    url: '/api/v1/orgs/{org_id}/suspend';
+};
+
+export type OrgsSuspendOrgErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type OrgsSuspendOrgError = OrgsSuspendOrgErrors[keyof OrgsSuspendOrgErrors];
+
+export type OrgsSuspendOrgResponses = {
+    /**
+     * Successful Response
+     */
+    200: OrgOut;
+};
+
+export type OrgsSuspendOrgResponse = OrgsSuspendOrgResponses[keyof OrgsSuspendOrgResponses];
+
+export type PublicGetPublicMallData = {
+    body?: never;
+    path: {
+        /**
+         * Slug
+         */
+        slug: string;
+    };
+    query?: never;
+    url: '/api/v1/public/malls/{slug}';
+};
+
+export type PublicGetPublicMallErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PublicGetPublicMallError = PublicGetPublicMallErrors[keyof PublicGetPublicMallErrors];
+
+export type PublicGetPublicMallResponses = {
+    /**
+     * Successful Response
+     */
+    200: PublicMallOut;
+};
+
+export type PublicGetPublicMallResponse = PublicGetPublicMallResponses[keyof PublicGetPublicMallResponses];
+
 export type HealthGetReadyData = {
     body?: never;
     path?: never;
@@ -422,3 +1173,123 @@ export type HealthGetReadyResponses = {
 };
 
 export type HealthGetReadyResponse = HealthGetReadyResponses[keyof HealthGetReadyResponses];
+
+export type StoresGetStoreData = {
+    body?: never;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}';
+};
+
+export type StoresGetStoreErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type StoresGetStoreError = StoresGetStoreErrors[keyof StoresGetStoreErrors];
+
+export type StoresGetStoreResponses = {
+    /**
+     * Successful Response
+     */
+    200: StoreOut;
+};
+
+export type StoresGetStoreResponse = StoresGetStoreResponses[keyof StoresGetStoreResponses];
+
+export type StoresUpdateStoreData = {
+    body: StoreUpdate;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}';
+};
+
+export type StoresUpdateStoreErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type StoresUpdateStoreError = StoresUpdateStoreErrors[keyof StoresUpdateStoreErrors];
+
+export type StoresUpdateStoreResponses = {
+    /**
+     * Successful Response
+     */
+    200: StoreOut;
+};
+
+export type StoresUpdateStoreResponse = StoresUpdateStoreResponses[keyof StoresUpdateStoreResponses];
+
+export type StoresActivateStoreData = {
+    body?: never;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/activate';
+};
+
+export type StoresActivateStoreErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type StoresActivateStoreError = StoresActivateStoreErrors[keyof StoresActivateStoreErrors];
+
+export type StoresActivateStoreResponses = {
+    /**
+     * Successful Response
+     */
+    200: StoreOut;
+};
+
+export type StoresActivateStoreResponse = StoresActivateStoreResponses[keyof StoresActivateStoreResponses];
+
+export type StoresSuspendStoreData = {
+    body?: never;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/suspend';
+};
+
+export type StoresSuspendStoreErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type StoresSuspendStoreError = StoresSuspendStoreErrors[keyof StoresSuspendStoreErrors];
+
+export type StoresSuspendStoreResponses = {
+    /**
+     * Successful Response
+     */
+    200: StoreOut;
+};
+
+export type StoresSuspendStoreResponse = StoresSuspendStoreResponses[keyof StoresSuspendStoreResponses];

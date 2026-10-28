@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AuthStaffChangePasswordData, AuthStaffChangePasswordErrors, AuthStaffChangePasswordResponses, AuthStaffLoginData, AuthStaffLoginErrors, AuthStaffLoginResponses, AuthStaffLogoutAllData, AuthStaffLogoutAllResponses, AuthStaffLogoutData, AuthStaffLogoutResponses, AuthStaffMeData, AuthStaffMeResponses, AuthStaffRefreshData, AuthStaffRefreshResponses, AuthStaffSessionsData, AuthStaffSessionsResponses, AuthStaffTotpConfirmData, AuthStaffTotpConfirmErrors, AuthStaffTotpConfirmResponses, AuthStaffTotpSetupData, AuthStaffTotpSetupResponses, HealthGetHealthData, HealthGetHealthResponses, HealthGetReadyData, HealthGetReadyResponses } from './types.gen';
+import type { AuthStaffChangePasswordData, AuthStaffChangePasswordErrors, AuthStaffChangePasswordResponses, AuthStaffLoginData, AuthStaffLoginErrors, AuthStaffLoginResponses, AuthStaffLogoutAllData, AuthStaffLogoutAllResponses, AuthStaffLogoutData, AuthStaffLogoutResponses, AuthStaffMeData, AuthStaffMeResponses, AuthStaffRefreshData, AuthStaffRefreshResponses, AuthStaffSessionsData, AuthStaffSessionsResponses, AuthStaffTotpConfirmData, AuthStaffTotpConfirmErrors, AuthStaffTotpConfirmResponses, AuthStaffTotpSetupData, AuthStaffTotpSetupResponses, HealthGetHealthData, HealthGetHealthResponses, HealthGetReadyData, HealthGetReadyResponses, MallsActivateMallData, MallsActivateMallErrors, MallsActivateMallResponses, MallsCreateMallData, MallsCreateMallErrors, MallsCreateMallResponses, MallsGetMallData, MallsGetMallErrors, MallsGetMallResponses, MallsListMallsData, MallsListMallsErrors, MallsListMallsResponses, MallsSuspendMallData, MallsSuspendMallErrors, MallsSuspendMallResponses, MallsUpdateMallData, MallsUpdateMallErrors, MallsUpdateMallResponses, OrgsActivateOrgData, OrgsActivateOrgErrors, OrgsActivateOrgResponses, OrgsCreateOrgData, OrgsCreateOrgErrors, OrgsCreateOrgResponses, OrgsGetOrgData, OrgsGetOrgErrors, OrgsGetOrgResponses, OrgsListOrgsData, OrgsListOrgsErrors, OrgsListOrgsResponses, OrgsSuspendOrgData, OrgsSuspendOrgErrors, OrgsSuspendOrgResponses, OrgsUpdateOrgData, OrgsUpdateOrgErrors, OrgsUpdateOrgResponses, PublicGetPublicMallData, PublicGetPublicMallErrors, PublicGetPublicMallResponses, StoresActivateStoreData, StoresActivateStoreErrors, StoresActivateStoreResponses, StoresCreateStoreData, StoresCreateStoreErrors, StoresCreateStoreResponses, StoresGetStoreData, StoresGetStoreErrors, StoresGetStoreResponses, StoresListStoresData, StoresListStoresErrors, StoresListStoresResponses, StoresSuspendStoreData, StoresSuspendStoreErrors, StoresSuspendStoreResponses, StoresUpdateStoreData, StoresUpdateStoreErrors, StoresUpdateStoreResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -90,6 +90,143 @@ export const authStaffTotpSetup = <ThrowOnError extends boolean = false>(options
 export const healthGetHealth = <ThrowOnError extends boolean = false>(options?: Options<HealthGetHealthData, ThrowOnError>): RequestResult<HealthGetHealthResponses, unknown, ThrowOnError> => (options?.client ?? client).get<HealthGetHealthResponses, unknown, ThrowOnError>({ url: '/api/v1/health', ...options });
 
 /**
+ * Get Mall
+ */
+export const mallsGetMall = <ThrowOnError extends boolean = false>(options: Options<MallsGetMallData, ThrowOnError>): RequestResult<MallsGetMallResponses, MallsGetMallErrors, ThrowOnError> => (options.client ?? client).get<MallsGetMallResponses, MallsGetMallErrors, ThrowOnError>({ url: '/api/v1/malls/{mall_id}', ...options });
+
+/**
+ * Update Mall
+ */
+export const mallsUpdateMall = <ThrowOnError extends boolean = false>(options: Options<MallsUpdateMallData, ThrowOnError>): RequestResult<MallsUpdateMallResponses, MallsUpdateMallErrors, ThrowOnError> => (options.client ?? client).patch<MallsUpdateMallResponses, MallsUpdateMallErrors, ThrowOnError>({
+    url: '/api/v1/malls/{mall_id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Activate Mall
+ */
+export const mallsActivateMall = <ThrowOnError extends boolean = false>(options: Options<MallsActivateMallData, ThrowOnError>): RequestResult<MallsActivateMallResponses, MallsActivateMallErrors, ThrowOnError> => (options.client ?? client).post<MallsActivateMallResponses, MallsActivateMallErrors, ThrowOnError>({ url: '/api/v1/malls/{mall_id}/activate', ...options });
+
+/**
+ * List Stores
+ */
+export const storesListStores = <ThrowOnError extends boolean = false>(options: Options<StoresListStoresData, ThrowOnError>): RequestResult<StoresListStoresResponses, StoresListStoresErrors, ThrowOnError> => (options.client ?? client).get<StoresListStoresResponses, StoresListStoresErrors, ThrowOnError>({ url: '/api/v1/malls/{mall_id}/stores', ...options });
+
+/**
+ * Create Store
+ */
+export const storesCreateStore = <ThrowOnError extends boolean = false>(options: Options<StoresCreateStoreData, ThrowOnError>): RequestResult<StoresCreateStoreResponses, StoresCreateStoreErrors, ThrowOnError> => (options.client ?? client).post<StoresCreateStoreResponses, StoresCreateStoreErrors, ThrowOnError>({
+    url: '/api/v1/malls/{mall_id}/stores',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Suspend Mall
+ */
+export const mallsSuspendMall = <ThrowOnError extends boolean = false>(options: Options<MallsSuspendMallData, ThrowOnError>): RequestResult<MallsSuspendMallResponses, MallsSuspendMallErrors, ThrowOnError> => (options.client ?? client).post<MallsSuspendMallResponses, MallsSuspendMallErrors, ThrowOnError>({ url: '/api/v1/malls/{mall_id}/suspend', ...options });
+
+/**
+ * List Orgs
+ */
+export const orgsListOrgs = <ThrowOnError extends boolean = false>(options?: Options<OrgsListOrgsData, ThrowOnError>): RequestResult<OrgsListOrgsResponses, OrgsListOrgsErrors, ThrowOnError> => (options?.client ?? client).get<OrgsListOrgsResponses, OrgsListOrgsErrors, ThrowOnError>({ url: '/api/v1/orgs', ...options });
+
+/**
+ * Create Org
+ */
+export const orgsCreateOrg = <ThrowOnError extends boolean = false>(options: Options<OrgsCreateOrgData, ThrowOnError>): RequestResult<OrgsCreateOrgResponses, OrgsCreateOrgErrors, ThrowOnError> => (options.client ?? client).post<OrgsCreateOrgResponses, OrgsCreateOrgErrors, ThrowOnError>({
+    url: '/api/v1/orgs',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Get Org
+ */
+export const orgsGetOrg = <ThrowOnError extends boolean = false>(options: Options<OrgsGetOrgData, ThrowOnError>): RequestResult<OrgsGetOrgResponses, OrgsGetOrgErrors, ThrowOnError> => (options.client ?? client).get<OrgsGetOrgResponses, OrgsGetOrgErrors, ThrowOnError>({ url: '/api/v1/orgs/{org_id}', ...options });
+
+/**
+ * Update Org
+ */
+export const orgsUpdateOrg = <ThrowOnError extends boolean = false>(options: Options<OrgsUpdateOrgData, ThrowOnError>): RequestResult<OrgsUpdateOrgResponses, OrgsUpdateOrgErrors, ThrowOnError> => (options.client ?? client).patch<OrgsUpdateOrgResponses, OrgsUpdateOrgErrors, ThrowOnError>({
+    url: '/api/v1/orgs/{org_id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Activate Org
+ */
+export const orgsActivateOrg = <ThrowOnError extends boolean = false>(options: Options<OrgsActivateOrgData, ThrowOnError>): RequestResult<OrgsActivateOrgResponses, OrgsActivateOrgErrors, ThrowOnError> => (options.client ?? client).post<OrgsActivateOrgResponses, OrgsActivateOrgErrors, ThrowOnError>({ url: '/api/v1/orgs/{org_id}/activate', ...options });
+
+/**
+ * List Malls
+ */
+export const mallsListMalls = <ThrowOnError extends boolean = false>(options: Options<MallsListMallsData, ThrowOnError>): RequestResult<MallsListMallsResponses, MallsListMallsErrors, ThrowOnError> => (options.client ?? client).get<MallsListMallsResponses, MallsListMallsErrors, ThrowOnError>({ url: '/api/v1/orgs/{org_id}/malls', ...options });
+
+/**
+ * Create Mall
+ */
+export const mallsCreateMall = <ThrowOnError extends boolean = false>(options: Options<MallsCreateMallData, ThrowOnError>): RequestResult<MallsCreateMallResponses, MallsCreateMallErrors, ThrowOnError> => (options.client ?? client).post<MallsCreateMallResponses, MallsCreateMallErrors, ThrowOnError>({
+    url: '/api/v1/orgs/{org_id}/malls',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Suspend Org
+ */
+export const orgsSuspendOrg = <ThrowOnError extends boolean = false>(options: Options<OrgsSuspendOrgData, ThrowOnError>): RequestResult<OrgsSuspendOrgResponses, OrgsSuspendOrgErrors, ThrowOnError> => (options.client ?? client).post<OrgsSuspendOrgResponses, OrgsSuspendOrgErrors, ThrowOnError>({ url: '/api/v1/orgs/{org_id}/suspend', ...options });
+
+/**
+ * Get Public Mall
+ */
+export const publicGetPublicMall = <ThrowOnError extends boolean = false>(options: Options<PublicGetPublicMallData, ThrowOnError>): RequestResult<PublicGetPublicMallResponses, PublicGetPublicMallErrors, ThrowOnError> => (options.client ?? client).get<PublicGetPublicMallResponses, PublicGetPublicMallErrors, ThrowOnError>({ url: '/api/v1/public/malls/{slug}', ...options });
+
+/**
  * Get Ready
  */
 export const healthGetReady = <ThrowOnError extends boolean = false>(options?: Options<HealthGetReadyData, ThrowOnError>): RequestResult<HealthGetReadyResponses, unknown, ThrowOnError> => (options?.client ?? client).get<HealthGetReadyResponses, unknown, ThrowOnError>({ url: '/api/v1/ready', ...options });
+
+/**
+ * Get Store
+ */
+export const storesGetStore = <ThrowOnError extends boolean = false>(options: Options<StoresGetStoreData, ThrowOnError>): RequestResult<StoresGetStoreResponses, StoresGetStoreErrors, ThrowOnError> => (options.client ?? client).get<StoresGetStoreResponses, StoresGetStoreErrors, ThrowOnError>({ url: '/api/v1/stores/{store_id}', ...options });
+
+/**
+ * Update Store
+ */
+export const storesUpdateStore = <ThrowOnError extends boolean = false>(options: Options<StoresUpdateStoreData, ThrowOnError>): RequestResult<StoresUpdateStoreResponses, StoresUpdateStoreErrors, ThrowOnError> => (options.client ?? client).patch<StoresUpdateStoreResponses, StoresUpdateStoreErrors, ThrowOnError>({
+    url: '/api/v1/stores/{store_id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Activate Store
+ */
+export const storesActivateStore = <ThrowOnError extends boolean = false>(options: Options<StoresActivateStoreData, ThrowOnError>): RequestResult<StoresActivateStoreResponses, StoresActivateStoreErrors, ThrowOnError> => (options.client ?? client).post<StoresActivateStoreResponses, StoresActivateStoreErrors, ThrowOnError>({ url: '/api/v1/stores/{store_id}/activate', ...options });
+
+/**
+ * Suspend Store
+ */
+export const storesSuspendStore = <ThrowOnError extends boolean = false>(options: Options<StoresSuspendStoreData, ThrowOnError>): RequestResult<StoresSuspendStoreResponses, StoresSuspendStoreErrors, ThrowOnError> => (options.client ?? client).post<StoresSuspendStoreResponses, StoresSuspendStoreErrors, ThrowOnError>({ url: '/api/v1/stores/{store_id}/suspend', ...options });

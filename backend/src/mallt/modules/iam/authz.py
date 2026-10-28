@@ -123,16 +123,31 @@ class AuthzService:
         existence is not revealed; a missing permission inside a visible tenant is 403."""
         if self.can(principal, permission, target):
             return
-        if target.type == ScopeType.PLATFORM or self._can_see(principal, target):
+        if target.type == ScopeType.PLATFORM or self._shares_org(principal, target):
             raise Forbidden("missing_permission", "You do not have permission to do this.")
         raise NotFound("not_found", "Not found.")
 
     @staticmethod
-    def _can_see(principal: Principal, target: Scope) -> bool:
+    def _shares_org(principal: Principal, target: Scope) -> bool:
         return any(
             g.scope.type == ScopeType.PLATFORM or g.scope.organization_id == target.organization_id
             for g in principal.grants
         )
+
+    @staticmethod
+    def can_see(principal: Principal, target: Scope) -> bool:
+        """Read visibility: platform staff see everything; others see scopes on their own chain
+        (an ancestor of a grant, or anything beneath one)."""
+        return any(
+            g.scope.type == ScopeType.PLATFORM
+            or contains(g.scope, target)
+            or contains(target, g.scope)
+            for g in principal.grants
+        )
+
+    def require_visible(self, principal: Principal, target: Scope) -> None:
+        if not self.can_see(principal, target):
+            raise NotFound("not_found", "Not found.")
 
     @staticmethod
     def visible_org_ids(principal: Principal) -> set[uuid.UUID] | None:
