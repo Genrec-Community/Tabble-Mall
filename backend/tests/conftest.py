@@ -1,12 +1,8 @@
 import asyncio
-import os
 from collections.abc import AsyncIterator
-from pathlib import Path
 
-import asyncpg
 import httpx
 import pytest
-from alembic.config import Config
 from fastapi import FastAPI
 from pydantic import BaseModel
 from sqlalchemy import text
@@ -17,32 +13,7 @@ from mallt.core.config import Settings
 from mallt.core.db import get_session, make_engine
 from mallt.core.kv import KV, PostgresKV, RedisKV
 from mallt.main import create_app
-
-BACKEND = Path(__file__).resolve().parents[1]
-TEST_DATABASE_URL = os.environ.get(
-    "TEST_DATABASE_URL", "postgresql+asyncpg://postgres:test@localhost:5432/mallt_test"
-)
-TEST_REDIS_URL = os.environ.get("TEST_REDIS_URL") or None
-
-
-def _alembic_config(url: str) -> Config:
-    cfg = Config(str(BACKEND / "alembic.ini"))
-    cfg.set_main_option("script_location", str(BACKEND / "alembic"))
-    cfg.set_main_option("sqlalchemy.url", url)
-    return cfg
-
-
-async def _ensure_database(url: str) -> None:
-    """Create the test database if it does not exist yet."""
-    plain = url.replace("+asyncpg", "")
-    base, _, name = plain.rpartition("/")
-    conn = await asyncpg.connect(f"{base}/postgres")
-    try:
-        exists = await conn.fetchval("SELECT 1 FROM pg_database WHERE datname = $1", name)
-        if not exists:
-            await conn.execute(f'CREATE DATABASE "{name}"')
-    finally:
-        await conn.close()
+from tests.dbtools import TEST_DATABASE_URL, TEST_REDIS_URL, alembic_config, ensure_database
 
 
 @pytest.fixture(scope="session")
@@ -57,13 +28,13 @@ def settings() -> Settings:
 
 @pytest.fixture(scope="session")
 async def db_engine(settings: Settings) -> AsyncIterator[AsyncEngine]:
-    await _ensure_database(settings.database_url)
+    await ensure_database(settings.database_url)
     engine = make_engine(settings.database_url)
     async with engine.begin() as conn:
         await conn.execute(text("DROP SCHEMA public CASCADE"))
         await conn.execute(text("CREATE SCHEMA public"))
     # Alembic's async env calls asyncio.run(), so run it off the test loop.
-    await asyncio.to_thread(command.upgrade, _alembic_config(settings.database_url), "head")
+    await asyncio.to_thread(command.upgrade, alembic_config(settings.database_url), "head")
     yield engine
     await engine.dispose()
 
