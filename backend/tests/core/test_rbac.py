@@ -1,7 +1,15 @@
 import pytest
 
 from mallt.core.ids import uuid7
-from mallt.core.rbac import STAFF_MANAGE_FOR, SYSTEM_ROLES, P, Scope, ScopeType, contains
+from mallt.core.rbac import (
+    GRANT_RULES,
+    STAFF_MANAGE_FOR,
+    SYSTEM_ROLES,
+    P,
+    Scope,
+    ScopeType,
+    contains,
+)
 
 R = SYSTEM_ROLES
 
@@ -90,3 +98,15 @@ def test_incomplete_chain_rejected() -> None:
         Scope(ScopeType.PLATFORM, organization_id=uuid7())
     with pytest.raises(ValueError):
         Scope(ScopeType.ORGANIZATION)
+
+
+def test_grant_rules_say_who_may_hand_out_each_role() -> None:
+    assert set(GRANT_RULES) == set(SYSTEM_ROLES)
+    assert all("platform_admin" in granters for granters in GRANT_RULES.values())
+    # The spec: an Org Manager can't create Org Owners or Org Managers; an owner can.
+    assert "org_manager" not in GRANT_RULES["org_owner"]
+    assert "org_manager" not in GRANT_RULES["org_manager"]
+    assert "org_owner" in GRANT_RULES["org_owner"] and "org_owner" in GRANT_RULES["org_manager"]
+    # Org managers and store owners may build store teams; store staff may not.
+    assert {"org_manager", "store_owner"} <= GRANT_RULES["store_staff"]
+    assert "store_staff" not in GRANT_RULES["store_staff"]

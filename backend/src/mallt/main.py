@@ -13,6 +13,7 @@ from mallt.core.kv import make_kv
 from mallt.core.logging import RequestIdMiddleware, configure_logging
 from mallt.modules.health.router import router as health_router
 from mallt.modules.iam.router import staff_router
+from mallt.modules.staff.router import router as staff_mgmt_router
 from mallt.modules.tenancy.router import routers as tenancy_routers
 
 
@@ -57,4 +58,5 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(staff_router)
     for router in tenancy_routers:
         app.include_router(router)
+    app.include_router(staff_mgmt_router)
     return app

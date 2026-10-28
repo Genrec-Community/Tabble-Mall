@@ -9,6 +9,73 @@
         "title": "ActiveStatus",
         "type": "string"
       },
+      "AssignmentOut": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "mall_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mall Id"
+          },
+          "organization_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Organization Id"
+          },
+          "role_key": {
+            "title": "Role Key",
+            "type": "string"
+          },
+          "role_name": {
+            "title": "Role Name",
+            "type": "string"
+          },
+          "scope_type": {
+            "$ref": "#/components/schemas/ScopeType"
+          },
+          "store_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Store Id"
+          }
+        },
+        "required": [
+          "id",
+          "role_key",
+          "role_name",
+          "scope_type",
+          "organization_id",
+          "mall_id",
+          "store_id"
+        ],
+        "title": "AssignmentOut",
+        "type": "object"
+      },
       "GrantOut": {
         "properties": {
           "mall_id": {
@@ -522,6 +589,67 @@
         "title": "PublicStoreOut",
         "type": "object"
       },
+      "RoleAssign": {
+        "properties": {
+          "role_key": {
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Role Key",
+            "type": "string"
+          },
+          "scope_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scope Id"
+          },
+          "scope_type": {
+            "$ref": "#/components/schemas/ScopeType"
+          }
+        },
+        "required": [
+          "role_key",
+          "scope_type"
+        ],
+        "title": "RoleAssign",
+        "type": "object"
+      },
+      "RoleOut": {
+        "properties": {
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "permissions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Permissions",
+            "type": "array"
+          },
+          "scope_type": {
+            "$ref": "#/components/schemas/ScopeType"
+          }
+        },
+        "required": [
+          "key",
+          "name",
+          "scope_type",
+          "permissions"
+        ],
+        "title": "RoleOut",
+        "type": "object"
+      },
       "ScopeType": {
         "enum": [
           "platform",
@@ -585,6 +713,64 @@
           "current"
         ],
         "title": "SessionOut",
+        "type": "object"
+      },
+      "StaffCreate": {
+        "properties": {
+          "display_name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Display Name",
+            "type": "string"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "role_key": {
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Role Key",
+            "type": "string"
+          },
+          "username": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "username",
+          "display_name",
+          "role_key"
+        ],
+        "title": "StaffCreate",
+        "type": "object"
+      },
+      "StaffCreatedOut": {
+        "properties": {
+          "staff": {
+            "$ref": "#/components/schemas/StaffOut"
+          },
+          "temp_password": {
+            "title": "Temp Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "staff",
+          "temp_password"
+        ],
+        "title": "StaffCreatedOut",
         "type": "object"
       },
       "StaffLogin": {
@@ -661,6 +847,77 @@
           "grants"
         ],
         "title": "StaffMe",
+        "type": "object"
+      },
+      "StaffOut": {
+        "properties": {
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "grants": {
+            "items": {
+              "$ref": "#/components/schemas/AssignmentOut"
+            },
+            "title": "Grants",
+            "type": "array"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "last_login_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Login At"
+          },
+          "must_change_password": {
+            "title": "Must Change Password",
+            "type": "boolean"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ActiveStatus"
+          },
+          "totp_enabled": {
+            "title": "Totp Enabled",
+            "type": "boolean"
+          },
+          "username": {
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "display_name",
+          "email",
+          "status",
+          "must_change_password",
+          "totp_enabled",
+          "last_login_at",
+          "grants"
+        ],
+        "title": "StaffOut",
         "type": "object"
       },
       "StatusOut": {
@@ -815,6 +1072,19 @@
           }
         },
         "title": "StoreUpdate",
+        "type": "object"
+      },
+      "TempPasswordOut": {
+        "properties": {
+          "temp_password": {
+            "title": "Temp Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "temp_password"
+        ],
+        "title": "TempPasswordOut",
         "type": "object"
       },
       "TokenOut": {
@@ -1305,6 +1575,104 @@
         ]
       }
     },
+    "/api/v1/malls/{mall_id}/staff": {
+      "get": {
+        "operationId": "staff_list_mall_staff",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mall_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Mall Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/StaffOut"
+                  },
+                  "title": "Response Staff List Mall Staff",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Mall Staff",
+        "tags": [
+          "staff"
+        ]
+      },
+      "post": {
+        "operationId": "staff_create_mall_staff",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mall_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Mall Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StaffCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffCreatedOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Mall Staff",
+        "tags": [
+          "staff"
+        ]
+      }
+    },
     "/api/v1/malls/{mall_id}/stores": {
       "get": {
         "operationId": "stores_list_stores",
@@ -1782,6 +2150,104 @@
         ]
       }
     },
+    "/api/v1/orgs/{org_id}/staff": {
+      "get": {
+        "operationId": "staff_list_org_staff",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "org_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Org Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/StaffOut"
+                  },
+                  "title": "Response Staff List Org Staff",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Org Staff",
+        "tags": [
+          "staff"
+        ]
+      },
+      "post": {
+        "operationId": "staff_create_org_staff",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "org_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Org Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StaffCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffCreatedOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Org Staff",
+        "tags": [
+          "staff"
+        ]
+      }
+    },
     "/api/v1/orgs/{org_id}/suspend": {
       "post": {
         "operationId": "orgs_suspend_org",
@@ -1885,6 +2351,259 @@
         "summary": "Get Ready",
         "tags": [
           "health"
+        ]
+      }
+    },
+    "/api/v1/roles": {
+      "get": {
+        "operationId": "staff_list_roles",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RoleOut"
+                  },
+                  "title": "Response Staff List Roles",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Roles",
+        "tags": [
+          "staff"
+        ]
+      }
+    },
+    "/api/v1/staff/{staff_id}/activate": {
+      "post": {
+        "operationId": "staff_activate_staff",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "staff_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Staff Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Activate Staff",
+        "tags": [
+          "staff"
+        ]
+      }
+    },
+    "/api/v1/staff/{staff_id}/reset-password": {
+      "post": {
+        "operationId": "staff_reset_staff_password",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "staff_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Staff Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TempPasswordOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reset Staff Password",
+        "tags": [
+          "staff"
+        ]
+      }
+    },
+    "/api/v1/staff/{staff_id}/roles": {
+      "post": {
+        "operationId": "staff_assign_role",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "staff_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Staff Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoleAssign"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssignmentOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Assign Role",
+        "tags": [
+          "staff"
+        ]
+      }
+    },
+    "/api/v1/staff/{staff_id}/roles/{assignment_id}": {
+      "delete": {
+        "operationId": "staff_revoke_role",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "staff_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Staff Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "assignment_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Assignment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Revoke Role",
+        "tags": [
+          "staff"
+        ]
+      }
+    },
+    "/api/v1/staff/{staff_id}/suspend": {
+      "post": {
+        "operationId": "staff_suspend_staff",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "staff_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Staff Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Suspend Staff",
+        "tags": [
+          "staff"
         ]
       }
     },
@@ -2022,6 +2741,104 @@
         "summary": "Activate Store",
         "tags": [
           "stores"
+        ]
+      }
+    },
+    "/api/v1/stores/{store_id}/staff": {
+      "get": {
+        "operationId": "staff_list_store_staff",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "store_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Store Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/StaffOut"
+                  },
+                  "title": "Response Staff List Store Staff",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Store Staff",
+        "tags": [
+          "staff"
+        ]
+      },
+      "post": {
+        "operationId": "staff_create_store_staff",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "store_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Store Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StaffCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffCreatedOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Store Staff",
+        "tags": [
+          "staff"
         ]
       }
     },

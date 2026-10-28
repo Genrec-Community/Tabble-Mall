@@ -10,6 +10,37 @@ export type ClientOptions = {
 export type ActiveStatus = 'active' | 'suspended';
 
 /**
+ * AssignmentOut
+ */
+export type AssignmentOut = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Mall Id
+     */
+    mall_id: string | null;
+    /**
+     * Organization Id
+     */
+    organization_id: string | null;
+    /**
+     * Role Key
+     */
+    role_key: string;
+    /**
+     * Role Name
+     */
+    role_name: string;
+    scope_type: ScopeType;
+    /**
+     * Store Id
+     */
+    store_id: string | null;
+};
+
+/**
  * GrantOut
  */
 export type GrantOut = {
@@ -283,6 +314,40 @@ export type PublicStoreOut = {
 };
 
 /**
+ * RoleAssign
+ */
+export type RoleAssign = {
+    /**
+     * Role Key
+     */
+    role_key: string;
+    /**
+     * Scope Id
+     */
+    scope_id?: string | null;
+    scope_type: ScopeType;
+};
+
+/**
+ * RoleOut
+ */
+export type RoleOut = {
+    /**
+     * Key
+     */
+    key: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Permissions
+     */
+    permissions: Array<string>;
+    scope_type: ScopeType;
+};
+
+/**
  * ScopeType
  */
 export type ScopeType = 'platform' | 'organization' | 'mall' | 'store';
@@ -315,6 +380,39 @@ export type SessionOut = {
      * User Agent
      */
     user_agent: string | null;
+};
+
+/**
+ * StaffCreate
+ */
+export type StaffCreate = {
+    /**
+     * Display Name
+     */
+    display_name: string;
+    /**
+     * Email
+     */
+    email?: string | null;
+    /**
+     * Role Key
+     */
+    role_key: string;
+    /**
+     * Username
+     */
+    username: string;
+};
+
+/**
+ * StaffCreatedOut
+ */
+export type StaffCreatedOut = {
+    staff: StaffOut;
+    /**
+     * Temp Password
+     */
+    temp_password: string;
 };
 
 /**
@@ -355,6 +453,45 @@ export type StaffMe = {
      * Must Change Password
      */
     must_change_password: boolean;
+    /**
+     * Totp Enabled
+     */
+    totp_enabled: boolean;
+    /**
+     * Username
+     */
+    username: string;
+};
+
+/**
+ * StaffOut
+ */
+export type StaffOut = {
+    /**
+     * Display Name
+     */
+    display_name: string;
+    /**
+     * Email
+     */
+    email: string | null;
+    /**
+     * Grants
+     */
+    grants: Array<AssignmentOut>;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Last Login At
+     */
+    last_login_at: string | null;
+    /**
+     * Must Change Password
+     */
+    must_change_password: boolean;
+    status: ActiveStatus;
     /**
      * Totp Enabled
      */
@@ -444,6 +581,16 @@ export type StoreUpdate = {
      * Name
      */
     name?: string | null;
+};
+
+/**
+ * TempPasswordOut
+ */
+export type TempPasswordOut = {
+    /**
+     * Temp Password
+     */
+    temp_password: string;
 };
 
 /**
@@ -795,6 +942,68 @@ export type MallsActivateMallResponses = {
 
 export type MallsActivateMallResponse = MallsActivateMallResponses[keyof MallsActivateMallResponses];
 
+export type StaffListMallStaffData = {
+    body?: never;
+    path: {
+        /**
+         * Mall Id
+         */
+        mall_id: string;
+    };
+    query?: never;
+    url: '/api/v1/malls/{mall_id}/staff';
+};
+
+export type StaffListMallStaffErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type StaffListMallStaffError = StaffListMallStaffErrors[keyof StaffListMallStaffErrors];
+
+export type StaffListMallStaffResponses = {
+    /**
+     * Response Staff List Mall Staff
+     *
+     * Successful Response
+     */
+    200: Array<StaffOut>;
+};
+
+export type StaffListMallStaffResponse = StaffListMallStaffResponses[keyof StaffListMallStaffResponses];
+
+export type StaffCreateMallStaffData = {
+    body: StaffCreate;
+    path: {
+        /**
+         * Mall Id
+         */
+        mall_id: string;
+    };
+    query?: never;
+    url: '/api/v1/malls/{mall_id}/staff';
+};
+
+export type StaffCreateMallStaffErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type StaffCreateMallStaffError = StaffCreateMallStaffErrors[keyof StaffCreateMallStaffErrors];
+
+export type StaffCreateMallStaffResponses = {
+    /**
+     * Successful Response
+     */
+    201: StaffCreatedOut;
+};
+
+export type StaffCreateMallStaffResponse = StaffCreateMallStaffResponses[keyof StaffCreateMallStaffResponses];
+
 export type StoresListStoresData = {
     body?: never;
     path: {
@@ -1098,6 +1307,68 @@ export type MallsCreateMallResponses = {
 
 export type MallsCreateMallResponse = MallsCreateMallResponses[keyof MallsCreateMallResponses];
 
+export type StaffListOrgStaffData = {
+    body?: never;
+    path: {
+        /**
+         * Org Id
+         */
+        org_id: string;
+    };
+    query?: never;
+    url: '/api/v1/orgs/{org_id}/staff';
+};
+
+export type StaffListOrgStaffErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type StaffListOrgStaffError = StaffListOrgStaffErrors[keyof StaffListOrgStaffErrors];
+
+export type StaffListOrgStaffResponses = {
+    /**
+     * Response Staff List Org Staff
+     *
+     * Successful Response
+     */
+    200: Array<StaffOut>;
+};
+
+export type StaffListOrgStaffResponse = StaffListOrgStaffResponses[keyof StaffListOrgStaffResponses];
+
+export type StaffCreateOrgStaffData = {
+    body: StaffCreate;
+    path: {
+        /**
+         * Org Id
+         */
+        org_id: string;
+    };
+    query?: never;
+    url: '/api/v1/orgs/{org_id}/staff';
+};
+
+export type StaffCreateOrgStaffErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type StaffCreateOrgStaffError = StaffCreateOrgStaffErrors[keyof StaffCreateOrgStaffErrors];
+
+export type StaffCreateOrgStaffResponses = {
+    /**
+     * Successful Response
+     */
+    201: StaffCreatedOut;
+};
+
+export type StaffCreateOrgStaffResponse = StaffCreateOrgStaffResponses[keyof StaffCreateOrgStaffResponses];
+
 export type OrgsSuspendOrgData = {
     body?: never;
     path: {
@@ -1173,6 +1444,178 @@ export type HealthGetReadyResponses = {
 };
 
 export type HealthGetReadyResponse = HealthGetReadyResponses[keyof HealthGetReadyResponses];
+
+export type StaffListRolesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/roles';
+};
+
+export type StaffListRolesResponses = {
+    /**
+     * Response Staff List Roles
+     *
+     * Successful Response
+     */
+    200: Array<RoleOut>;
+};
+
+export type StaffListRolesResponse = StaffListRolesResponses[keyof StaffListRolesResponses];
+
+export type StaffActivateStaffData = {
+    body?: never;
+    path: {
+        /**
+         * Staff Id
+         */
+        staff_id: string;
+    };
+    query?: never;
+    url: '/api/v1/staff/{staff_id}/activate';
+};
+
+export type StaffActivateStaffErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type StaffActivateStaffError = StaffActivateStaffErrors[keyof StaffActivateStaffErrors];
+
+export type StaffActivateStaffResponses = {
+    /**
+     * Successful Response
+     */
+    200: StaffOut;
+};
+
+export type StaffActivateStaffResponse = StaffActivateStaffResponses[keyof StaffActivateStaffResponses];
+
+export type StaffResetStaffPasswordData = {
+    body?: never;
+    path: {
+        /**
+         * Staff Id
+         */
+        staff_id: string;
+    };
+    query?: never;
+    url: '/api/v1/staff/{staff_id}/reset-password';
+};
+
+export type StaffResetStaffPasswordErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type StaffResetStaffPasswordError = StaffResetStaffPasswordErrors[keyof StaffResetStaffPasswordErrors];
+
+export type StaffResetStaffPasswordResponses = {
+    /**
+     * Successful Response
+     */
+    200: TempPasswordOut;
+};
+
+export type StaffResetStaffPasswordResponse = StaffResetStaffPasswordResponses[keyof StaffResetStaffPasswordResponses];
+
+export type StaffAssignRoleData = {
+    body: RoleAssign;
+    path: {
+        /**
+         * Staff Id
+         */
+        staff_id: string;
+    };
+    query?: never;
+    url: '/api/v1/staff/{staff_id}/roles';
+};
+
+export type StaffAssignRoleErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type StaffAssignRoleError = StaffAssignRoleErrors[keyof StaffAssignRoleErrors];
+
+export type StaffAssignRoleResponses = {
+    /**
+     * Successful Response
+     */
+    201: AssignmentOut;
+};
+
+export type StaffAssignRoleResponse = StaffAssignRoleResponses[keyof StaffAssignRoleResponses];
+
+export type StaffRevokeRoleData = {
+    body?: never;
+    path: {
+        /**
+         * Staff Id
+         */
+        staff_id: string;
+        /**
+         * Assignment Id
+         */
+        assignment_id: string;
+    };
+    query?: never;
+    url: '/api/v1/staff/{staff_id}/roles/{assignment_id}';
+};
+
+export type StaffRevokeRoleErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type StaffRevokeRoleError = StaffRevokeRoleErrors[keyof StaffRevokeRoleErrors];
+
+export type StaffRevokeRoleResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type StaffRevokeRoleResponse = StaffRevokeRoleResponses[keyof StaffRevokeRoleResponses];
+
+export type StaffSuspendStaffData = {
+    body?: never;
+    path: {
+        /**
+         * Staff Id
+         */
+        staff_id: string;
+    };
+    query?: never;
+    url: '/api/v1/staff/{staff_id}/suspend';
+};
+
+export type StaffSuspendStaffErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type StaffSuspendStaffError = StaffSuspendStaffErrors[keyof StaffSuspendStaffErrors];
+
+export type StaffSuspendStaffResponses = {
+    /**
+     * Successful Response
+     */
+    200: StaffOut;
+};
+
+export type StaffSuspendStaffResponse = StaffSuspendStaffResponses[keyof StaffSuspendStaffResponses];
 
 export type StoresGetStoreData = {
     body?: never;
@@ -1263,6 +1706,68 @@ export type StoresActivateStoreResponses = {
 };
 
 export type StoresActivateStoreResponse = StoresActivateStoreResponses[keyof StoresActivateStoreResponses];
+
+export type StaffListStoreStaffData = {
+    body?: never;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/staff';
+};
+
+export type StaffListStoreStaffErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type StaffListStoreStaffError = StaffListStoreStaffErrors[keyof StaffListStoreStaffErrors];
+
+export type StaffListStoreStaffResponses = {
+    /**
+     * Response Staff List Store Staff
+     *
+     * Successful Response
+     */
+    200: Array<StaffOut>;
+};
+
+export type StaffListStoreStaffResponse = StaffListStoreStaffResponses[keyof StaffListStoreStaffResponses];
+
+export type StaffCreateStoreStaffData = {
+    body: StaffCreate;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/staff';
+};
+
+export type StaffCreateStoreStaffErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type StaffCreateStoreStaffError = StaffCreateStoreStaffErrors[keyof StaffCreateStoreStaffErrors];
+
+export type StaffCreateStoreStaffResponses = {
+    /**
+     * Successful Response
+     */
+    201: StaffCreatedOut;
+};
+
+export type StaffCreateStoreStaffResponse = StaffCreateStoreStaffResponses[keyof StaffCreateStoreStaffResponses];
 
 export type StoresSuspendStoreData = {
     body?: never;

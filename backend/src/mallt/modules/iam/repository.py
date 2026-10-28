@@ -2,11 +2,11 @@ import uuid
 from dataclasses import dataclass
 from datetime import datetime
 
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from mallt.core.enums import IdentityKind
-from mallt.core.rbac import ScopeType
+from mallt.core.enums import ActiveStatus, IdentityKind
+from mallt.core.rbac import Scope, ScopeType
 from mallt.modules.iam.models import (
     RefreshToken,
     Role,
@@ -55,6 +55,71 @@ class IamRepository:
             .limit(1)
         )
         return (await self.session.execute(stmt)).first() is not None
+
+    async def staff_by_ids(self, ids: list[uuid.UUID]) -> list[StaffUser]:
+        stmt = select(StaffUser).where(StaffUser.id.in_(ids)).order_by(StaffUser.username)
+        return list((await self.session.execute(stmt)).scalars())
+
+    async def staff_ids_at(self, scope: Scope) -> list[uuid.UUID]:
+        """Staff holding any role at this scope or beneath it."""
+        column = {
+            ScopeType.ORGANIZATION: RoleAssignment.organization_id,
+            ScopeType.MALL: RoleAssignment.mall_id,
+            ScopeType.STORE: RoleAssignment.store_id,
+        }[scope.type]
+        scope_id = {
+            ScopeType.ORGANIZATION: scope.organization_id,
+            ScopeType.MALL: scope.mall_id,
+            ScopeType.STORE: scope.store_id,
+        }[scope.type]
+        stmt = select(RoleAssignment.staff_user_id).where(column == scope_id).distinct()
+        return list((await self.session.execute(stmt)).scalars())
+
+    async def assignments_for(self, staff_ids: list[uuid.UUID]) -> list[tuple[uuid.UUID, GrantRow]]:
+        """(staff_id, assignment) pairs; permissions are left empty (use core.rbac.SYSTEM_ROLES)."""
+        stmt = (
+            select(
+                RoleAssignment.staff_user_id,
+                RoleAssignment.id,
+                Role.key,
+                RoleAssignment.scope_type,
+                RoleAssignment.organization_id,
+                RoleAssignment.mall_id,
+                RoleAssignment.store_id,
+            )
+            .join(Role, Role.id == RoleAssignment.role_id)
+            .where(RoleAssignment.staff_user_id.in_(staff_ids))
+            .order_by(RoleAssignment.created_at, RoleAssignment.id)
+        )
+        return [
+            (row[0], GrantRow(row[1], row[2], row[3], row[4], row[5], row[6], frozenset()))
+            for row in (await self.session.execute(stmt)).all()
+        ]
+
+    async def get_assignment(
+        self, staff_id: uuid.UUID, assignment_id: uuid.UUID
+    ) -> RoleAssignment | None:
+        stmt = select(RoleAssignment).where(
+            RoleAssignment.id == assignment_id, RoleAssignment.staff_user_id == staff_id
+        )
+        return (await self.session.execute(stmt)).scalar_one_or_none()
+
+    async def delete(self, obj: RoleAssignment) -> None:
+        await self.session.delete(obj)
+
+    async def count_active_owners(self, org_id: uuid.UUID, excluding: uuid.UUID) -> int:
+        stmt = (
+            select(func.count(func.distinct(RoleAssignment.staff_user_id)))
+            .join(Role, Role.id == RoleAssignment.role_id)
+            .join(StaffUser, StaffUser.id == RoleAssignment.staff_user_id)
+            .where(
+                Role.key == "org_owner",
+                RoleAssignment.organization_id == org_id,
+                StaffUser.status == ActiveStatus.ACTIVE,
+                StaffUser.id != excluding,
+            )
+        )
+        return int((await self.session.execute(stmt)).scalar_one())
 
     async def grants_for(self, staff_id: uuid.UUID) -> list[GrantRow]:
         """Every role assignment of a staff user with the role's permissions, in one query."""

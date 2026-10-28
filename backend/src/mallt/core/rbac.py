@@ -144,3 +144,14 @@ STAFF_MANAGE_FOR: dict[ScopeType, P] = {
     ScopeType.MALL: P.ORG_STAFF_MANAGE,
     ScopeType.STORE: P.STORE_STAFF_MANAGE,
 }
+
+# Who may hand out each role: the granter must hold one of these roles at a scope containing the
+# target. This is on top of "hold every permission in the role", which alone would let an Org
+# Manager mint more Org Managers (they already hold all of that role's permissions).
+GRANT_RULES: dict[str, frozenset[str]] = {
+    "platform_admin": frozenset({"platform_admin"}),
+    "org_owner": frozenset({"platform_admin", "org_owner"}),
+    "org_manager": frozenset({"platform_admin", "org_owner"}),
+    "store_owner": frozenset({"platform_admin", "org_owner", "org_manager", "store_owner"}),
+    "store_staff": frozenset({"platform_admin", "org_owner", "org_manager", "store_owner"}),
+}

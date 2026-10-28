@@ -101,6 +101,14 @@ class TenancyService:
         if org.status != ActiveStatus.ACTIVE or (mall and mall.status != ActiveStatus.ACTIVE):
             raise Conflict("suspended", "This organization or mall is suspended.")
 
+    async def assert_operational(self, principal: Principal, scope: Scope) -> None:
+        """For other modules: refuse changes under a suspended org or mall (platform exempt)."""
+        if scope.organization_id is None:
+            return
+        org = await self._org(scope.organization_id)
+        mall = await self._mall(scope.mall_id) if scope.mall_id else None
+        self._ensure_operational(principal, org, mall)
+
     async def _record(
         self,
         principal: Principal,
