@@ -8,13 +8,12 @@ runs in its own transactions so counters survive a request rollback (e.g. a 429 
 import random
 from typing import TYPE_CHECKING, Protocol
 
+from fastapi import Request
 from redis.asyncio import Redis
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 if TYPE_CHECKING:
-    from fastapi import Request
-
     from mallt.core.config import Settings
 
 
@@ -154,6 +153,6 @@ def make_kv(settings: "Settings", engine: AsyncEngine) -> KV:
     return PostgresKV(engine)
 
 
-def get_kv(request: "Request") -> KV:
+def get_kv(request: Request) -> KV:
     kv: KV = request.app.state.kv
     return kv

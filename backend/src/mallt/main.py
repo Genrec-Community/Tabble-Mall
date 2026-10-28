@@ -12,6 +12,7 @@ from mallt.core.errors import install_error_handlers
 from mallt.core.kv import make_kv
 from mallt.core.logging import RequestIdMiddleware, configure_logging
 from mallt.modules.health.router import router as health_router
+from mallt.modules.iam.router import staff_router
 
 
 def _operation_id(route: APIRoute) -> str:
@@ -52,4 +53,5 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.add_middleware(RequestIdMiddleware)
     install_error_handlers(app)
     app.include_router(health_router)
+    app.include_router(staff_router)
     return app

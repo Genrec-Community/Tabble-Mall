@@ -106,6 +106,7 @@ async def make_staff(
     password_hash: str | None = None,
     must_change_password: bool = False,
     status: ActiveStatus = ActiveStatus.ACTIVE,
+    totp_secret: str | None = None,
 ) -> StaffUser:
     staff = StaffUser(
         username=username,
@@ -113,6 +114,8 @@ async def make_staff(
         password_hash=password_hash or _default_hash(),
         must_change_password=must_change_password,
         status=status,
+        totp_secret=totp_secret,
+        totp_enabled=totp_secret is not None,
     )
     session.add(staff)
     await session.flush()

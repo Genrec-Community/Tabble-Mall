@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { HealthGetHealthData, HealthGetHealthResponses, HealthGetReadyData, HealthGetReadyResponses } from './types.gen';
+import type { AuthStaffChangePasswordData, AuthStaffChangePasswordErrors, AuthStaffChangePasswordResponses, AuthStaffLoginData, AuthStaffLoginErrors, AuthStaffLoginResponses, AuthStaffLogoutAllData, AuthStaffLogoutAllResponses, AuthStaffLogoutData, AuthStaffLogoutResponses, AuthStaffMeData, AuthStaffMeResponses, AuthStaffRefreshData, AuthStaffRefreshResponses, AuthStaffSessionsData, AuthStaffSessionsResponses, AuthStaffTotpConfirmData, AuthStaffTotpConfirmErrors, AuthStaffTotpConfirmResponses, AuthStaffTotpSetupData, AuthStaffTotpSetupResponses, HealthGetHealthData, HealthGetHealthResponses, HealthGetReadyData, HealthGetReadyResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -17,6 +17,72 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
      */
     meta?: keyof ClientMeta extends never ? Record<string, unknown> : ClientMeta;
 };
+
+/**
+ * Staff Login
+ */
+export const authStaffLogin = <ThrowOnError extends boolean = false>(options: Options<AuthStaffLoginData, ThrowOnError>): RequestResult<AuthStaffLoginResponses, AuthStaffLoginErrors, ThrowOnError> => (options.client ?? client).post<AuthStaffLoginResponses, AuthStaffLoginErrors, ThrowOnError>({
+    url: '/api/v1/auth/staff/login',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Staff Logout
+ */
+export const authStaffLogout = <ThrowOnError extends boolean = false>(options?: Options<AuthStaffLogoutData, ThrowOnError>): RequestResult<AuthStaffLogoutResponses, unknown, ThrowOnError> => (options?.client ?? client).post<AuthStaffLogoutResponses, unknown, ThrowOnError>({ url: '/api/v1/auth/staff/logout', ...options });
+
+/**
+ * Staff Logout All
+ */
+export const authStaffLogoutAll = <ThrowOnError extends boolean = false>(options?: Options<AuthStaffLogoutAllData, ThrowOnError>): RequestResult<AuthStaffLogoutAllResponses, unknown, ThrowOnError> => (options?.client ?? client).post<AuthStaffLogoutAllResponses, unknown, ThrowOnError>({ url: '/api/v1/auth/staff/logout-all', ...options });
+
+/**
+ * Staff Me
+ */
+export const authStaffMe = <ThrowOnError extends boolean = false>(options?: Options<AuthStaffMeData, ThrowOnError>): RequestResult<AuthStaffMeResponses, unknown, ThrowOnError> => (options?.client ?? client).get<AuthStaffMeResponses, unknown, ThrowOnError>({ url: '/api/v1/auth/staff/me', ...options });
+
+/**
+ * Staff Change Password
+ */
+export const authStaffChangePassword = <ThrowOnError extends boolean = false>(options: Options<AuthStaffChangePasswordData, ThrowOnError>): RequestResult<AuthStaffChangePasswordResponses, AuthStaffChangePasswordErrors, ThrowOnError> => (options.client ?? client).post<AuthStaffChangePasswordResponses, AuthStaffChangePasswordErrors, ThrowOnError>({
+    url: '/api/v1/auth/staff/password',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Staff Refresh
+ */
+export const authStaffRefresh = <ThrowOnError extends boolean = false>(options?: Options<AuthStaffRefreshData, ThrowOnError>): RequestResult<AuthStaffRefreshResponses, unknown, ThrowOnError> => (options?.client ?? client).post<AuthStaffRefreshResponses, unknown, ThrowOnError>({ url: '/api/v1/auth/staff/refresh', ...options });
+
+/**
+ * Staff Sessions
+ */
+export const authStaffSessions = <ThrowOnError extends boolean = false>(options?: Options<AuthStaffSessionsData, ThrowOnError>): RequestResult<AuthStaffSessionsResponses, unknown, ThrowOnError> => (options?.client ?? client).get<AuthStaffSessionsResponses, unknown, ThrowOnError>({ url: '/api/v1/auth/staff/sessions', ...options });
+
+/**
+ * Staff Totp Confirm
+ */
+export const authStaffTotpConfirm = <ThrowOnError extends boolean = false>(options: Options<AuthStaffTotpConfirmData, ThrowOnError>): RequestResult<AuthStaffTotpConfirmResponses, AuthStaffTotpConfirmErrors, ThrowOnError> => (options.client ?? client).post<AuthStaffTotpConfirmResponses, AuthStaffTotpConfirmErrors, ThrowOnError>({
+    url: '/api/v1/auth/staff/totp/confirm',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Staff Totp Setup
+ */
+export const authStaffTotpSetup = <ThrowOnError extends boolean = false>(options?: Options<AuthStaffTotpSetupData, ThrowOnError>): RequestResult<AuthStaffTotpSetupResponses, unknown, ThrowOnError> => (options?.client ?? client).post<AuthStaffTotpSetupResponses, unknown, ThrowOnError>({ url: '/api/v1/auth/staff/totp/setup', ...options });
 
 /**
  * Get Health

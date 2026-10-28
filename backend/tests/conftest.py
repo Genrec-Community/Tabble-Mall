@@ -6,11 +6,11 @@ import pytest
 from fastapi import FastAPI
 from pydantic import BaseModel
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncSession, async_sessionmaker
 
 from alembic import command
 from mallt.core.config import Settings
-from mallt.core.db import get_session, make_engine
+from mallt.core.db import make_engine
 from mallt.core.kv import KV, PostgresKV, RedisKV
 from mallt.main import create_app
 from tests.dbtools import TEST_DATABASE_URL, TEST_REDIS_URL, alembic_config, ensure_database
@@ -40,19 +40,26 @@ async def db_engine(settings: Settings) -> AsyncIterator[AsyncEngine]:
 
 
 @pytest.fixture
-async def db_session(db_engine: AsyncEngine) -> AsyncIterator[AsyncSession]:
-    """A session whose work (including commits) is rolled back after each test."""
-    conn: AsyncConnection = await db_engine.connect()
+async def db_conn(db_engine: AsyncEngine) -> AsyncIterator[AsyncConnection]:
+    """A connection inside an outer transaction that is rolled back after each test."""
+    conn = await db_engine.connect()
     outer = await conn.begin()
+    try:
+        yield conn
+    finally:
+        await outer.rollback()
+        await conn.close()
+
+
+@pytest.fixture
+async def db_session(db_conn: AsyncConnection) -> AsyncIterator[AsyncSession]:
     session = AsyncSession(
-        bind=conn, join_transaction_mode="create_savepoint", expire_on_commit=False
+        bind=db_conn, join_transaction_mode="create_savepoint", expire_on_commit=False
     )
     try:
         yield session
     finally:
         await session.close()
-        await outer.rollback()
-        await conn.close()
 
 
 @pytest.fixture(params=["postgres", "redis"])
@@ -76,14 +83,13 @@ class _Echo(BaseModel):
 
 
 @pytest.fixture
-async def app(settings: Settings, db_session: AsyncSession) -> AsyncIterator[FastAPI]:
+async def app(settings: Settings, db_conn: AsyncConnection) -> AsyncIterator[FastAPI]:
     app = create_app(settings)
-
-    async def _session() -> AsyncIterator[AsyncSession]:
-        yield db_session
-        await db_session.commit()
-
-    app.dependency_overrides[get_session] = _session
+    # The real get_session runs unchanged; each request gets its own session whose
+    # commit/rollback are savepoints inside the test's outer transaction.
+    app.state.session_factory = async_sessionmaker(
+        bind=db_conn, join_transaction_mode="create_savepoint", expire_on_commit=False
+    )
 
     @app.post("/api/v1/_test/echo")
     async def echo(body: _Echo) -> _Echo:

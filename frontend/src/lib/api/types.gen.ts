@@ -5,6 +5,140 @@ export type ClientOptions = {
 };
 
 /**
+ * GrantOut
+ */
+export type GrantOut = {
+    /**
+     * Mall Id
+     */
+    mall_id: string | null;
+    /**
+     * Organization Id
+     */
+    organization_id: string | null;
+    /**
+     * Permissions
+     */
+    permissions: Array<string>;
+    /**
+     * Role Key
+     */
+    role_key: string;
+    scope_type: ScopeType;
+    /**
+     * Store Id
+     */
+    store_id: string | null;
+};
+
+/**
+ * HTTPValidationError
+ */
+export type HttpValidationError = {
+    /**
+     * Detail
+     */
+    detail?: Array<ValidationError>;
+};
+
+/**
+ * PasswordChange
+ */
+export type PasswordChange = {
+    /**
+     * Current Password
+     */
+    current_password: string;
+    /**
+     * New Password
+     */
+    new_password: string;
+};
+
+/**
+ * ScopeType
+ */
+export type ScopeType = 'platform' | 'organization' | 'mall' | 'store';
+
+/**
+ * SessionOut
+ */
+export type SessionOut = {
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Current
+     */
+    current: boolean;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Ip
+     */
+    ip: string | null;
+    /**
+     * Last Seen At
+     */
+    last_seen_at: string;
+    /**
+     * User Agent
+     */
+    user_agent: string | null;
+};
+
+/**
+ * StaffLogin
+ */
+export type StaffLogin = {
+    /**
+     * Password
+     */
+    password: string;
+    /**
+     * Totp Code
+     */
+    totp_code?: string | null;
+    /**
+     * Username
+     */
+    username: string;
+};
+
+/**
+ * StaffMe
+ */
+export type StaffMe = {
+    /**
+     * Display Name
+     */
+    display_name: string;
+    /**
+     * Grants
+     */
+    grants: Array<GrantOut>;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Must Change Password
+     */
+    must_change_password: boolean;
+    /**
+     * Totp Enabled
+     */
+    totp_enabled: boolean;
+    /**
+     * Username
+     */
+    username: string;
+};
+
+/**
  * StatusOut
  */
 export type StatusOut = {
@@ -13,6 +147,249 @@ export type StatusOut = {
      */
     status: string;
 };
+
+/**
+ * TokenOut
+ */
+export type TokenOut = {
+    /**
+     * Access Token
+     */
+    access_token: string;
+    /**
+     * Expires In
+     */
+    expires_in: number;
+    /**
+     * Token Type
+     */
+    token_type?: 'bearer';
+};
+
+/**
+ * TotpConfirm
+ */
+export type TotpConfirm = {
+    /**
+     * Code
+     */
+    code: string;
+};
+
+/**
+ * TotpSetupOut
+ */
+export type TotpSetupOut = {
+    /**
+     * Otpauth Uri
+     */
+    otpauth_uri: string;
+    /**
+     * Secret
+     */
+    secret: string;
+};
+
+/**
+ * ValidationError
+ */
+export type ValidationError = {
+    /**
+     * Context
+     */
+    ctx?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Input
+     */
+    input?: unknown;
+    /**
+     * Location
+     */
+    loc: Array<string | number>;
+    /**
+     * Message
+     */
+    msg: string;
+    /**
+     * Error Type
+     */
+    type: string;
+};
+
+export type AuthStaffLoginData = {
+    body: StaffLogin;
+    path?: never;
+    query?: never;
+    url: '/api/v1/auth/staff/login';
+};
+
+export type AuthStaffLoginErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AuthStaffLoginError = AuthStaffLoginErrors[keyof AuthStaffLoginErrors];
+
+export type AuthStaffLoginResponses = {
+    /**
+     * Successful Response
+     */
+    200: TokenOut;
+};
+
+export type AuthStaffLoginResponse = AuthStaffLoginResponses[keyof AuthStaffLoginResponses];
+
+export type AuthStaffLogoutData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/auth/staff/logout';
+};
+
+export type AuthStaffLogoutResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type AuthStaffLogoutResponse = AuthStaffLogoutResponses[keyof AuthStaffLogoutResponses];
+
+export type AuthStaffLogoutAllData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/auth/staff/logout-all';
+};
+
+export type AuthStaffLogoutAllResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type AuthStaffLogoutAllResponse = AuthStaffLogoutAllResponses[keyof AuthStaffLogoutAllResponses];
+
+export type AuthStaffMeData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/auth/staff/me';
+};
+
+export type AuthStaffMeResponses = {
+    /**
+     * Successful Response
+     */
+    200: StaffMe;
+};
+
+export type AuthStaffMeResponse = AuthStaffMeResponses[keyof AuthStaffMeResponses];
+
+export type AuthStaffChangePasswordData = {
+    body: PasswordChange;
+    path?: never;
+    query?: never;
+    url: '/api/v1/auth/staff/password';
+};
+
+export type AuthStaffChangePasswordErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AuthStaffChangePasswordError = AuthStaffChangePasswordErrors[keyof AuthStaffChangePasswordErrors];
+
+export type AuthStaffChangePasswordResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type AuthStaffChangePasswordResponse = AuthStaffChangePasswordResponses[keyof AuthStaffChangePasswordResponses];
+
+export type AuthStaffRefreshData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/auth/staff/refresh';
+};
+
+export type AuthStaffRefreshResponses = {
+    /**
+     * Successful Response
+     */
+    200: TokenOut;
+};
+
+export type AuthStaffRefreshResponse = AuthStaffRefreshResponses[keyof AuthStaffRefreshResponses];
+
+export type AuthStaffSessionsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/auth/staff/sessions';
+};
+
+export type AuthStaffSessionsResponses = {
+    /**
+     * Response Auth Staff Sessions
+     *
+     * Successful Response
+     */
+    200: Array<SessionOut>;
+};
+
+export type AuthStaffSessionsResponse = AuthStaffSessionsResponses[keyof AuthStaffSessionsResponses];
+
+export type AuthStaffTotpConfirmData = {
+    body: TotpConfirm;
+    path?: never;
+    query?: never;
+    url: '/api/v1/auth/staff/totp/confirm';
+};
+
+export type AuthStaffTotpConfirmErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AuthStaffTotpConfirmError = AuthStaffTotpConfirmErrors[keyof AuthStaffTotpConfirmErrors];
+
+export type AuthStaffTotpConfirmResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type AuthStaffTotpConfirmResponse = AuthStaffTotpConfirmResponses[keyof AuthStaffTotpConfirmResponses];
+
+export type AuthStaffTotpSetupData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/auth/staff/totp/setup';
+};
+
+export type AuthStaffTotpSetupResponses = {
+    /**
+     * Successful Response
+     */
+    200: TotpSetupOut;
+};
+
+export type AuthStaffTotpSetupResponse = AuthStaffTotpSetupResponses[keyof AuthStaffTotpSetupResponses];
 
 export type HealthGetHealthData = {
     body?: never;

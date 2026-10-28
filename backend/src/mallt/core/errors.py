@@ -18,6 +18,9 @@ class AppError(Exception):
     status = 500
     default_code = "internal_error"
     default_title = "Internal Server Error"
+    # When True, get_session commits the request's work instead of rolling it back. Only for
+    # errors whose side effects must persist (e.g. revoking a session after token reuse).
+    commit_on_error = False
 
     def __init__(
         self,

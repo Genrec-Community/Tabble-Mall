@@ -9,6 +9,7 @@ from sqlalchemy import DateTime, MetaData, Uuid, func
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
+from mallt.core.errors import AppError
 from mallt.core.ids import uuid7
 
 NAMING_CONVENTION = {
@@ -78,8 +79,11 @@ async def get_session(request: Request) -> AsyncIterator[AsyncSession]:
         try:
             yield session
             await session.commit()
-        except BaseException:
-            await session.rollback()
+        except BaseException as exc:
+            if isinstance(exc, AppError) and exc.commit_on_error:
+                await session.commit()
+            else:
+                await session.rollback()
             raise
 
 
