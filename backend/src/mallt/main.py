@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 from mallt.core.config import Settings, get_settings
 from mallt.core.db import make_engine
 from mallt.core.errors import install_error_handlers
+from mallt.core.kv import make_kv
 from mallt.core.logging import RequestIdMiddleware, configure_logging
 from mallt.modules.health.router import router as health_router
 
@@ -23,10 +24,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     if settings.env != "test":
         configure_logging()
     engine = make_engine(settings.database_url)
+    kv = make_kv(settings, engine)
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
         yield
+        await kv.aclose()
         await engine.dispose()
 
     app = FastAPI(
@@ -37,6 +40,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     app.state.settings = settings
     app.state.engine = engine
+    app.state.kv = kv
     app.state.session_factory = async_sessionmaker(engine, expire_on_commit=False)
     app.add_middleware(
         CORSMiddleware,

@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncSession
 from alembic import command
 from mallt.core.config import Settings
 from mallt.core.db import get_session, make_engine
+from mallt.core.kv import KV, PostgresKV, RedisKV
 from mallt.main import create_app
 
 BACKEND = Path(__file__).resolve().parents[1]
@@ -83,12 +84,28 @@ async def db_session(db_engine: AsyncEngine) -> AsyncIterator[AsyncSession]:
         await conn.close()
 
 
+@pytest.fixture(params=["postgres", "redis"])
+async def kv(request: pytest.FixtureRequest, db_engine: AsyncEngine) -> AsyncIterator[KV]:
+    """Every KV test runs against both backends (redis only when TEST_REDIS_URL is set)."""
+    if request.param == "redis":
+        if not TEST_REDIS_URL:
+            pytest.skip("TEST_REDIS_URL not set")
+        backend: KV = RedisKV.from_url(TEST_REDIS_URL)
+        await backend.flush()
+    else:
+        backend = PostgresKV(db_engine)
+        await backend.flush()
+    yield backend
+    await backend.flush()
+    await backend.aclose()
+
+
 class _Echo(BaseModel):
     n: int
 
 
 @pytest.fixture
-def app(settings: Settings, db_session: AsyncSession) -> FastAPI:
+async def app(settings: Settings, db_session: AsyncSession) -> AsyncIterator[FastAPI]:
     app = create_app(settings)
 
     async def _session() -> AsyncIterator[AsyncSession]:
@@ -101,7 +118,10 @@ def app(settings: Settings, db_session: AsyncSession) -> FastAPI:
     async def echo(body: _Echo) -> _Echo:
         return body
 
-    return app
+    yield app
+    # kv state lives outside the per-test transaction, so wipe it after each test.
+    await app.state.kv.flush()
+    await app.state.kv.aclose()
 
 
 @pytest.fixture

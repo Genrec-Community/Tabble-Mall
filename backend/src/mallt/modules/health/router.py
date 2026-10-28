@@ -21,6 +21,7 @@ async def get_health() -> StatusOut:
 async def get_ready(request: Request, session: SessionDep) -> StatusOut:
     try:
         await session.execute(text("SELECT 1"))
+        await request.app.state.kv.ping()
     except Exception as exc:
         raise AppError("db_unavailable", title="Service Unavailable", status=503) from exc
     return StatusOut(status="ready")
