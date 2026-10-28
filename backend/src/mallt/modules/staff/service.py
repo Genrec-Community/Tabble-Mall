@@ -194,6 +194,13 @@ class StaffService:
         target = await self._scope(data.scope_type, data.scope_id)
         record = await self._managed(principal, staff_id)
         self._check_can_grant(principal, data.role_key, target)
+        role = SYSTEM_ROLES[data.role_key]
+        if role.scope_type == ScopeType.PLATFORM and not record.totp_enabled:
+            # Platform admins cannot sign in without TOTP, and enrolling needs a signed-in session.
+            raise Conflict(
+                "totp_required_first",
+                "They must set up an authenticator app before becoming a platform admin.",
+            )
         await self.tenancy.assert_operational(principal, target)
         row = await self.users.assign_role(
             record.id, data.role_key, target, granted_by=principal.staff_id
@@ -211,6 +218,7 @@ class StaffService:
         assignment = next((a for a in record.assignments if a.id == assignment_id), None)
         if assignment is None:
             raise NotFound("not_found", "Not found.")
+        await self.tenancy.assert_operational(principal, assignment.scope)
         await self._guard_last_owner(record, [assignment])
         await self.users.revoke_assignment(record.id, assignment.id)
         await self.authz.invalidate(record.id)
@@ -228,6 +236,7 @@ class StaffService:
         record = await self._managed(principal, staff_id)
         if record.status == status:
             return record
+        await self.tenancy.assert_operational(principal, self._scope_of(record))
         if status == ActiveStatus.SUSPENDED:
             await self._guard_last_owner(record, list(record.assignments))
         await self.users.set_status(record.id, status)
@@ -247,6 +256,7 @@ class StaffService:
 
     async def reset_password(self, principal: Principal, staff_id: uuid.UUID) -> str:
         record = await self._managed(principal, staff_id)
+        await self.tenancy.assert_operational(principal, self._scope_of(record))
         temp_password = new_temp_password()
         await self.users.set_temp_password(record.id, temp_password)
         await self.sessions.revoke_all(IdentityKind.STAFF, record.id)

@@ -2,6 +2,7 @@ import pytest
 from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from mallt.core.db import run_after_commit
 from mallt.core.enums import ActiveStatus
 from mallt.core.errors import Forbidden, NotFound, Unauthorized
 from mallt.core.ids import uuid7
@@ -164,3 +165,19 @@ async def test_extra_grant_is_picked_up_after_invalidate(db_session: AsyncSessio
     assert authz.can(
         await authz.load_principal(staff.id), P.STORE_PRODUCT_WRITE, store_scope(store)
     )
+
+
+async def test_invalidate_clears_again_after_commit(db_session: AsyncSession, kv: KV) -> None:
+    """A request that raced the change can re-cache the OLD permissions before the commit lands;
+    invalidation must therefore also run once the transaction has committed."""
+    org = await make_org(db_session)
+    owner = await make_staff(db_session, "owner", [("org_owner", Scope.org(org.id))])
+    authz = AuthzService(db_session, kv)
+    key = f"authz:staff:{owner.id}"
+
+    await authz.invalidate(owner.id)
+    assert await kv.get(key) is None
+    await kv.set(key, "stale-principal-cached-by-a-racing-request", 60)
+
+    await run_after_commit(db_session)  # what get_session does right after commit()
+    assert await kv.get(key) is None

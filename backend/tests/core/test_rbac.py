@@ -110,3 +110,6 @@ def test_grant_rules_say_who_may_hand_out_each_role() -> None:
     # Org managers and store owners may build store teams; store staff may not.
     assert {"org_manager", "store_owner"} <= GRANT_RULES["store_staff"]
     assert "store_staff" not in GRANT_RULES["store_staff"]
+    # Store owners can submit KYC (bank details) and managers cannot, so managers cannot mint them;
+    # listing them as granters would only mislead the API and the UI.
+    assert "org_manager" not in GRANT_RULES["store_owner"]

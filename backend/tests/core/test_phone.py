@@ -20,7 +20,18 @@ def test_all_common_formats_normalise_to_ten_digits(raw: str) -> None:
 
 
 @pytest.mark.parametrize(
-    "raw", ["12345", "5361899061", "", "93618990612", "abcdefghij", "+1 9361899061", "91936189906"]
+    "raw",
+    [
+        "12345",
+        "5361899061",
+        "",
+        "93618990612",
+        "abcdefghij",
+        "+1 9361899061",
+        "91936189906",
+        "9\u096e\u096d\u096c\u096b\u096a\u0969\u0968\u0967\u0966",  # Devanagari digits
+        "\uff19\uff13\uff16\uff11\uff18\uff19\uff19\uff10\uff16\uff11",  # full-width digits
+    ],
 )
 def test_invalid_numbers_are_rejected(raw: str) -> None:
     with pytest.raises(Unprocessable) as e:

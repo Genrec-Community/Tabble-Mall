@@ -7,9 +7,11 @@ a revoked role or a suspension takes effect on the very next request.
 import json
 import uuid
 from dataclasses import dataclass
+from functools import partial
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from mallt.core.db import defer_after_commit
 from mallt.core.enums import ActiveStatus
 from mallt.core.errors import Forbidden, NotFound, Unauthorized
 from mallt.core.kv import KV
@@ -81,6 +83,7 @@ def _cache_key(staff_id: uuid.UUID) -> str:
 
 class AuthzService:
     def __init__(self, session: AsyncSession, kv: KV) -> None:
+        self.session = session
         self.repo = IamRepository(session)
         self.kv = kv
 
@@ -138,6 +141,10 @@ class AuthzService:
     def can_see(principal: Principal, target: Scope) -> bool:
         """Read visibility: platform staff see everything; others see scopes on their own chain
         (an ancestor of a grant, or anything beneath one)."""
+        if target.type == ScopeType.PLATFORM:
+            # The platform scope contains every tenant, so "contained by" would make it visible to
+            # everyone; only platform staff may know what lives there.
+            return any(g.scope.type == ScopeType.PLATFORM for g in principal.grants)
         return any(
             g.scope.type == ScopeType.PLATFORM
             or contains(g.scope, target)
@@ -157,4 +164,8 @@ class AuthzService:
         return {g.scope.organization_id for g in principal.grants if g.scope.organization_id}
 
     async def invalidate(self, staff_id: uuid.UUID) -> None:
-        await self.kv.delete(_cache_key(staff_id))
+        """Forget the cached principal now, and again once the change that prompted this commits
+        (a request racing the change could otherwise re-cache the old permissions)."""
+        key = _cache_key(staff_id)
+        await self.kv.delete(key)
+        defer_after_commit(self.session, partial(self.kv.delete, key))

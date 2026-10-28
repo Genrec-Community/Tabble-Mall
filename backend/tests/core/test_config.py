@@ -25,9 +25,28 @@ def test_prod_requires_secure_cookies() -> None:
         _prod(jwt_secret=STRONG, otp_pepper=STRONG + "y", cookie_secure=False)
 
 
+GOOD = {
+    "jwt_secret": STRONG,
+    "otp_pepper": STRONG + "y",
+    "cookie_secure": True,
+    "sms_backend": "fast2sms",
+    "fast2sms_api_key": "key",
+    "cors_origins": ["https://mallt.example"],
+}
+
+
 def test_prod_accepts_strong_config() -> None:
-    s = _prod(jwt_secret=STRONG, otp_pepper=STRONG + "y", cookie_secure=True)
-    assert s.env == "prod"
+    assert _prod(**GOOD).env == "prod"
+
+
+def test_prod_must_really_send_sms() -> None:
+    with pytest.raises(ValidationError, match="sms_backend"):
+        _prod(**{**GOOD, "sms_backend": "console"})
+
+
+def test_prod_must_not_trust_localhost_origins() -> None:
+    with pytest.raises(ValidationError, match="cors_origins"):
+        _prod(**{**GOOD, "cors_origins": ["https://mallt.example", "http://localhost:3000"]})
 
 
 def test_default_dev_secrets_are_long_enough_for_hs256() -> None:

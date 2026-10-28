@@ -164,7 +164,8 @@ Run `make lint test` before every commit that touches code.
   themselves; an organization always keeps one active owner.
 - **Commission** (`commission_bps`) is MallT's revenue, so only `platform.org.manage` may edit it.
 - **Anything that changes roles, status or passwords must call `AuthzService.invalidate(staff_id)`**
-  (Redis caches a principal for 60 s). Tests that change those by raw SQL must call it too.
+  (Redis caches a principal for 60 s). It clears the cache now *and again after commit*
+  (`defer_after_commit`); use that helper for any cache you invalidate from inside a request. Tests that change those by raw SQL must call it too.
 - **Audit:** every staff mutation writes an append-only audit log row.
 - **Tests:** every new tenant-scoped endpoint gets a **cross-tenant test**.
   Staff of org A must get 404 (not 403) for org B's resources, so the

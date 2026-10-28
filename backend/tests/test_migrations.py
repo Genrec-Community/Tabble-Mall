@@ -65,3 +65,27 @@ async def test_seeded_roles_match_code(db_engine: AsyncEngine) -> None:
 async def test_models_match_migrations() -> None:
     """`alembic check` raises if the ORM models and the migrations have drifted apart."""
     await asyncio.to_thread(command.check, alembic_config(TEST_DATABASE_URL))
+
+
+async def test_every_foreign_key_has_an_index(db_engine: AsyncEngine) -> None:
+    async with db_engine.connect() as conn:
+        rows = (
+            await conn.execute(
+                text(
+                    """
+                    SELECT c.conrelid::regclass::text AS tbl, a.attname AS col
+                    FROM pg_constraint c
+                    JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = c.conkey[1]
+                    WHERE c.contype = 'f' AND cardinality(c.conkey) = 1
+                      AND NOT EXISTS (
+                        SELECT 1 FROM pg_index i
+                        WHERE i.indrelid = c.conrelid AND i.indkey[0] = c.conkey[1]
+                      )
+                    ORDER BY 1, 2
+                    """
+                )
+            )
+        ).all()
+    # role_permissions.role_id is covered by its composite primary key (role_id, permission).
+    unindexed = [(r.tbl, r.col) for r in rows if (r.tbl, r.col) != ("role_permissions", "role_id")]
+    assert unindexed == []

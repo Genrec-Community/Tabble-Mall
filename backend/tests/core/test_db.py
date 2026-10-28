@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from mallt.core.db import SessionDep, normalize_database_url
+from mallt.core.db import SessionDep, defer_after_commit, normalize_database_url
 from mallt.core.errors import Conflict, Unauthorized
 from mallt.modules.tenancy.models import Organization
 
@@ -54,3 +54,26 @@ async def test_session_rolls_back_on_error_but_commits_when_the_error_asks_for_i
 
 class CommitOnErrorForTest(Unauthorized):
     commit_on_error = True
+
+
+async def test_after_commit_callbacks_run_only_when_the_work_commits(
+    app: FastAPI, client: httpx.AsyncClient
+) -> None:
+    calls: list[str] = []
+
+    @app.post("/api/v1/_test/defer/{mode}")
+    async def defer(mode: str, session: SessionDep) -> dict[str, str]:
+        async def later() -> None:
+            calls.append(mode)
+
+        defer_after_commit(session, later)
+        if mode == "plain":
+            raise Conflict("boom")
+        if mode == "commit":
+            raise CommitOnErrorForTest("boom")
+        return {"ok": mode}
+
+    assert (await client.post("/api/v1/_test/defer/ok")).status_code == 200
+    assert (await client.post("/api/v1/_test/defer/plain")).status_code == 409
+    assert (await client.post("/api/v1/_test/defer/commit")).status_code == 401
+    assert calls == ["ok", "commit"]  # never for work that was rolled back

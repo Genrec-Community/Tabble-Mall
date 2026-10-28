@@ -152,6 +152,7 @@ GRANT_RULES: dict[str, frozenset[str]] = {
     "platform_admin": frozenset({"platform_admin"}),
     "org_owner": frozenset({"platform_admin", "org_owner"}),
     "org_manager": frozenset({"platform_admin", "org_owner"}),
-    "store_owner": frozenset({"platform_admin", "org_owner", "org_manager", "store_owner"}),
+    # Not org_manager: store owners can submit KYC (bank details), which managers cannot.
+    "store_owner": frozenset({"platform_admin", "org_owner", "store_owner"}),
     "store_staff": frozenset({"platform_admin", "org_owner", "org_manager", "store_owner"}),
 }

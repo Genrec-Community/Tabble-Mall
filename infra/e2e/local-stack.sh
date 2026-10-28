@@ -72,7 +72,7 @@ CONF="$RUN_DIR/nginx.conf"
   sed -e 's/listen 80;/listen 8080;/' \
       -e 's/server api:8000/server 127.0.0.1:8000/' \
       -e 's/server web:3000/server 127.0.0.1:3000/' \
-      -e 's/rate=10r\/m/rate=6000r\/m/' \
+      -e 's/rate=60r\/m/rate=6000r\/m/' \
       -e "s#^http {#http {\n  access_log off;\n  client_body_temp_path $RUN_DIR/body; proxy_temp_path $RUN_DIR/proxy; fastcgi_temp_path $RUN_DIR/fcgi; uwsgi_temp_path $RUN_DIR/uwsgi; scgi_temp_path $RUN_DIR/scgi;#" \
       "$ROOT/infra/nginx/nginx.conf"
 } >"$CONF"

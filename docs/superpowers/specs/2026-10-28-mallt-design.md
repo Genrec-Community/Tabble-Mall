@@ -524,7 +524,9 @@ Where the build refined or departed from the text above. The owner has seen the 
    in `tenancy/service.py`.)*
 3. **Who may grant which role** is an explicit table (`GRANT_RULES`), because "hold every
    permission in the role" alone would let an Org Manager mint more Org Managers. Org Managers
-   therefore cannot create Store Owners either (Store Owners can submit KYC, managers cannot).
+   therefore cannot create Store Owners either (Store Owners can submit KYC, managers cannot);
+   they can create Store Staff. If you want managers to onboard store owners, give them
+   `store.kyc.submit` or relax that rule deliberately: it protects the bank-details path.
 4. **Stores gained `description`** so Store Owners have a profile field they may edit without being
    able to rename the store.
 5. **Dashboards nest**: higher roles can open the dashboards beneath them.
@@ -533,3 +535,14 @@ Where the build refined or departed from the text above. The owner has seen the 
    `mallt-dev`; production secrets stay out of git.
 8. **Not built yet** (per plan): catalog, cart, orders, payments, real-time, GST invoices, store
    theming, email password reset.
+9. **Hardening after the independent review**: caches (permissions, sessions) are cleared again
+   *after* the transaction commits, so a racing request cannot re-cache old permissions; the
+   last-owner check is serialised per organization; a user must have an authenticator enrolled
+   before being made a platform admin; OTP guess counters are not reset by asking for a new code;
+   per-IP SMS limits are generous (mall customers share one public IP) with a global daily SMS
+   budget instead; nginx throttles only login/OTP endpoints; post-login redirects are validated
+   against control-character tricks; production refuses `console` SMS and localhost CORS origins.
+10. **Known gaps, deliberately deferred**: a per-username login ceiling across IPs (it would let
+    anyone lock a known username out), a refresh grace window for lost responses, TOTP replay
+    within its window, an authenticator enrolment screen (the first admin is enrolled by the
+    `seed-admin` command), and audit scope for staff who hold roles in several organizations.

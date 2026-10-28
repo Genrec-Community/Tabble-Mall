@@ -97,12 +97,40 @@ async def test_send_limit_is_three_per_phone_per_window(
     assert (await request_otp(client, "9876543210")).status_code == 202  # other numbers unaffected
 
 
-async def test_send_limit_is_twenty_per_ip_per_hour(
-    client: httpx.AsyncClient, sms: FakeSms
+async def test_ip_limit_is_generous_by_default_and_configurable(
+    app: FastAPI, client: httpx.AsyncClient, sms: FakeSms
 ) -> None:
-    for n in range(20):
+    # A mall's customers share one public address, so this is only an abuse ceiling.
+    assert app.state.settings.otp_send_per_ip_hourly >= 200
+    app.state.settings = app.state.settings.model_copy(update={"otp_send_per_ip_hourly": 3})
+    for n in range(3):
         assert (await request_otp(client, f"98765432{n:02d}")).status_code == 202
     assert (await request_otp(client, "9999999999")).status_code == 429
+
+
+async def test_there_is_a_daily_sms_budget_for_the_whole_platform(
+    app: FastAPI, client: httpx.AsyncClient, sms: FakeSms
+) -> None:
+    app.state.settings = app.state.settings.model_copy(update={"otp_send_global_daily": 2})
+    assert (await request_otp(client, "9876543210")).status_code == 202
+    assert (await request_otp(client, "9876543211")).status_code == 202
+    r = await request_otp(client, "9876543212")
+    assert r.status_code == 429 and r.json()["code"] == "sms_budget_exhausted"
+    assert len(sms.sent) == 2
+
+
+async def test_asking_for_a_new_code_does_not_reset_the_guess_counter(
+    client: httpx.AsyncClient, sms: FakeSms
+) -> None:
+    await request_otp(client)
+    right = sms.last_otp(PHONE)
+    wrong = "000000" if right != "000000" else "111111"
+    for _ in range(5):
+        await client.post(f"{C}/otp/verify", json={"phone": PHONE, "otp": wrong})
+
+    assert (await request_otp(client)).status_code == 202  # a fresh code is sent...
+    again = await client.post(f"{C}/otp/verify", json={"phone": PHONE, "otp": sms.last_otp(PHONE)})
+    assert again.status_code == 429  # ...but the guesses already used still count
 
 
 async def test_wrong_otp_is_refused_and_five_tries_burn_the_code(
@@ -375,6 +403,9 @@ def test_fixed_otp_is_honoured_only_in_the_test_environment() -> None:
             jwt_secret="x" * 40,
             otp_pepper="y" * 40,
             cookie_secure=True,
+            sms_backend="fast2sms",
+            fast2sms_api_key="k",
+            cors_origins=["https://mallt.example"],
             _env_file=None,
         )  # type: ignore[call-arg]
         assert cfg.e2e_fixed_otp == fixed

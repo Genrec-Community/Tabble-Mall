@@ -31,6 +31,10 @@ class Settings(BaseSettings):
     fast2sms_api_key: str = ""
     google_client_id: str = ""
     otp_pepper: str = "dev-only-insecure-otp-pepper-change-me-0123456789"
+    # Abuse ceilings, not fairness limits: a mall's customers share one public IP address.
+    otp_send_per_ip_hourly: int = 300
+    # Caps what a flood of fake numbers can cost in SMS credits.
+    otp_send_global_daily: int = 20_000
     # Makes OTPs predictable for end-to-end tests. Only honoured when env == "test".
     e2e_fixed_otp: str | None = None
 
@@ -56,6 +60,10 @@ class Settings(BaseSettings):
                 )
         if not self.cookie_secure:
             raise ValueError("cookie_secure must be true in prod")
+        if self.sms_backend != "fast2sms":
+            raise ValueError("sms_backend must be fast2sms in prod (OTPs would never be sent)")
+        if any("localhost" in o or "127.0.0.1" in o for o in self.cors_origins):
+            raise ValueError("cors_origins must not include localhost in prod")
         return self
 
 

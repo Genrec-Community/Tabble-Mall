@@ -2,7 +2,7 @@ import uuid
 from dataclasses import dataclass
 from datetime import datetime
 
-from sqlalchemy import func, select, update
+from sqlalchemy import func, select, text, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -114,6 +114,12 @@ class IamRepository:
         await self.session.delete(obj)
 
     async def count_active_owners(self, org_id: uuid.UUID, excluding: uuid.UUID) -> int:
+        # Serialise "is anyone else still an owner?" checks per organization until commit; without
+        # this, two owners removing each other at once both see the other and both succeed.
+        await self.session.execute(
+            text("SELECT pg_advisory_xact_lock(hashtextextended(:key, 0))"),
+            {"key": f"last-owner:{org_id}"},
+        )
         stmt = (
             select(func.count(func.distinct(RoleAssignment.staff_user_id)))
             .join(Role, Role.id == RoleAssignment.role_id)

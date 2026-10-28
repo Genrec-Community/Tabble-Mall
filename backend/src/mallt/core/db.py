@@ -1,5 +1,6 @@
+import logging
 import uuid
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Awaitable, Callable
 from datetime import datetime
 from typing import Annotated, Any
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
@@ -11,6 +12,10 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from mallt.core.errors import AppError
 from mallt.core.ids import uuid7
+
+log = logging.getLogger(__name__)
+
+AfterCommit = Callable[[], Awaitable[None]]
 
 NAMING_CONVENTION = {
     "ix": "ix_%(column_0_label)s",
@@ -73,17 +78,36 @@ def make_engine(url: str) -> AsyncEngine:
     )
 
 
+def defer_after_commit(session: AsyncSession, callback: AfterCommit) -> None:
+    """Run ``callback`` once this request's transaction has committed (never if it rolls back).
+
+    For cache invalidation: clearing a cache inside the transaction leaves a window in which a
+    concurrent request re-caches the OLD data, so the clear must be repeated after the commit."""
+    session.info.setdefault("after_commit", []).append(callback)
+
+
+async def run_after_commit(session: AsyncSession) -> None:
+    for callback in session.info.pop("after_commit", []):
+        try:
+            await callback()
+        except Exception:  # a failed cache clear must not turn a committed request into an error
+            log.exception("after-commit callback failed")
+
+
 async def get_session(request: Request) -> AsyncIterator[AsyncSession]:
     """One session per request: commit when the handler returns, roll back on error."""
     async with request.app.state.session_factory() as session:
         try:
             yield session
             await session.commit()
+            await run_after_commit(session)
         except BaseException as exc:
             if isinstance(exc, AppError) and exc.commit_on_error:
                 await session.commit()
+                await run_after_commit(session)
             else:
                 await session.rollback()
+                session.info.pop("after_commit", None)
             raise
 
 

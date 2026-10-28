@@ -468,3 +468,54 @@ async def test_staff_endpoints_require_a_signed_in_staff_member(
     w = await world(db_session)
     assert (await client.get(f"/api/v1/stores/{w.s1.id}/staff")).status_code == 401
     assert (await client.get("/api/v1/roles")).status_code == 401
+
+
+async def test_platform_admin_role_needs_an_authenticator_enrolled_first(
+    client: httpx.AsyncClient, db_session: AsyncSession
+) -> None:
+    """Platform admins cannot sign in without TOTP, so promoting someone who has none would lock
+    them out for good."""
+    secret = new_totp_secret()
+    await make_staff(db_session, "root", [("platform_admin", Scope.platform())], totp_secret=secret)
+    target = await make_staff(db_session, "future.admin")
+    h = await staff_headers(client, "root", totp_secret=secret)
+    url = f"/api/v1/staff/{target.id}/roles"
+    body = {"role_key": "platform_admin", "scope_type": "platform"}
+
+    refused = await client.post(url, json=body, headers=h)
+    assert refused.status_code == 409 and refused.json()["code"] == "totp_required_first"
+
+    target.totp_secret, target.totp_enabled = new_totp_secret(), True
+    await db_session.flush()
+    assert (await client.post(url, json=body, headers=h)).status_code == 201
+
+
+async def test_tenant_staff_cannot_probe_for_platform_admins(
+    client: httpx.AsyncClient, db_session: AsyncSession
+) -> None:
+    await world(db_session)
+    root = await make_staff(db_session, "root", [("platform_admin", Scope.platform())])
+    owner = await as_(client, "owner")
+    for action in ("suspend", "activate", "reset-password"):
+        r = await client.post(f"/api/v1/staff/{root.id}/{action}", headers=owner)
+        assert r.status_code == 404, action  # indistinguishable from an id that does not exist
+
+
+async def test_a_suspended_org_cannot_change_its_staff(
+    client: httpx.AsyncClient, db_session: AsyncSession
+) -> None:
+    w = await world(db_session)
+    owner = await as_(client, "owner")
+    cashier = await staff_id(db_session, "cashier")
+    assignment = (await client.get(f"/api/v1/stores/{w.s1.id}/staff", headers=owner)).json()
+    (row,) = [x for x in assignment if x["username"] == "cashier"]
+    w.org.status = ActiveStatus.SUSPENDED
+    await db_session.flush()
+
+    for call in (
+        client.post(f"/api/v1/staff/{cashier}/suspend", headers=owner),
+        client.post(f"/api/v1/staff/{cashier}/reset-password", headers=owner),
+        client.delete(f"/api/v1/staff/{cashier}/roles/{row['grants'][0]['id']}", headers=owner),
+    ):
+        r = await call
+        assert r.status_code == 409 and r.json()["code"] == "suspended"

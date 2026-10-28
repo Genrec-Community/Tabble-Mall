@@ -23,7 +23,6 @@ from mallt.modules.iam.staff_auth import TokenPair
 OTP_TTL_S = 300
 MAX_VERIFY_TRIES = 5
 SEND_PER_PHONE = (3, 600)  # 3 codes per 10 minutes per number
-SEND_PER_IP = (20, 3600)  # 20 codes per hour per IP address
 
 
 def generate_otp(settings: Settings) -> str:
@@ -79,10 +78,18 @@ class CustomerAuthService:
         phone = normalize_in_phone(raw_phone)
         await hit(self.kv, f"otp-send:{phone}", *SEND_PER_PHONE)
         if ip:
-            await hit(self.kv, f"otp-ip:{ip}", *SEND_PER_IP)
+            await hit(self.kv, f"otp-ip:{ip}", self.settings.otp_send_per_ip_hourly, 3600)
+        await hit(
+            self.kv,
+            "otp-global",
+            self.settings.otp_send_global_daily,
+            86_400,
+            "sms_budget_exhausted",
+        )
         otp = generate_otp(self.settings)
         await self.kv.set(_otp_key(phone), hash_otp(self.settings, phone, otp), OTP_TTL_S)
-        await self.kv.delete(_tries_key(phone))
+        # The guess counter is deliberately NOT reset here: asking for a new code must not hand an
+        # attacker a fresh set of guesses.
         try:
             await self.sms.send_otp(phone, otp)
         except BaseException:

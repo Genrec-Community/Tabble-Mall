@@ -70,17 +70,19 @@ class RoleAssignment(IdMixin, TimestampMixin, Base):
     )
 
     staff_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("staff_users.id"), index=True)
-    role_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("roles.id"))
+    role_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("roles.id"), index=True)
     scope_type: Mapped[ScopeType] = mapped_column(text_enum(ScopeType, "assignment_scope_type"))
     organization_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("organizations.id"), nullable=True, index=True
     )
-    mall_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("malls.id"), nullable=True)
+    mall_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("malls.id"), nullable=True, index=True
+    )
     store_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("stores.id"), nullable=True, index=True
     )
     granted_by: Mapped[uuid.UUID | None] = mapped_column(
-        ForeignKey("staff_users.id"), nullable=True
+        ForeignKey("staff_users.id"), nullable=True, index=True
     )
 
 

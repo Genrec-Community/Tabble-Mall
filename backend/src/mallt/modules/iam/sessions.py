@@ -8,10 +8,12 @@ an already-rotated token means it leaked, so the whole family is revoked. The ac
 import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
+from functools import partial
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from mallt.core.config import Settings
+from mallt.core.db import defer_after_commit
 from mallt.core.enums import IdentityKind
 from mallt.core.errors import Unauthorized
 from mallt.core.ids import uuid7
@@ -57,6 +59,7 @@ def _active_key(family_id: uuid.UUID) -> str:
 
 class SessionService:
     def __init__(self, session: AsyncSession, settings: Settings, kv: KV) -> None:
+        self.session = session
         self.repo = SessionRepository(session)
         self.settings = settings
         self.kv = kv
@@ -122,7 +125,10 @@ class SessionService:
 
     async def revoke_family(self, family_id: uuid.UUID) -> None:
         await self.repo.revoke_family(family_id, _now())
-        await self.kv.delete(_active_key(family_id))
+        key = _active_key(family_id)
+        await self.kv.delete(key)
+        # Again after the commit: a racing request may re-cache "still active" before it lands.
+        defer_after_commit(self.session, partial(self.kv.delete, key))
 
     async def revoke_all(
         self,

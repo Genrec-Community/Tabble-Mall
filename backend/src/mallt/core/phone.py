@@ -3,7 +3,7 @@ import re
 from mallt.core.errors import Unprocessable
 
 _NOISE = re.compile(r"[\s\-().]")
-_INDIAN_MOBILE = re.compile(r"[6-9]\d{9}")
+_INDIAN_MOBILE = re.compile(r"[6-9][0-9]{9}")  # ASCII only: \d would accept other scripts' digits
 
 
 def normalize_in_phone(raw: str) -> str:
