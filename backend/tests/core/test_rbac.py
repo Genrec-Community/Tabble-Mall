@@ -32,6 +32,7 @@ def test_matrix_matches_spec() -> None:
         P.STORE_ORDER_READ,
         P.STORE_ORDER_UPDATE,
         P.STORE_ORDER_VERIFY_PICKUP,
+        P.STORE_ORDER_PRINT,
     }
     assert R["store_owner"].permissions == R["store_staff"].permissions | {
         P.STORE_PROFILE_UPDATE,
@@ -41,6 +42,7 @@ def test_matrix_matches_spec() -> None:
         P.STORE_KYC_SUBMIT,
         P.STORE_STAFF_MANAGE,
         P.STORE_REPORT_READ,
+        P.STORE_PRINTER_MANAGE,
     }
     assert R["org_manager"].permissions == R["store_owner"].permissions - {P.STORE_KYC_SUBMIT} | {
         P.ORG_MALL_MANAGE,

@@ -225,6 +225,8 @@ in v1.
 | `store.kyc.submit` | ✅ | ✅ | | ✅ | |
 | `store.staff.manage` | ✅ | ✅ | ✅ | ✅ | |
 | `store.report.read` | ✅ | ✅ | ✅ | ✅ | |
+| `store.printer.manage` | ✅ | ✅ | ✅ | ✅ | |
+| `store.order.print` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `audit.read` | ✅ | ✅ | | | |
 
 \* An Org Manager can't create or assign the Org Owner or Org Manager roles.
