@@ -9,18 +9,19 @@ const AREA_OF = {
   store: "store",
 } as const;
 
+// Higher roles reach the dashboards beneath them (an org owner manages a store's team from the
+// store's own pages), never the reverse.
+const RANK: Record<Area, number> = { store: 1, org: 2, platform: 3 };
+
 export const AREA_PATH: Record<Area, string> = {
   platform: "/admin",
   org: "/org",
   store: "/store",
 };
 
-/** Does this user hold a role that belongs in the given dashboard? */
+/** May this user open the given dashboard? True if any of their roles is at that level or above. */
 export function hasArea(me: StaffMe, area: Area): boolean {
-  return me.grants.some((g) => {
-    const own = AREA_OF[g.scope_type];
-    return own === area || own === "platform";
-  });
+  return me.grants.some((g) => RANK[AREA_OF[g.scope_type]] >= RANK[area]);
 }
 
 /** Where to send someone right after they sign in. */

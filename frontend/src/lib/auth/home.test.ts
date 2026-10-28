@@ -45,4 +45,12 @@ describe("hasArea", () => {
     expect(hasArea(me(["platform"]), "org")).toBe(true); // the platform can see every area
     expect(hasArea(me([]), "store")).toBe(false);
   });
+  it("lets higher roles into the areas beneath them, never the reverse", () => {
+    // An org owner creates store owners from the store's own staff page.
+    expect(hasArea(me(["organization"]), "store")).toBe(true);
+    expect(hasArea(me(["mall"]), "store")).toBe(true);
+    expect(hasArea(me(["store"]), "org")).toBe(false);
+    expect(hasArea(me(["organization"]), "platform")).toBe(false);
+    expect(hasArea(me(["store"]), "platform")).toBe(false);
+  });
 });

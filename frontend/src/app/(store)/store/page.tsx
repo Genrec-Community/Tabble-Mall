@@ -1,3 +1,5 @@
-export default function Page() {
-  return <main className="p-6">Store dashboard</main>;
+import { StorePicker } from "@/components/store/store-picker";
+
+export default function StoreHomePage() {
+  return <StorePicker />;
 }
