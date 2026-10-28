@@ -13,7 +13,7 @@ stated reason; they can be overturned.
 ## 1. Intent
 
 MallT lets a customer walking through a shopping mall scan **one QR code**,
-browse the products of **every store in that mall** (food, clothing, anything),
+browse the menus of **every store in that mall** (**food and beverages only**, owner decision 2026-10-28),
 put items from several stores into **one cart**, **pay once**, and then collect
 each item at the store's counter by showing a **4-digit pickup code** on their
 phone. Think Swiggy/Zomato, but scoped to a single mall and built around
@@ -50,8 +50,10 @@ takes minutes and needs no engineering work.
   premade roles.
 - One QR per mall that opens a mobile-first web app. There is no native
   app **(owner)**.
-- Catalog: products with **variants** (size/colour, each with its own price,
-  SKU and stock) and **option groups** (food add-ons) **(owner)**.
+- Catalog (**food & beverages only**): products with **variants** (size, e.g. Half/Full)
+  and **option groups** (add-ons), diet tag, allergens, prep time **(owner)**.
+- **Printing**: a store-side print agent prints a KOT and a customer bill automatically; stores
+  customise the bill/KOT design **(owner)**. See §14.
 - Stock tracking, chosen per product: counted stock or a manual
   in-stock/out-of-stock toggle **(owner)**.
 - A multi-store cart paid in a single payment, split into one store order per
@@ -264,8 +266,8 @@ Org Owners can read their org's log. Platform Admins can read all logs.
     payment succeeds, and released when payment fails or times out. The
     product auto-hides when stock reaches 0.
   - `MANUAL`: an in-stock/out-of-stock toggle, typical for kitchens.
-- **Categories** are per store. **Mall-level discovery categories** ("Food",
-  "Fashion") let the mall page group stores.
+- **Categories** are per store. **Mall-level discovery categories** (food types: "Fast food",
+  "Beverages", "Desserts") let the mall page group stores.
 - **Images** are uploaded **directly from the browser to the bucket** using a
   presigned PUT URL. The API never streams file bytes. After upload the API
   records the object key and serves the image through a CDN URL.
@@ -482,8 +484,8 @@ tested, and UI polish is a separate later pass.
 |---|---|---|
 | **M0** | Foundation | Monorepo scaffold, docker-compose (nginx, web, api, worker, redis), Neon + Neon storage wiring, config, logging, error format, health checks, Alembic, generated API client, CI (lint, types, tests, Docker build) |
 | **M1** | **IAM** | Everything in §5 |
-| M2 | Catalog & theming | §6 |
-| M3 | Cart & orders | §7 with `FakePaymentProvider`, real-time dashboard, pickup code |
+| M2 | Food catalog & theming | §6 (plan Part A) |
+| M3 | Cart & orders + **Printing** | §7 with `FakePaymentProvider`, real-time dashboard, pickup code (Part B); print agent, KOT, bill designer (Part C, §14) |
 | M4 | Payments | §8. **On hold until the owner reopens it** |
 | M5 | Production | AWS infra (RDS, ElastiCache, S3/CloudFront, EC2/ALB), deploy pipeline, backups, monitoring |
 
@@ -546,3 +548,30 @@ Where the build refined or departed from the text above. The owner has seen the 
     anyone lock a known username out), a refresh grace window for lost responses, TOTP replay
     within its window, an authenticator enrolment screen (the first admin is enrolled by the
     `seed-admin` command), and audit scope for staff who hold roles in several organizations.
+
+---
+
+## 14. Scope change 2026-10-28b: food & beverages only, and printing
+
+**Decided by the owner.** MallT serves food and beverage stores only. Clothing/retail fields are
+dropped from the catalog (§6). Stores print a **KOT** (kitchen order ticket) and a **customer
+bill** on thermal printers via a **desktop print agent** installed on the store's counter PC.
+
+**Reference:** `Genrec-Community/tabble` `print-agent/` and its backend half. We reuse its
+design (outbound WebSocket, job lease, idempotent by job id, record-then-ack, structured payload
+rendered to ESC/POS by the agent, no money on a KOT) and add **printer detection**, an **OS print
+queue transport** and store-scoped tenancy.
+
+- **Scope:** agents, printers, templates and jobs belong to a **store**. An agent authenticates with
+  `<agent_id>.<secret>` (argon2, shown once); the store comes from the agent row, never from the
+  agent.
+- **Detection:** the agent lists OS print queues, USB/serial/Bluetooth ports and (on request) LAN
+  printers on port 9100, and reports them; the owner picks which is the Kitchen or Counter printer.
+- **Design controls (store owner):** header/footer text, logo, GSTIN/FSSAI, paper 58/80 mm, show/hide
+  fields, custom labels, text sizes, copies, cut, cash drawer, auto-print rules (`kot_when`,
+  `bill_when`). Live preview is approximate; **Test print** is exact.
+- **Printing never blocks ordering.** Jobs are queued in the order's transaction; a missing or dead
+  printer never affects an order.
+- **Bills** are per StoreOrder and contain neither commission nor other stores' items.
+- **Permissions:** `store.printer.manage` (owners), `store.order.print` (staff may reprint).
+- Plan: `docs/superpowers/plans/2026-10-28-m2-m3-catalog-orders-printing.md`.

@@ -12,7 +12,7 @@ MallT is a multi-tenant mall ordering platform.
 
 - **Tenancy:** Organization → Malls → Stores.
 - **Customer flow:**
-  1. A customer scans one QR per mall.
+  1. A customer scans one QR per mall (**food and beverage stores only**).
   2. They browse every store's products and build one multi-store cart.
   3. They pay once.
   4. They collect each store's part at the counter by showing a 4-digit
@@ -20,6 +20,8 @@ MallT is a multi-tenant mall ordering platform.
 - **Money:** MallT takes a commission (default 5%) through Razorpay Route.
 - **Payments are ON HOLD.** Do not build them until told to.
 - **Fulfilment:** v1 is **pickup only**. There is no delivery.
+- **Printing:** each store prints a KOT and a bill through a desktop `print-agent/` on its counter
+  PC (spec §14). Printing never blocks ordering.
 
 ## 2. Stack
 
@@ -61,6 +63,7 @@ frontend/
   src/app/(admin)/admin/...             # platform admin
   src/components/ui/                    # shadcn components
   src/lib/api/                          # GENERATED client — never hand-edit
+print-agent/             # standalone Python agent (stdlib + websockets), built with PyInstaller
 infra/
   nginx/  docker/  aws/
 docs/
@@ -196,6 +199,13 @@ Run `make lint test` before every commit that touches code.
      with a server-generated, tenant-scoped key.
   2. The API stores only the key.
   3. Images are served from the CDN URL.
+
+- **Printing rules** (from the Tabble reference): the agent dials out and the store comes from its
+  authenticated row; the job id is the idempotency key (record on disk, then ack, and ack an
+  already-printed job without reprinting); a KOT contains no prices; a bill is per StoreOrder and
+  never shows commission or other stores' lines; payloads are structured and the agent owns
+  ESC/POS; dispatch happens inside the order transaction and never waits on a printer; the agent
+  has one dependency (`websockets`).
 
 ## 8. Frontend rules
 
