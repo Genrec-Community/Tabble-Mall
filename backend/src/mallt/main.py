@@ -11,7 +11,10 @@ from mallt.core.db import make_engine
 from mallt.core.errors import install_error_handlers
 from mallt.core.kv import make_kv
 from mallt.core.logging import RequestIdMiddleware, configure_logging
+from mallt.core.storage import Storage
 from mallt.modules.audit.router import router as audit_router
+from mallt.modules.catalog.router import public_router as catalog_public_router
+from mallt.modules.catalog.router import router as catalog_router
 from mallt.modules.health.router import router as health_router
 from mallt.modules.iam.customer_router import customer_router
 from mallt.modules.iam.google import make_google_verifier
@@ -48,6 +51,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.settings = settings
     app.state.engine = engine
     app.state.kv = kv
+    app.state.storage = Storage(settings)
     app.state.sms = make_sms_sender(settings)
     app.state.google = make_google_verifier(settings)
     app.state.session_factory = async_sessionmaker(engine, expire_on_commit=False)
@@ -66,5 +70,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     for router in tenancy_routers:
         app.include_router(router)
     app.include_router(staff_mgmt_router)
+    app.include_router(catalog_router)
+    app.include_router(catalog_public_router)
     app.include_router(audit_router)
     return app

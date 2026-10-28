@@ -23,6 +23,9 @@ def settings() -> Settings:
         env="test",
         database_url=TEST_DATABASE_URL,
         redis_url=TEST_REDIS_URL,
+        s3_access_key_id="test-key",
+        s3_secret_access_key="test-secret",
+        s3_public_base_url="https://cdn.test/mallt",
         _env_file=None,  # type: ignore[call-arg]
     )
 

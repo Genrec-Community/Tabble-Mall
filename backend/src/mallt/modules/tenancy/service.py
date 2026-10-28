@@ -381,3 +381,10 @@ class TenancyService:
             city=mall.city,
             stores=[PublicStoreOut.model_validate(s) for s in stores],
         )
+
+    async def public_directory(self, slug: str) -> tuple[Mall, list[Store]]:
+        """The active mall and its active stores as ORM rows, for other modules' public views."""
+        found = await self.repo.public_mall(slug)
+        if found is None:
+            raise NotFound("not_found", "Not found.")
+        return found
