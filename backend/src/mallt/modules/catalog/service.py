@@ -748,3 +748,23 @@ class OrderingCatalog:
     async def return_stock(self, holds: dict[uuid.UUID, int]) -> None:
         for variant_id in sorted(holds):
             await self.repo.return_stock(variant_id, holds[variant_id])
+
+
+@dataclass(frozen=True)
+class StorePrintPrefs:
+    auto_print: bool
+    kot_when: str
+    bill_when: str
+    gstin: str | None
+    fssai: str | None
+    timezone: str
+
+
+async def print_prefs(session: AsyncSession, store_id: uuid.UUID) -> StorePrintPrefs:
+    """A store's printing preferences (defaults when it never saved settings)."""
+    row = await CatalogRepository(session).get_settings(store_id)
+    if row is None:
+        return StorePrintPrefs(True, "accepted", "ready", None, None, "Asia/Kolkata")
+    return StorePrintPrefs(
+        row.auto_print, row.kot_when, row.bill_when, row.gstin, row.fssai, row.timezone
+    )

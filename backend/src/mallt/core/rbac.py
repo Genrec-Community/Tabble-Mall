@@ -44,6 +44,8 @@ class P(StrEnum):
     STORE_KYC_SUBMIT = "store.kyc.submit"
     STORE_STAFF_MANAGE = "store.staff.manage"
     STORE_REPORT_READ = "store.report.read"
+    STORE_PRINTER_MANAGE = "store.printer.manage"
+    STORE_ORDER_PRINT = "store.order.print"
     AUDIT_READ = "audit.read"
 
 
@@ -103,6 +105,7 @@ _STORE_STAFF = frozenset(
         P.STORE_ORDER_READ,
         P.STORE_ORDER_UPDATE,
         P.STORE_ORDER_VERIFY_PICKUP,
+        P.STORE_ORDER_PRINT,
     }
 )
 _STORE_OWNER = _STORE_STAFF | {
@@ -113,6 +116,7 @@ _STORE_OWNER = _STORE_STAFF | {
     P.STORE_KYC_SUBMIT,
     P.STORE_STAFF_MANAGE,
     P.STORE_REPORT_READ,
+    P.STORE_PRINTER_MANAGE,
 }
 _ORG_MANAGER = (_STORE_OWNER - {P.STORE_KYC_SUBMIT}) | {
     P.ORG_MALL_MANAGE,

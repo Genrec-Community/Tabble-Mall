@@ -28,6 +28,8 @@ from mallt.modules.orders.router import store_router as orders_store_router
 from mallt.modules.orders.service import sweep_loop
 from mallt.modules.orders.ws import serve_orders
 from mallt.modules.payments.provider import FakePaymentProvider
+from mallt.modules.printing.router import router as printing_router
+from mallt.modules.printing.ws import serve_agent
 from mallt.modules.staff.router import router as staff_mgmt_router
 from mallt.modules.tenancy.router import routers as tenancy_routers
 
@@ -90,9 +92,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(catalog_router)
     app.include_router(catalog_public_router)
     app.include_router(cart_router)
+    app.include_router(printing_router)
     app.include_router(orders_customer_router)
     app.include_router(orders_store_router)
     app.include_router(audit_router)
+
+    @app.websocket("/ws/print-agent")
+    async def print_agent_socket(websocket: WebSocket) -> None:
+        await serve_agent(websocket, app)
 
     @app.websocket("/ws/orders")
     async def orders_socket(websocket: WebSocket) -> None:

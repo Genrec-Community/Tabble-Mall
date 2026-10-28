@@ -41,11 +41,14 @@ from mallt.modules.orders.schemas import (
 )
 from mallt.modules.orders.state import CUSTOMER_CANCELLABLE, REFUND_STATES, can_transition
 from mallt.modules.payments.provider import PaymentProvider
+from mallt.modules.printing.service import PrintingService
+from mallt.modules.printing.types import PrintableLine, PrintableOrder
 from mallt.modules.tenancy.service import TenancyService
 
 S = StoreOrderStatus
 log = logging.getLogger(__name__)
 
+PRINT_TRIGGERS = frozenset({S.PAID, S.ACCEPTED, S.READY, S.PICKED_UP})
 PICKUP_ATTEMPTS_PER_ORDER = (5, 600)  # tries, per seconds
 PICKUP_ATTEMPTS_PER_STORE = (60, 600)
 
@@ -66,6 +69,8 @@ class OrderService:
         self.tenancy = TenancyService(session, kv)
         self.authz = AuthzService(session, kv)
         self.customers = IamCustomers(session)
+        self.printing = PrintingService(session, kv)
+        self._store_names: dict[uuid.UUID, str] = {}
 
     # ------------------------------------------------------------------ state machine
 
@@ -126,6 +131,8 @@ class OrderService:
         )
         await self.session.flush()
         self._announce(order, "order.created" if to is S.PAID else "order.updated")
+        if to in PRINT_TRIGGERS:
+            await self.printing.on_order_status(await self._printable(order), to.value)
         if to in REFUND_STATES:
             await self._release_stock(order)
             result = await self.payments.refund(
@@ -142,6 +149,49 @@ class OrderService:
                 )
             )
             await self._transition(order, S.REFUNDED, ActorType.SYSTEM, None)
+
+    async def _printable(self, order: StoreOrder) -> PrintableOrder:
+        if order.store_id not in self._store_names:
+            stores = await self.tenancy.stores_by_ids([order.store_id])
+            self._store_names[order.store_id] = stores[order.store_id].name
+        return PrintableOrder(
+            id=order.id,
+            organization_id=order.organization_id,
+            mall_id=order.mall_id,
+            store_id=order.store_id,
+            store_name=self._store_names[order.store_id],
+            order_no=order.order_no,
+            order_date=order.order_date,
+            created_at=order.created_at or datetime.now(UTC),
+            customer_name=order.customer_name,
+            prep_minutes=order.prep_minutes,
+            note=order.note,
+            subtotal_paise=order.subtotal_paise,
+            tax_paise=order.tax_paise,
+            total_paise=order.total_paise,
+            lines=[
+                PrintableLine(
+                    name=ln.name,
+                    variant_name=ln.variant_name,
+                    quantity=ln.quantity,
+                    unit_price_paise=ln.unit_price_paise,
+                    line_total_paise=ln.line_total_paise,
+                    tax_bps=ln.tax_bps,
+                    options=[str(o["name"]) for o in ln.options],
+                    note=ln.note,
+                    allergens=ln.allergens,
+                )
+                for ln in order.lines
+            ],
+        )
+
+    async def reprint(
+        self, principal: Principal, store_id: uuid.UUID, order_id: uuid.UUID, what: str
+    ) -> int:
+        order = await self._staff_order(
+            principal, store_id, order_id, P.STORE_ORDER_PRINT, write=True
+        )
+        return await self.printing.reprint(principal, await self._printable(order), what)
 
     async def _release_stock(self, order: StoreOrder) -> None:
         holds: dict[uuid.UUID, int] = {}

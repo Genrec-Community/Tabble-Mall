@@ -1,10 +1,8 @@
 """Money arithmetic in integer paise. Prices are GST-inclusive."""
 
+from mallt.core.tax import tax_included
 
-def tax_included(total_paise: int, tax_bps: int) -> int:
-    """The GST contained in a GST-inclusive amount, rounded half up."""
-    divisor = 10_000 + tax_bps
-    return (total_paise * tax_bps + divisor // 2) // divisor
+__all__ = ["commission", "tax_included"]
 
 
 def commission(total_paise: int, commission_bps: int) -> int:

@@ -2,6 +2,7 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Header, Query, Request, Response, status
+from pydantic import BaseModel
 
 from mallt.core.bus import Bus
 from mallt.core.db import SessionDep
@@ -19,6 +20,7 @@ from mallt.modules.orders.schemas import (
 )
 from mallt.modules.orders.service import OrderService
 from mallt.modules.payments.provider import PaymentProvider
+from mallt.modules.printing.schemas import ReprintIn
 
 
 def _svc(session: SessionDep, kv: KvDep, request: Request) -> OrderService:
@@ -160,3 +162,16 @@ async def list_mall_orders(
     limit: Limit = 50,
 ) -> Page[StoreOrderOut]:
     return await svc.list_mall_orders(principal, mall_id, view, before, limit)
+
+
+class ReprintOut(BaseModel):
+    queued: int
+
+
+@store_router.post(
+    "/stores/{store_id}/orders/{order_id}/print", status_code=status.HTTP_202_ACCEPTED
+)
+async def reprint_order(
+    store_id: uuid.UUID, order_id: uuid.UUID, body: ReprintIn, principal: Staff, svc: Svc
+) -> ReprintOut:
+    return ReprintOut(queued=await svc.reprint(principal, store_id, order_id, body.what))
