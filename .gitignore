@@ -1,7 +1,6 @@
-# env & secrets
-.env
-.env.*
-!.env.example
+# env: dev .env is committed by owner decision; never commit prod secrets
+.env.production
+.env.*.local
 
 # python
 __pycache__/

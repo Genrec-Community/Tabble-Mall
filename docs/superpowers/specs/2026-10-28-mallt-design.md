@@ -423,8 +423,8 @@ containers.
 | Object storage | **Neon Object Storage** (S3-compatible) | **AWS S3 + CloudFront** |
 | Redis | `redis` container in docker-compose | **ElastiCache Redis** |
 | App runtime | `docker compose up`: nginx, web, api, worker, redis | Same images. v1 runs on **EC2 behind an ALB**, moving to **ECS Fargate** when traffic needs it |
-| Secrets | `.env` (git-ignored; `.env.example` committed) | **AWS SSM Parameter Store / Secrets Manager** |
-| SMS | Fast2SMS sandbox, or OTP logged to the console | Fast2SMS (DLT-registered templates) |
+| Secrets | `.env` **committed** (owner decision; private repo) | **AWS SSM Parameter Store / Secrets Manager** |
+| SMS | Fast2SMS `otp` route; `SMS_BACKEND=console` option logs the OTP instead of sending | Fast2SMS `otp` route |
 
 - **One codebase, configured by env vars only.** Examples: `DATABASE_URL`,
   `REDIS_URL`, `S3_ENDPOINT_URL`, `S3_BUCKET`, `S3_PUBLIC_BASE_URL`.
@@ -454,7 +454,13 @@ containers.
   runs in the ARQ worker, never in the request path.
 - The API is stateless: no in-process state. That allows horizontal scaling.
 
-### 9.5 Security
+### 9.5 Frontend phase (owner)
+
+v1 screens are **plain and functional**: stock shadcn/ui and no custom design.
+The owner will provide design inspiration after functionality is fully
+tested, and UI polish is a separate later pass.
+
+### 9.6 Security
 
 - Argon2id passwords, TOTP 2FA, rotating refresh tokens, httpOnly cookies,
   CSRF protection for cookie-authenticated mutations, and a strict CORS
@@ -487,8 +493,11 @@ containers.
 
 1. **Payments:** gateway fee bearer, commission base and GST on commission
    (§8). Deferred by the owner.
-2. **Fast2SMS DLT:** in India, OTP SMS needs a DLT-registered sender ID and
-   template. Registration takes days, so start it early.
+2. **Fast2SMS:** the owner has provided an API key for the **`otp` route**
+   (`GET https://www.fast2sms.com/dev/bulkV2?route=otp&variables_values=<otp>&numbers=<10-digit>`).
+   Send the key in the `authorization` **header**, not the query string, so
+   it never appears in access logs. Confirm with Fast2SMS whether this route
+   needs DLT registration; switch to a DLT route if it does.
 3. **Google OAuth client:** create a Google Cloud OAuth client ID for
    Sign-in with Google (dev and prod origins).
 4. **Domain:** the production domain name, needed for cookies, CORS and

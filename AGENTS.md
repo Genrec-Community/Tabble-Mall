@@ -65,7 +65,7 @@ infra/
   nginx/  docker/  aws/
 docs/
   superpowers/specs/  superpowers/plans/
-docker-compose.yml  .env.example  Makefile
+docker-compose.yml  .env  Makefile
 ```
 
 ## 4. Commands
@@ -101,8 +101,10 @@ Run `make lint test` before every commit that touches code.
 - **Async everywhere.** No blocking I/O in request handlers. Run any CPU-heavy
   or slow work (SMS, webhooks, PDFs, timeouts) as an ARQ job.
 - **Config:** use only `pydantic-settings` and environment variables. Never
-  hardcode URLs, keys or credentials. Every new variable goes into
-  `.env.example` with a comment.
+  hardcode URLs, keys or credentials in code. Every new variable goes into
+  `.env` (dev values, committed by owner decision; the repo is private) with
+  a comment. Production secrets live in AWS SSM / Secrets Manager, not in
+  git.
 - **Errors:** raise domain exceptions from `core/errors.py`. They are rendered
   as RFC 9457 `application/problem+json`. Never leak stack traces or SQL.
 - **API:** REST under `/api/v1`. Use cursor pagination for lists. Name
@@ -184,6 +186,13 @@ Run `make lint test` before every commit that touches code.
 
 ## 8. Frontend rules
 
+> **Current phase: functionality first.** Build plain, clean,
+> functional screens with stock shadcn/ui components and default styling. No
+> custom visual design, animation or branding work until the owner supplies
+> design inspiration. UI polish is a separate later pass after everything is
+> tested end to end. Keep components cleanly separated from data logic so
+> restyling later doesn't touch behaviour.
+
 - TypeScript `strict`. No `any` without a comment explaining why.
 - **All API calls go through the generated client** in `src/lib/api`.
   Regenerate it with `make api-client` after any backend schema change, and
@@ -232,8 +241,9 @@ Run `make lint test` before every commit that touches code.
   endpoint`. Keep commits small and focused.
 - Every change goes through a PR, and CI (lint, types, tests, Docker build)
   must be green before merge.
-- Never commit `.env`, secrets, credentials or generated build output. The
-  generated API client in `src/lib/api` **is** committed.
+- **Dev `.env` is committed** (owner decision; private repo). Never commit
+  **production** secrets or generated build output. The generated API client
+  in `src/lib/api` **is** committed.
 - Large work follows this flow:
   1. **brainstorming**: produces the spec in `docs/superpowers/specs/`.
   2. **writing-plans**: produces the plan in `docs/superpowers/plans/`.
@@ -251,6 +261,7 @@ Run `make lint test` before every commit that touches code.
 - Use floats for money.
 - Let the API stream image bytes, or render store-supplied HTML or CSS.
 - Hand-edit the generated API client or an applied migration.
-- Commit secrets, or log OTPs, tokens, passwords or pickup codes.
+- Commit production secrets, or log OTPs, tokens, passwords, pickup codes
+  or API keys.
 - Add a dependency, framework or AWS service not listed above without
   approval.
