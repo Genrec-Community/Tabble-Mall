@@ -8,6 +8,9 @@ TEST_DATABASE_URL ?= postgresql+asyncpg://postgres:test@localhost:55432/mallt_te
 TEST_REDIS_URL ?= redis://localhost:56379/15
 export TEST_DATABASE_URL TEST_REDIS_URL
 
+# The print agent is standalone (one runtime dependency); dev tools come in through uv, no project install.
+AGENT_RUN = uv run --no-project --with websockets --with pytest --with pytest-asyncio --with ruff
+
 .PHONY: dev dev-redis down test test-up lint fmt migrate migration api-client seed-admin e2e
 
 dev: ## nginx + web + api against Neon; Redis not required
@@ -27,14 +30,17 @@ endif
 test: test-up
 	cd backend && uv run pytest
 	cd frontend && pnpm test
+	cd print-agent && $(AGENT_RUN) python -m pytest
 
 lint:
 	cd backend && uv run ruff check . && uv run ruff format --check . && uv run mypy src
 	cd frontend && pnpm lint && pnpm typecheck
+	cd print-agent && $(AGENT_RUN) python -m ruff check . && $(AGENT_RUN) python -m ruff format --check .
 
 fmt:
 	cd backend && uv run ruff check --fix . && uv run ruff format .
 	cd frontend && pnpm exec eslint --fix
+	cd print-agent && $(AGENT_RUN) python -m ruff check --fix . && $(AGENT_RUN) python -m ruff format .
 
 migrate:
 	cd backend && uv run alembic upgrade head

@@ -1,0 +1,34 @@
+MallT print agent - Linux
+==========================
+
+This program prints the kitchen slips and bills for your store. One machine, the one the
+printers are attached to, runs it. It needs systemd (every mainstream distro has it).
+
+1. In the MallT dashboard go to Printers in the store dashboard, choose "Pair a PC", and name this
+   machine ("Counter", "Kitchen pass"). The app shows a command. Keep that page open.
+
+2. Extract this archive anywhere:   tar -xzf mallt-print-agent-linux-*.tar.gz
+   then:                            cd mallt-print-agent
+
+3. Paste the command from step 1. It looks like:
+
+       sudo bash install.sh --url https://YOUR-ADDRESS --token THE-TOKEN
+
+4. Wait for "Printing is live". If it stops with a message, the message says what to do.
+
+It starts at boot and restarts itself if it ever stops.
+
+Check it worked: the dashboard, under Print agents, says "Connected just now".
+Logs:            journalctl -u mallt-print-agent -f
+
+Updates: this program updates itself in the background and installs a new version in a
+gap between two slips, so you do not need to do anything. If a new version ever fails to
+start, the machine puts the previous one back by itself and keeps printing. To update by
+hand (or a machine older than version 1.4.0): extract the new archive and run the same
+command again. Your settings and the record of printed slips are kept.
+
+Remove it:       sudo bash uninstall.sh
+Add --purge to also delete the settings, the printed-slip record and the service user.
+
+Where things live: /opt/mallt-print-agent (program), /etc/mallt-print-agent (settings),
+/var/lib/mallt-print-agent (printed-slip record).

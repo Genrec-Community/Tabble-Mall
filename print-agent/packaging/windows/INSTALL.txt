@@ -1,0 +1,35 @@
+MallT print agent - Windows
+============================
+
+This program prints the kitchen slips and bills for your store. One PC, the one the
+printers are attached to, runs it.
+
+1. In the MallT dashboard go to Printers in the store dashboard, choose "Pair a PC", and name this PC
+   ("Counter", "Kitchen pass"). The app shows a command. Keep that page open.
+
+2. Unzip this folder anywhere on the PC (the Desktop is fine).
+
+3. Open PowerShell in this folder (hold Shift, right-click an empty space in the folder,
+   choose "Open PowerShell window here"), and paste the command from step 1. It looks like:
+
+       powershell -ExecutionPolicy Bypass -File install.ps1 -Url https://YOUR-ADDRESS -Token THE-TOKEN
+
+4. Wait for "Printing is live". If it stops with a message, the message says what to do.
+
+It starts by itself every time this PC's user signs in. For a PC that must print after a
+power cut, also turn on automatic sign-in (Windows key, type "netplwiz").
+
+Check it worked: the dashboard, under Print agents, says "Connected just now".
+
+Updates: this program updates itself in the background and installs a new version in a
+gap between two slips, so you do not need to do anything. If a new version ever fails to
+start, the PC puts the previous one back by itself and keeps printing. To update by hand
+(or a PC older than version 1.4.0): download the new folder and paste the same command
+again. Your settings and the record of printed slips are kept.
+
+Remove it: in this folder run
+       powershell -ExecutionPolicy Bypass -File uninstall.ps1
+Add -Purge to also delete the settings and the printed-slip record.
+
+Where things live: %LOCALAPPDATA%\MallTPrintAgent
+   print-agent.log is the log. If something goes wrong, send us that file.

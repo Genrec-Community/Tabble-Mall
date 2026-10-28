@@ -50,6 +50,48 @@ jobs:
         env:
           TEST_REDIS_URL: ""
 
+  # The agent that runs on a store's counter PC. Standalone: one runtime dependency (websockets).
+  print-agent:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: print-agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install websockets pytest pytest-asyncio ruff
+      - run: ruff check .
+      - run: ruff format --check .
+      - run: python -m pytest
+
+  # PyInstaller cannot cross-compile, so each OS builds its own release (runs the suite, builds,
+  # smoke-runs the binary). The Windows build is the only place the Windows scripts are exercised.
+  print-agent-build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: print-agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - if: runner.os == 'Linux'
+        run: bash build.sh
+      - if: runner.os == 'Windows'
+        run: powershell -ExecutionPolicy Bypass -File build.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: print-agent-${{ runner.os }}
+          path: |
+            print-agent/dist/*.zip
+            print-agent/dist/*.tar.gz
+
   frontend:
     runs-on: ubuntu-latest
     defaults:
@@ -93,7 +135,8 @@ jobs:
       - run: make api-client
       - run: git diff --exit-code frontend/openapi.json frontend/src/lib/api
 
-  # The whole IAM journey in a real browser: admin -> org owner -> store owner -> customer.
+  # The whole journeys in a real browser: IAM (admin -> org owner -> store owner -> customer) and
+  # food ordering with a real print agent printing to fake network printers.
   e2e:
     runs-on: ubuntu-latest
     services:
@@ -120,10 +163,16 @@ jobs:
           cache: pnpm
           cache-dependency-path: frontend/pnpm-lock.yaml
       - run: sudo apt-get update && sudo apt-get install -y nginx && sudo systemctl stop nginx
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install websockets
       - run: cd backend && uv sync --frozen
       - run: cd frontend && pnpm install --frozen-lockfile
       - run: cd frontend && pnpm exec playwright install --with-deps chromium
       - run: make e2e
+        env:
+          E2E_AGENT_PYTHON: python
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

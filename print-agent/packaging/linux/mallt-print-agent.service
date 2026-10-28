@@ -1,0 +1,35 @@
+[Unit]
+Description=MallT print agent
+After=network-online.target
+Wants=network-online.target
+# A store PC must never give up on printing, however many times it has to restart.
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=@USER@
+Group=@USER@
+Environment=MALLT_AGENT_STATE_DIR=@STATE_DIR@
+# After a self-update, counts this start and restores the previous program if the new one
+# keeps failing (rollback-guard.sh). The leading "-" means it can never stop a start.
+ExecStartPre=-@INSTALL_DIR@/rollback-guard.sh @INSTALL_DIR@
+ExecStart=@INSTALL_DIR@/print-agent --config @CONFIG@
+Restart=always
+RestartSec=5
+# systemd 254+: grow the delay from 5s to 60s over four restarts. Older systemd ignores
+# these two keys (with a warning) and restarts every 5s, which is also fine.
+RestartSteps=4
+RestartMaxDelaySec=60
+# Exit codes that restarting cannot fix: 2 bad config, 3 credential refused, 4 another
+# print-agent is already running. They stay stopped, and `systemctl status` says why.
+RestartPreventExitStatus=2 3 4
+# Exit 10 is the agent replacing itself with a newer release, and 11 an updated agent that
+# could not reach the server; Restart=always starts either again.
+NoNewPrivileges=true
+ProtectHome=true
+ProtectSystem=full
+# The agent replaces its own program (self-update), so it needs its install folder too.
+ReadWritePaths=@STATE_DIR@ @INSTALL_DIR@
+
+[Install]
+WantedBy=multi-user.target

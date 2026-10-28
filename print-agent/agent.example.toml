@@ -1,0 +1,40 @@
+# Copy this to `agent.toml` beside the program and fill in the two lines that matter.
+#
+# Nothing about the printers themselves belongs here. The server sends each printer's
+# connection kind and address with every job, so they are configured once, under
+# Printers in the store dashboard, where someone can see and correct them.
+
+# Where the server is. Paste the address you use in the browser; https:// is fine.
+url = "https://mallt.example.com"
+
+# The credential shown when you pair this PC under Printers in the store dashboard.
+#
+# It is shown once and cannot be looked up again -- the server keeps only a hash of it.
+# If it is lost, issue a new one from that screen, which stops the old one working.
+token = "PASTE-THE-PAIRING-TOKEN-HERE"
+
+# --- Everything below is optional. ---------------------------------------------------
+
+# Characters per line. 32 for 58mm paper, 48 for 80mm. The default is 32, because a
+# 48-column slip on narrow paper wraps into something nobody can read, while a
+# 32-column slip on wide paper just leaves a margin.
+# paper_width = 32
+
+# Seconds to wait for a printer before giving up on one job and reporting it failed.
+# Raise it if a printer that sleeps between orders is reporting failures it recovers
+# from; a job abandoned early is a slip a cook never sees.
+# print_timeout = 20.0
+
+# Where to keep the record of jobs that have already been printed. Defaults to this
+# folder. Do not delete that file: it is what stops a reconnect reprinting slips that
+# already came out.
+# state_dir = "."
+
+# Leave this alone unless the server is behind a proxy with a self-signed certificate,
+# which is the only reason to turn off certificate checking.
+# verify_tls = true
+
+# The agent updates itself: it downloads a new release in the background, checks it, and
+# swaps it in between two slips, so printing never waits and nobody needs to visit. Set
+# this to false to keep this PC on the version it has.
+# auto_update = true
