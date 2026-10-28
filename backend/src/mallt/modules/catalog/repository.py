@@ -1,12 +1,19 @@
 import uuid
+from typing import Any, cast
 
-from sqlalchemy import select
+from sqlalchemy import CursorResult, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from mallt.core.errors import Conflict
-from mallt.modules.catalog.models import MenuCategory, OptionGroup, Product, StoreSettings
+from mallt.modules.catalog.models import (
+    MenuCategory,
+    OptionGroup,
+    Product,
+    ProductVariant,
+    StoreSettings,
+)
 
 _PRODUCT_LOAD = (
     selectinload(Product.variants),
@@ -101,3 +108,34 @@ class CatalogRepository:
             .execution_options(populate_existing=True)
         )
         return (await self.session.execute(stmt)).scalar_one_or_none()
+
+    async def products_by_ids(
+        self, mall_id: uuid.UUID, product_ids: list[uuid.UUID]
+    ) -> list[Product]:
+        if not product_ids:
+            return []
+        stmt = (
+            select(Product)
+            .where(Product.mall_id == mall_id, Product.id.in_(product_ids))
+            .options(*_PRODUCT_LOAD)
+            .execution_options(populate_existing=True)
+        )
+        return list((await self.session.execute(stmt)).scalars())
+
+    async def take_stock(self, variant_id: uuid.UUID, quantity: int) -> bool:
+        """Atomically hold ``quantity`` units; False if there is not enough."""
+        stmt = (
+            update(ProductVariant)
+            .where(ProductVariant.id == variant_id, ProductVariant.stock_count >= quantity)
+            .values(stock_count=ProductVariant.stock_count - quantity)
+        )
+        result = await self.session.execute(stmt)
+        return cast(CursorResult[Any], result).rowcount == 1
+
+    async def return_stock(self, variant_id: uuid.UUID, quantity: int) -> None:
+        stmt = (
+            update(ProductVariant)
+            .where(ProductVariant.id == variant_id, ProductVariant.stock_count.is_not(None))
+            .values(stock_count=ProductVariant.stock_count + quantity)
+        )
+        await self.session.execute(stmt)

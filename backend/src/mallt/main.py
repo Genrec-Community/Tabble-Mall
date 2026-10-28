@@ -1,11 +1,13 @@
+import asyncio
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRoute
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
+from mallt.core.bus import make_bus
 from mallt.core.config import Settings, get_settings
 from mallt.core.db import make_engine
 from mallt.core.errors import install_error_handlers
@@ -20,6 +22,12 @@ from mallt.modules.iam.customer_router import customer_router
 from mallt.modules.iam.google import make_google_verifier
 from mallt.modules.iam.router import staff_router
 from mallt.modules.iam.sms import make_sms_sender
+from mallt.modules.orders.cart_router import router as cart_router
+from mallt.modules.orders.router import customer_router as orders_customer_router
+from mallt.modules.orders.router import store_router as orders_store_router
+from mallt.modules.orders.service import sweep_loop
+from mallt.modules.orders.ws import serve_orders
+from mallt.modules.payments.provider import FakePaymentProvider
 from mallt.modules.staff.router import router as staff_mgmt_router
 from mallt.modules.tenancy.router import routers as tenancy_routers
 
@@ -38,8 +46,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+        sweeper = None
+        if settings.env != "test":
+            sweeper = asyncio.create_task(sweep_loop(app))
         yield
+        if sweeper is not None:
+            sweeper.cancel()
+            await asyncio.gather(sweeper, return_exceptions=True)
         await kv.aclose()
+        await app.state.bus.aclose()
         await engine.dispose()
 
     app = FastAPI(
@@ -52,6 +67,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.engine = engine
     app.state.kv = kv
     app.state.storage = Storage(settings)
+    app.state.bus = make_bus(settings, engine)
+    app.state.payments = FakePaymentProvider()  # until payments are reopened
     app.state.sms = make_sms_sender(settings)
     app.state.google = make_google_verifier(settings)
     app.state.session_factory = async_sessionmaker(engine, expire_on_commit=False)
@@ -72,5 +89,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(staff_mgmt_router)
     app.include_router(catalog_router)
     app.include_router(catalog_public_router)
+    app.include_router(cart_router)
+    app.include_router(orders_customer_router)
+    app.include_router(orders_store_router)
     app.include_router(audit_router)
+
+    @app.websocket("/ws/orders")
+    async def orders_socket(websocket: WebSocket) -> None:
+        await serve_orders(websocket, app)
+
     return app

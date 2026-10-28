@@ -9,6 +9,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncSession, async_sessionmaker
 
 from alembic import command
+from mallt.core.bus import MemoryBus
 from mallt.core.config import Settings
 from mallt.core.db import make_engine
 from mallt.core.kv import KV, PostgresKV, RedisKV
@@ -95,6 +96,7 @@ def sms() -> FakeSms:
 async def app(settings: Settings, db_conn: AsyncConnection, sms: FakeSms) -> AsyncIterator[FastAPI]:
     app = create_app(settings)
     app.state.sms = sms
+    app.state.bus = MemoryBus()
     app.state.google = FakeGoogle()
     # The real get_session runs unchanged; each request gets its own session whose
     # commit/rollback are savepoints inside the test's outer transaction.

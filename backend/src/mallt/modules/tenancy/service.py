@@ -388,3 +388,13 @@ class TenancyService:
         if found is None:
             raise NotFound("not_found", "Not found.")
         return found
+
+    # ---- internal lookups for other modules (no authorization: callers have already decided) ----
+
+    async def org_terms(self, org_id: uuid.UUID) -> tuple[int, int]:
+        """(commission_bps, accept_timeout_s) for an organization."""
+        org = await self._org(org_id)
+        return org.commission_bps, org.accept_timeout_s
+
+    async def stores_by_ids(self, store_ids: list[uuid.UUID]) -> dict[uuid.UUID, Store]:
+        return await self.repo.stores_by_ids(store_ids)

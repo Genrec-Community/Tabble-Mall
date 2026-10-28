@@ -5,6 +5,15 @@ from mallt.core.db import Base
 from mallt.modules.audit import models as audit_models
 from mallt.modules.catalog import models as catalog_models
 from mallt.modules.iam import models as iam_models
+from mallt.modules.orders import models as orders_models
 from mallt.modules.tenancy import models as tenancy_models
 
-__all__ = ["Base", "audit_models", "catalog_models", "iam_models", "kv_models", "tenancy_models"]
+__all__ = [
+    "Base",
+    "audit_models",
+    "catalog_models",
+    "iam_models",
+    "kv_models",
+    "orders_models",
+    "tenancy_models",
+]

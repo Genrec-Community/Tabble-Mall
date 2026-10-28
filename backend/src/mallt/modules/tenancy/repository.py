@@ -69,3 +69,9 @@ class TenancyRepository:
             .order_by(Store.name, Store.id)
         )
         return mall, list((await self.session.execute(stores)).scalars())
+
+    async def stores_by_ids(self, store_ids: list[uuid.UUID]) -> dict[uuid.UUID, Store]:
+        if not store_ids:
+            return {}
+        stmt = select(Store).where(Store.id.in_(store_ids))
+        return {s.id: s for s in (await self.session.execute(stmt)).scalars()}

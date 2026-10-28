@@ -1,4 +1,5 @@
 import uuid
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -6,7 +7,7 @@ from zoneinfo import ZoneInfo
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from mallt.core.enums import ActorType
-from mallt.core.errors import BadRequest, NotFound
+from mallt.core.errors import BadRequest, Conflict, NotFound
 from mallt.core.ids import uuid7
 from mallt.core.kv import KV
 from mallt.core.rbac import P, Scope
@@ -594,3 +595,156 @@ class CatalogService:
                 for g in product.option_groups
             ],
         )
+
+
+# ---- what the ordering module may know about the menu (a read-only, priced snapshot) ----
+
+
+@dataclass(frozen=True)
+class OrderableOption:
+    id: uuid.UUID
+    name: str
+    price_delta_paise: int
+    available: bool
+
+
+@dataclass(frozen=True)
+class OrderableGroup:
+    id: uuid.UUID
+    name: str
+    min_select: int
+    max_select: int
+    options: dict[uuid.UUID, OrderableOption]
+
+
+@dataclass(frozen=True)
+class OrderableVariant:
+    id: uuid.UUID
+    name: str
+    price_paise: int
+    stock_count: int | None
+
+
+@dataclass(frozen=True)
+class OrderableStore:
+    id: uuid.UUID
+    organization_id: uuid.UUID
+    mall_id: uuid.UUID
+    slug: str
+    name: str
+    timezone: str
+    accepting: bool
+    commission_bps: int | None
+    gstin: str | None
+
+
+@dataclass(frozen=True)
+class OrderableMall:
+    id: uuid.UUID
+    organization_id: uuid.UUID
+    slug: str
+    stores: dict[uuid.UUID, OrderableStore]
+
+
+@dataclass(frozen=True)
+class OrderableProduct:
+    id: uuid.UUID
+    store: OrderableStore
+    name: str
+    diet: str
+    allergens: str | None
+    prep_minutes: int
+    tax_bps: int
+    counted: bool
+    available_now: bool  # not archived, switched on, inside its time window
+    variants: dict[uuid.UUID, OrderableVariant]  # active variants only
+    groups: dict[uuid.UUID, OrderableGroup]
+
+
+class OrderingCatalog:
+    """The only door the ordering module uses to read the menu or hold stock."""
+
+    def __init__(self, session: AsyncSession, kv: KV) -> None:
+        self.repo = CatalogRepository(session)
+        self.tenancy = TenancyService(session, kv)
+
+    async def mall_stores(self, mall_slug: str) -> "OrderableMall":
+        """The active mall and its active stores (404 for unknown or suspended)."""
+        mall, stores = await self.tenancy.public_directory(mall_slug)
+        settings = await self.repo.settings_for_stores([s.id for s in stores])
+        now = datetime.now(UTC)
+        out: dict[uuid.UUID, OrderableStore] = {}
+        for s in stores:
+            row = settings.get(s.id)
+            out[s.id] = OrderableStore(
+                id=s.id,
+                organization_id=s.organization_id,
+                mall_id=s.mall_id,
+                slug=s.slug,
+                name=s.name,
+                timezone=row.timezone if row else "Asia/Kolkata",
+                accepting=store_accepting(row.is_open, row.is_paused, row.hours, row.timezone, now)
+                if row
+                else True,
+                commission_bps=s.commission_bps,
+                gstin=row.gstin if row else None,
+            )
+        return OrderableMall(mall.id, mall.organization_id, mall.slug, out)
+
+    async def products(
+        self,
+        mall_id: uuid.UUID,
+        stores: dict[uuid.UUID, OrderableStore],
+        product_ids: list[uuid.UUID],
+    ) -> dict[uuid.UUID, OrderableProduct]:
+        now = datetime.now(UTC)
+        out: dict[uuid.UUID, OrderableProduct] = {}
+        for p in await self.repo.products_by_ids(mall_id, product_ids):
+            store = stores.get(p.store_id)
+            if store is None:
+                continue
+            local = now.astimezone(ZoneInfo(store.timezone))
+            out[p.id] = OrderableProduct(
+                id=p.id,
+                store=store,
+                name=p.name,
+                diet=p.diet.value,
+                allergens=p.allergens,
+                prep_minutes=p.prep_minutes,
+                tax_bps=p.tax_bps,
+                counted=p.stock_mode == StockMode.COUNTED,
+                available_now=(
+                    not p.is_archived
+                    and p.is_available
+                    and in_hours(p.windows, local, "start", "end")
+                ),
+                variants={
+                    v.id: OrderableVariant(v.id, v.name, v.price_paise, v.stock_count)
+                    for v in p.variants
+                    if v.is_active
+                },
+                groups={
+                    g.id: OrderableGroup(
+                        g.id,
+                        g.name,
+                        g.min_select,
+                        g.max_select,
+                        {
+                            o.id: OrderableOption(o.id, o.name, o.price_delta_paise, o.is_available)
+                            for o in g.options
+                        },
+                    )
+                    for g in p.option_groups
+                },
+            )
+        return out
+
+    async def take_stock(self, holds: dict[uuid.UUID, int]) -> None:
+        """Hold counted stock for several variants at once; all or nothing (caller rolls back)."""
+        for variant_id in sorted(holds):  # fixed order so two checkouts cannot deadlock
+            if not await self.repo.take_stock(variant_id, holds[variant_id]):
+                raise Conflict("out_of_stock", "An item just sold out.")
+
+    async def return_stock(self, holds: dict[uuid.UUID, int]) -> None:
+        for variant_id in sorted(holds):
+            await self.repo.return_stock(variant_id, holds[variant_id])

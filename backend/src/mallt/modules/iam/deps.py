@@ -2,6 +2,7 @@ import uuid
 from typing import Annotated
 
 from fastapi import Depends, Request
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from mallt.core.config import Settings
 from mallt.core.db import SessionDep
@@ -84,6 +85,22 @@ async def current_customer_id(
     claims: ClaimsDep, session: SessionDep, settings: SettingsDep, kv: KvDep
 ) -> uuid.UUID:
     """The signed-in customer's id (their account must exist, be active, and the session live)."""
+    return await customer_id_for(claims, session, settings, kv)
+
+
+async def staff_principal_for(
+    claims: AccessClaims, session: AsyncSession, settings: Settings, kv: KV
+) -> Principal:
+    """Same checks as the ``Staff`` dependency, for callers outside an HTTP request (sockets)."""
+    principal = await _staff_principal(claims, session, settings, kv)
+    if principal.must_change_password:
+        raise Forbidden("password_change_required", "Change your password to continue.")
+    return principal
+
+
+async def customer_id_for(
+    claims: AccessClaims, session: AsyncSession, settings: Settings, kv: KV
+) -> uuid.UUID:
     if claims.typ != "customer":
         raise Unauthorized("invalid_token", "Invalid or expired access token.")
     if not await SessionService(session, settings, kv).is_active(claims.sid):

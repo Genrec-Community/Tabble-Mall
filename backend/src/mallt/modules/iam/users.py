@@ -11,10 +11,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from mallt.core.enums import ActiveStatus
 from mallt.core.errors import Conflict, NotFound, Unprocessable
+from mallt.core.phone import mask_phone
 from mallt.core.rbac import Scope
 from mallt.core.security import hash_password
 from mallt.modules.iam.models import RoleAssignment, StaffUser
-from mallt.modules.iam.repository import GrantRow, IamRepository
+from mallt.modules.iam.repository import CustomerRepository, GrantRow, IamRepository
 
 USERNAME = re.compile(r"[a-z0-9._-]{3,40}")
 MIN_PASSWORD_LENGTH = 10
@@ -179,3 +180,24 @@ class IamUsers:
             raise NotFound("not_found", "Not found.")
         await self.repo.delete(row)
         await self.session.flush()
+
+
+@dataclass(frozen=True)
+class CustomerContact:
+    name: str | None
+    phone_masked: str | None
+
+
+class IamCustomers:
+    """Customer facts other modules may snapshot (never the full phone number)."""
+
+    def __init__(self, session: AsyncSession) -> None:
+        self.repo = CustomerRepository(session)
+
+    async def contact(self, customer_id: uuid.UUID) -> CustomerContact:
+        customer = await self.repo.get(customer_id)
+        if customer is None:
+            raise NotFound("not_found", "Not found.")
+        return CustomerContact(
+            name=customer.name, phone_masked=mask_phone(customer.phone) if customer.phone else None
+        )
