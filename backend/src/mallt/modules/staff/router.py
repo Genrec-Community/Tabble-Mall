@@ -4,7 +4,7 @@ from fastapi import APIRouter, Response, status
 
 from mallt.core.db import SessionDep
 from mallt.core.enums import ActiveStatus
-from mallt.core.rbac import ScopeType
+from mallt.core.rbac import GRANT_RULES, ScopeType
 from mallt.modules.iam.deps import KvDep, SettingsDep, Staff
 from mallt.modules.staff.schemas import (
     AssignmentOut,
@@ -167,6 +167,7 @@ async def list_roles(principal: Staff) -> list[RoleOut]:
             name=r.name,
             scope_type=r.scope_type,
             permissions=sorted(p.value for p in r.permissions),
+            grantable_by=sorted(GRANT_RULES[r.key]),
         )
         for r in StaffService.roles()
     ]

@@ -1,3 +1,5 @@
-export default function Page() {
-  return <main className="p-6">Organization dashboard</main>;
+import { OrgPicker } from "@/components/org/org-picker";
+
+export default function OrgHome() {
+  return <OrgPicker />;
 }

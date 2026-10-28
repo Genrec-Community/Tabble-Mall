@@ -250,6 +250,14 @@ async def test_roles_endpoint_lists_the_system_roles(
     }
     assert roles["store_staff"]["scope_type"] == "store"
     assert "store.order.update" in roles["store_staff"]["permissions"]
+    # The UI uses this to hide roles the viewer cannot hand out (same rule the API enforces).
+    assert roles["org_owner"]["grantable_by"] == ["org_owner", "platform_admin"]
+    assert set(roles["store_staff"]["grantable_by"]) == {
+        "platform_admin",
+        "org_owner",
+        "org_manager",
+        "store_owner",
+    }
 
 
 # ---------- role assignment ----------

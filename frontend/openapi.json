@@ -920,6 +920,13 @@
       },
       "RoleOut": {
         "properties": {
+          "grantable_by": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Grantable By",
+            "type": "array"
+          },
           "key": {
             "title": "Key",
             "type": "string"
@@ -943,7 +950,8 @@
           "key",
           "name",
           "scope_type",
-          "permissions"
+          "permissions",
+          "grantable_by"
         ],
         "title": "RoleOut",
         "type": "object"

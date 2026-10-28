@@ -84,3 +84,4 @@ class RoleOut(BaseModel):
     name: str
     scope_type: ScopeType
     permissions: list[str]
+    grantable_by: list[str]  # role keys whose holders may hand this role out

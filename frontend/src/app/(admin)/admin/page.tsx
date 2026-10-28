@@ -1,3 +1,5 @@
-export default function Page() {
-  return <main className="p-6">Platform admin dashboard</main>;
+import { OrgsPanel } from "@/components/admin/orgs-panel";
+
+export default function AdminHome() {
+  return <OrgsPanel />;
 }

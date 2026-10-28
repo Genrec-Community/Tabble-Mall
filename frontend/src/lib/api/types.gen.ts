@@ -487,6 +487,10 @@ export type RoleAssign = {
  */
 export type RoleOut = {
     /**
+     * Grantable By
+     */
+    grantable_by: Array<string>;
+    /**
      * Key
      */
     key: string;
