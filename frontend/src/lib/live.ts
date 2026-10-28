@@ -53,9 +53,12 @@ export function useLiveOrders(kind: AuthKind, subscription: LiveSubscription | n
           handler.current(message);
         }
       };
-      socket.onclose = () => {
+      socket.onclose = (event) => {
         if (stopped) return;
-        timer = setTimeout(connect, Math.min(30_000, 1000 * 2 ** attempt++));
+        // 1008 = refused (usually an expired token): fetch a fresh one before trying again.
+        const retry = () => void connect();
+        const wait = Math.min(30_000, 1000 * 2 ** attempt++);
+        timer = setTimeout(event.code === 1008 ? () => void refreshAccess(kind).finally(retry) : retry, wait);
       };
     };
     void connect();

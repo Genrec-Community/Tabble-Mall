@@ -21,6 +21,8 @@ from mallt.modules.printing.service import PrintingService, scan_key
 
 log = logging.getLogger(__name__)
 POLL_SECONDS = 3.0
+#: A revoked agent is cut off within RECHECK_EVERY_POLLS * POLL_SECONDS (30 s), not at next connect.
+RECHECK_EVERY_POLLS = 10
 AUTH_TIMEOUT_S = 10.0
 MAX_AUTH_FRAME = 2048
 MAX_FRAME = 65536
@@ -83,8 +85,16 @@ async def serve_agent(ws: WebSocketLike, app: FastAPI) -> None:
         return
 
     in_flight: set[uuid.UUID] = set()
+    polls = 0
     try:
         while True:
+            polls += 1
+            if polls % RECHECK_EVERY_POLLS == 0:
+                async with factory() as session:
+                    current = await PrintingRepository(session).agent(agent_id)
+                if current is None or not current.is_active:  # revoked while connected
+                    await ws.close(code=CLOSE_POLICY)
+                    return
             async with factory() as session:
                 frames = await PrintQueue(session).claim(store_id)
                 await session.commit()

@@ -47,7 +47,7 @@ backend/
   src/mallt/
     main.py                  # app factory, router mounting
     core/                    # config, db, redis, security, storage, errors, logging, rbac
-    modules/<domain>/        # iam, tenancy, catalog, orders, payments, notifications, audit
+    modules/<domain>/        # iam, tenancy, catalog, orders, payments, printing, audit
       router.py              # HTTP only: parse → call service → serialize
       schemas.py             # Pydantic request/response models
       service.py             # business rules + authorization checks
@@ -87,9 +87,11 @@ exists, these targets are the contract to implement.
 | `make migration m="msg"` | `alembic revision --autogenerate -m "msg"` (always review the output) |
 | `make api-client` | regenerate `frontend/src/lib/api` from FastAPI's OpenAPI |
 | `make seed-admin` | create the first Platform Admin |
-| `make e2e` | Playwright; it starts API + web + nginx itself (`infra/e2e/local-stack.sh`) and needs local Postgres |
+| `make e2e` | Playwright; it starts API + web + nginx itself (`infra/e2e/local-stack.sh`) and needs local Postgres. The food journey also starts the real print agent (`print-agent/.venv` or `E2E_AGENT_PYTHON`) |
 
-Run `make lint test` before every commit that touches code.
+Run `make lint test` before every commit that touches code. `print-agent/` is checked and tested
+by the same targets (`uv run --no-project`); its releases are built per OS with `build.sh` /
+`build.ps1`.
 
 ## 5. Backend rules
 
@@ -154,6 +156,8 @@ Run `make lint test` before every commit that touches code.
     tenant data.
   - Router dependencies may pre-check, but the service check is the one that
     counts.
+- **Staff never see a pickup code.** It is the customer's proof of purchase: it must not appear in a
+  store-facing API, a KOT, a bill, a log or a live event.
 - **Anti-escalation:** a user may grant a role only if they hold all of that
   role's permissions at a containing scope and hold the matching
   `*.staff.manage` permission.

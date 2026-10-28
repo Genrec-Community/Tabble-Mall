@@ -363,3 +363,43 @@ async def test_ack_is_idempotent(
     await queue.mark_printed(world.other_store.id, jid)  # a different store cannot touch it
     await db_session.refresh(job)
     assert job.acked_at == first_ack and job.status.value == "printed"
+
+
+async def test_a_revoked_agent_cannot_reconnect(
+    client: httpx.AsyncClient, app: FastAPI, world: World
+) -> None:
+    created = await pair(client, world)
+    await client.post(
+        f"{base(world)}/print-agents/{created['agent']['id']}/revoke", headers=world.owner
+    )
+    ws = FakeAgentSocket({"token": created["token"]})
+    await agent_ws.serve_agent(ws, app)
+    assert ws.closed == 1008
+
+
+async def test_a_live_socket_notices_revocation(
+    client: httpx.AsyncClient,
+    app: FastAPI,
+    world: World,
+    db_session: AsyncSession,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(agent_ws, "RECHECK_EVERY_POLLS", 2)
+    created = await pair(client, world)
+    agent = await db_session.get(PrintAgent, uuid.UUID(created["agent"]["id"]))
+    assert agent is not None
+    ws = FakeAgentSocket({"token": created["token"]})
+    original = agent_ws.PrintingRepository.agent
+    calls = {"n": 0}
+
+    async def revoked_after_first_check(self, agent_id):  # noqa: ANN001, ANN202
+        calls["n"] += 1
+        found = await original(self, agent_id)
+        if calls["n"] > 1 and found is not None:
+            found.is_active = False  # what a revoke does
+        return found
+
+    monkeypatch.setattr(agent_ws.PrintingRepository, "agent", revoked_after_first_check)
+    async with asyncio.timeout(10):
+        await agent_ws.serve_agent(ws, app)
+    assert ws.closed == 1008

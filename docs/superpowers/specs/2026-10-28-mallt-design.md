@@ -577,3 +577,57 @@ queue transport** and store-scoped tenancy.
 - **Bills** are per StoreOrder and contain neither commission nor other stores' items.
 - **Permissions:** `store.printer.manage` (owners), `store.order.print` (staff may reprint).
 - Plan: `docs/superpowers/plans/2026-10-28-m2-m3-catalog-orders-printing.md`.
+
+---
+
+## 15. Implementation notes (M2 catalog, M3 orders, printing — as built)
+
+Decisions made while building; each says what it costs if wrong.
+
+1. **Catalog** is food-only: product → sizes (variants) → add-on groups. Stock is `manual` (sold-out
+   switch) by default, `counted` for limited items. A product can be limited to a daily time window.
+   Product delete is an *archive* (past orders keep their snapshot). A store menu is capped at 500
+   products per list call (no pagination yet). *Cost if wrong:* a very large menu needs paging.
+2. **Mall food types** are a fixed list in code (`catalog/enums.py`), stored per store as JSON,
+   not a table. *Cost:* adding a type is a deploy, not data.
+3. **Opening hours** are local-time windows per store (`Asia/Kolkata` default); a window that ends
+   before it starts runs past midnight and belongs to the day it opened.
+4. **Cart** lives on the server, one per customer per mall, capped at 50 lines and 20 per line.
+   Prices are always recomputed from the current menu; the client never sends a price.
+5. **Checkout** is idempotent on an `Idempotency-Key` header. Counted stock is *taken* (atomic
+   `UPDATE … WHERE stock_count >= n`) when the order is created and *returned* on reject, expire,
+   cancel or a failed payment. With the fake provider payment is instant, so there is no separate
+   reservation table; real Razorpay (asynchronous) will need one. The charge currently runs inside the
+   request's transaction — fine for the fake provider, to be revisited in M4.
+6. **A verified phone number is required to order** (pickup needs a way to reach the customer). Google-only
+   customers are sent to link a phone first.
+7. **Pickup code** is the customer's proof of purchase, so the store never sees it: not in the store
+   API, not on the kitchen ticket, not on the bill, not in live events. Attempts are limited per order
+   (5 / 10 min) and per store (60 / 10 min); the limit also blocks the correct code while it applies.
+   *This corrects the earlier plan, which put the code on the KOT.*
+8. **Order numbers** (1, 2, 3 …) restart each day per store (store-local date) and are what slips show.
+9. **Commission** is computed per store order (store override, else the organization's, default 5 %,
+   half-up rounding) and recorded; nothing is settled until M4.
+10. **Live updates**: `/ws/orders` (first frame carries the token; sockets close after one access-token
+    lifetime so logout, suspension and role changes take effect). Pub/sub is Redis when configured,
+    otherwise Postgres LISTEN/NOTIFY — Redis stays optional. Events carry ids and statuses only.
+11. **Accept timeout** (organization setting, default 5 min) is enforced by a sweeper started with the
+    API (`FOR UPDATE SKIP LOCKED`, safe with several containers); expired orders are refunded.
+12. **Printing queue** is Tabble's design: lease 120 s, 10 attempts, ack-then-record idempotency,
+    agent dials out. Printing is queued inside a savepoint in the order's transaction and can never
+    fail an order. KOT goes to kitchen printers (else the counter printer); bills only to counter
+    printers. Auto-print rules (`kot_when`, `bill_when`, on/off) are per store.
+13. **Bill** belongs to one store order (invoice no. = `yymmdd-order no.`), prices GST-inclusive with a
+    CGST/SGST split per rate. It never shows commission or other stores' items.
+14. **Logos** are normalised on upload (Pillow: greyscale, ≤ 576×240 px, ≤ 256 KB) and kept in the
+    database; the 1-bit dithered raster for the printer's paper is produced at queue time. Uploads go
+    through the API, not presigned PUT, because the server must process them. (Pillow added.)
+15. **Printer detection** is stdlib-only in the agent: Windows print queues (ctypes `EnumPrintersW`) and
+    COM ports, Linux CUPS queues and device files, plus an on-demand /24 scan for port 9100. Detection
+    only lists; the owner chooses.
+16. **OS print queues** are printed to raw: Windows spooler `RAW` datatype via ctypes, Linux `lp -o raw`.
+17. **Bill/KOT preview** in the dashboard is a text sketch of the layout rules; the *Test print* button
+    is the exact check.
+18. **Not built:** signed self-update and rollback of the agent (the installer's rollback-guard is
+    present but inert), customer SMS for order events (the Fast2SMS `otp` route cannot carry a
+    message; needs DLT templates), real payments.

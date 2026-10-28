@@ -159,3 +159,16 @@ async def test_clear_cart(client: httpx.AsyncClient, alice: dict, menu: Menu) ->
     await add(client, alice, line(menu.burger))
     assert (await client.delete(CART, headers=alice)).status_code == 204
     assert (await client.get(CART, headers=alice)).json()["stores"] == []
+
+
+async def test_a_cart_cannot_grow_without_limit(
+    client: httpx.AsyncClient, alice: dict, menu: Menu
+) -> None:
+    # distinct notes make distinct lines
+    for i in range(50):
+        r = await add(client, alice, line(menu.burger, note=f"n{i}"))
+        assert r.status_code == 201, i
+    full = await add(client, alice, line(menu.burger, note="one too many"))
+    assert full.status_code == 400 and full.json()["code"] == "cart_full"
+    # merging into an existing line is still fine
+    assert (await add(client, alice, line(menu.burger, note="n0"))).status_code == 201

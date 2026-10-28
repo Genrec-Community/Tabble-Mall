@@ -389,11 +389,13 @@ class PrintingService:
         """Queue slips for a status change according to the store's rules. Best effort: a
         printing problem must never affect the order, so failures are logged and swallowed."""
         try:
-            prefs = await print_prefs(self.session, order.store_id)
-            if not prefs.auto_print:
-                return
-            pp = PrintPrefs(**prefs.__dict__)
+            # Everything, including reading the store's rules, runs in a savepoint: a SQL error
+            # aborts a Postgres transaction, and this must never take the order's own work with it.
             async with self.session.begin_nested():
+                prefs = await print_prefs(self.session, order.store_id)
+                if not prefs.auto_print:
+                    return
+                pp = PrintPrefs(**prefs.__dict__)
                 if status == pp.kot_when:
                     await self.queue_ticket(order, pp)
                 if status == pp.bill_when:

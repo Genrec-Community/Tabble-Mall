@@ -81,10 +81,20 @@ async def serve_orders(ws: WebSocketLike, app: FastAPI) -> None:
         await ws.send_text(json.dumps({"type": "ready"}))
         incoming: asyncio.Task[Any] = asyncio.ensure_future(anext(messages))
         client: asyncio.Task[str] = asyncio.ensure_future(ws.receive_text())
+        # A socket is only as trustworthy as the token it was opened with, so it lives no longer
+        # than an access token: logout, suspension and removed roles take effect by then, and the
+        # browser reconnects with a fresh token.
+        deadline = asyncio.get_running_loop().time() + app.state.settings.access_ttl_s
         try:
             while True:
+                remaining = deadline - asyncio.get_running_loop().time()
+                if remaining <= 0:
+                    await ws.close(code=1000)
+                    return
                 done, _ = await asyncio.wait(
-                    {incoming, client}, timeout=HEARTBEAT_S, return_when=asyncio.FIRST_COMPLETED
+                    {incoming, client},
+                    timeout=min(HEARTBEAT_S, remaining),
+                    return_when=asyncio.FIRST_COMPLETED,
                 )
                 if not done:
                     await ws.send_text(json.dumps({"type": "ping"}))

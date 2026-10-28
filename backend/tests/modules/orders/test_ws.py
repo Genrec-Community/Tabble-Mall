@@ -102,3 +102,14 @@ async def test_refusals_close_with_policy_code(
         await serve_orders(ws, app)
         assert ws.closed == 1008, first
         assert ws.sent.empty()
+
+
+async def test_a_socket_does_not_outlive_its_access_token(
+    app: FastAPI, alice: dict, world: World
+) -> None:
+    app.state.settings = app.state.settings.model_copy(update={"access_ttl_s": 1})
+    ws = FakeSocket({"token": token(alice), "channel": "customer"})
+    async with asyncio.timeout(5):
+        await serve_orders(ws, app)  # returns by itself once the lifetime is up
+    assert ws.closed == 1000
+    assert (await ws.next())["type"] == "ready"

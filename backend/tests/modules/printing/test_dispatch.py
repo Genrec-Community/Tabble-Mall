@@ -170,3 +170,47 @@ async def test_reprint_without_a_printer_is_a_clear_error(
         store_url(world, f"/{order['id']}/print"), json={"what": "bill"}, headers=world.owner
     )
     assert r.status_code == 400 and r.json()["code"] == "no_printer"
+
+
+async def test_a_printing_database_error_never_breaks_the_order(
+    client: httpx.AsyncClient,
+    alice: dict,
+    menu: Menu,
+    world: World,
+    printers: dict,
+    monkeypatch,  # noqa: ANN001
+) -> None:
+    from mallt.modules.printing import service as printing_service
+
+    order = await place(client, alice, menu)
+
+    async def explode(*_a: object, **_k: object) -> None:
+        raise RuntimeError("printing is broken")
+
+    monkeypatch.setattr(printing_service.PrintingService, "queue_ticket", explode)
+    r = await client.post(store_url(world, f"/{order['id']}/accept"), headers=world.owner)
+    assert r.status_code == 200 and r.json()["status"] == "accepted"
+
+
+async def test_a_failing_prefs_query_inside_the_transaction_is_contained(
+    client: httpx.AsyncClient,
+    alice: dict,
+    menu: Menu,
+    world: World,
+    printers: dict,
+    monkeypatch,  # noqa: ANN001
+) -> None:
+    """A SQL error (not just a Python one) aborts a Postgres transaction. It must be contained
+    in a savepoint, or the order's own work after it would fail."""
+    from sqlalchemy import text
+
+    from mallt.modules.printing import service as printing_service
+
+    order = await place(client, alice, menu)
+
+    async def bad_sql(session: AsyncSession, store_id: object) -> None:
+        await session.execute(text("SELECT * FROM table_that_does_not_exist"))
+
+    monkeypatch.setattr(printing_service, "print_prefs", bad_sql)
+    r = await client.post(store_url(world, f"/{order['id']}/accept"), headers=world.owner)
+    assert r.status_code == 200 and r.json()["status"] == "accepted"

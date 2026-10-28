@@ -25,6 +25,7 @@ from mallt.modules.orders.schemas import (
 )
 
 MAX_LINE_QUANTITY = 20
+MAX_CART_LINES = 50
 
 
 @dataclass(frozen=True)
@@ -184,6 +185,8 @@ class CartService:
                 existing.quantity = merged
                 break
         else:
+            if len(cart.lines) >= MAX_CART_LINES:
+                raise BadRequest("cart_full", "Your cart is full. Remove something first.")
             cart.lines.append(
                 CartLine(
                     store_id=product.store.id,
