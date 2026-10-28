@@ -631,3 +631,7 @@ Decisions made while building; each says what it costs if wrong.
 18. **Not built:** signed self-update and rollback of the agent (the installer's rollback-guard is
     present but inert), customer SMS for order events (the Fast2SMS `otp` route cannot carry a
     message; needs DLT templates), real payments.
+19. **Mall home page** shows dishes from every open store with search (name/description, case-insensitive,
+    `%`/`_` literal), a Veg-only toggle and food-type chips, over `GET /public/malls/{slug}/items`
+    (cursor-paged, cached 60 s with the mall page and purged with it). Dishes link to their store page and
+    can be added to the cart straight from the home page.

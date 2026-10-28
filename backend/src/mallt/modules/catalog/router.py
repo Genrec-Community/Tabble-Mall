@@ -1,7 +1,7 @@
 import uuid
-from typing import Annotated
+from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, Request, Response, status
+from fastapi import APIRouter, Depends, Query, Request, Response, status
 
 from mallt.core.db import SessionDep
 from mallt.core.storage import Storage
@@ -14,6 +14,7 @@ from mallt.modules.catalog.schemas import (
     ImagePresignOut,
     ProductIn,
     ProductOut,
+    PublicItemsOut,
     PublicMenuOut,
     PublicStoreCardOut,
     SettingsOut,
@@ -160,3 +161,33 @@ async def public_menu(
 ) -> PublicMenuOut:
     response.headers["Cache-Control"] = "public, max-age=30"
     return await svc.public_menu(mall_slug, store_slug)
+
+
+FoodType = Literal[
+    "fast_food", "meals", "snacks", "beverages", "desserts", "bakery", "healthy",
+    "chinese", "south_indian", "north_indian",
+]  # fmt: skip
+
+
+@public_router.get("/malls/{mall_slug}/items")
+async def public_items(
+    mall_slug: str,
+    response: Response,
+    svc: Svc,
+    q: Annotated[str | None, Query(max_length=60)] = None,
+    diet: Literal["veg", "nonveg", "egg"] | None = None,
+    food_type: FoodType | None = None,
+    store: Annotated[str | None, Query(max_length=60)] = None,
+    after: uuid.UUID | None = None,
+    limit: Annotated[int, Query(ge=1, le=60)] = 30,
+) -> PublicItemsOut:
+    response.headers["Cache-Control"] = "public, max-age=30"
+    return await svc.public_items(
+        mall_slug,
+        q=(q or "").strip() or None,
+        diet=diet,
+        food_type=food_type,
+        store=store,
+        after=after,
+        limit=limit,
+    )

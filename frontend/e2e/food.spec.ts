@@ -153,6 +153,20 @@ test("customer orders from a store; the kitchen ticket and bill really print", a
     await kitchenRow.getByRole("button", { name: "Test print" }).click();
     await expect.poll(() => kitchen.text(), { timeout: 20_000 }).toContain("TEST PRINT");
 
+    // ── The mall home page shows dishes from every store, searchable ─────────────────────────
+    const browse = await (await browser.newContext()).newPage();
+    await browse.goto(`/m/${mallSlug}`);
+    await expect(browse.getByRole("heading", { name: "Food Mall" })).toBeVisible();
+    await expect(browse.getByRole("button", { name: "Add Cheese Burger from Burger Hub" })).toBeVisible();
+    await browse.getByRole("searchbox", { name: "Search dishes" }).fill("pizza");
+    await expect(browse.getByText("Nothing matches")).toBeVisible();
+    await browse.getByRole("searchbox", { name: "Search dishes" }).fill("cheese");
+    await expect(browse.getByRole("button", { name: "Add Cheese Burger from Burger Hub" })).toBeVisible();
+    await browse.getByRole("button", { name: "Veg only" }).click();
+    await expect(browse.getByRole("button", { name: "Add Cheese Burger from Burger Hub" })).toBeVisible();
+    await browse.getByRole("link", { name: "Burger Hub" }).first().click();
+    await expect(browse).toHaveURL(new RegExp(`/m/${mallSlug}/s/${storeSlug}$`));
+
     // ── A customer orders ───────────────────────────────────────────────────────────────────
     const customer = await (await browser.newContext()).newPage();
     await customer.goto(`/account/login?next=/m/${mallSlug}/s/${storeSlug}`);

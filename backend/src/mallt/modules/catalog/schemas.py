@@ -338,3 +338,17 @@ class PublicMenuOut(BaseModel):
 
 def theme_from(raw: dict[str, Any] | None) -> Theme:
     return Theme.model_validate(raw or {})
+
+
+class PublicItemOut(BaseModel):
+    """A dish on the mall home page, with the store it comes from."""
+
+    store_slug: str
+    store_name: str
+    accepting_orders: bool
+    product: PublicProductOut
+
+
+class PublicItemsOut(BaseModel):
+    items: list[PublicItemOut]
+    next_cursor: uuid.UUID | None = None

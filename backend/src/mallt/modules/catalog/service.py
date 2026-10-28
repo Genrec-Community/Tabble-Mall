@@ -33,6 +33,8 @@ from mallt.modules.catalog.schemas import (
     OptionGroupIn,
     ProductIn,
     PublicCategoryOut,
+    PublicItemOut,
+    PublicItemsOut,
     PublicMenuOut,
     PublicOptionGroupOut,
     PublicOptionOut,
@@ -509,6 +511,52 @@ class CatalogService:
                 )
             )
         return cards
+
+    async def public_items(
+        self,
+        mall_slug: str,
+        *,
+        q: str | None,
+        diet: str | None,
+        food_type: str | None,
+        store: str | None,
+        after: uuid.UUID | None,
+        limit: int,
+    ) -> PublicItemsOut:
+        """Dishes from every open store of a mall, for the mall home page (search and filters)."""
+        _, stores = await self.tenancy.public_directory(mall_slug)
+        settings = await self.repo.settings_for_stores([s.id for s in stores])
+        now = datetime.now(UTC)
+        wanted = [
+            s
+            for s in stores
+            if (store is None or s.slug == store)
+            and (food_type is None or (s.id in settings and food_type in settings[s.id].food_types))
+        ]
+        by_id = {s.id: s for s in wanted}
+        rows = await self.repo.search_products(
+            list(by_id), q=q, diet=diet, after=after, limit=limit + 1
+        )
+        page = rows[:limit]
+        items: list[PublicItemOut] = []
+        for product in page:
+            st = by_id[product.store_id]
+            row = settings.get(st.id)
+            tz = ZoneInfo(row.timezone if row else "Asia/Kolkata")
+            accepting = (
+                store_accepting(row.is_open, row.is_paused, row.hours, row.timezone, now)
+                if row
+                else True
+            )
+            items.append(
+                PublicItemOut(
+                    store_slug=st.slug,
+                    store_name=st.name,
+                    accepting_orders=accepting,
+                    product=self._public_product(product, now.astimezone(tz)),
+                )
+            )
+        return PublicItemsOut(items=items, next_cursor=page[-1].id if len(rows) > limit else None)
 
     async def public_menu(self, mall_slug: str, store_slug: str) -> PublicMenuOut:
         _, stores = await self.tenancy.public_directory(mall_slug)

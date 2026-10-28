@@ -76,7 +76,7 @@ function ProductRow({ product, canOrder, onPick }: { product: PublicProductOut; 
   );
 }
 
-function ProductPicker({ mallSlug, product, onClose }: { mallSlug: string; product: PublicProductOut; onClose: () => void }) {
+export function ProductPicker({ mallSlug, product, onClose }: { mallSlug: string; product: PublicProductOut; onClose: () => void }) {
   const router = useRouter();
   const pathname = usePathname();
   const queryClient = useQueryClient();

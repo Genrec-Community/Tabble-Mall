@@ -1511,6 +1511,41 @@ export type PublicCategoryOut = {
 };
 
 /**
+ * PublicItemOut
+ *
+ * A dish on the mall home page, with the store it comes from.
+ */
+export type PublicItemOut = {
+    /**
+     * Accepting Orders
+     */
+    accepting_orders: boolean;
+    product: PublicProductOut;
+    /**
+     * Store Name
+     */
+    store_name: string;
+    /**
+     * Store Slug
+     */
+    store_slug: string;
+};
+
+/**
+ * PublicItemsOut
+ */
+export type PublicItemsOut = {
+    /**
+     * Items
+     */
+    items: Array<PublicItemOut>;
+    /**
+     * Next Cursor
+     */
+    next_cursor?: string | null;
+};
+
+/**
  * PublicMallOut
  */
 export type PublicMallOut = {
@@ -3851,6 +3886,61 @@ export type OrgsSuspendOrgResponses = {
 };
 
 export type OrgsSuspendOrgResponse = OrgsSuspendOrgResponses[keyof OrgsSuspendOrgResponses];
+
+export type PublicPublicItemsData = {
+    body?: never;
+    path: {
+        /**
+         * Mall Slug
+         */
+        mall_slug: string;
+    };
+    query?: {
+        /**
+         * Q
+         */
+        q?: string | null;
+        /**
+         * Diet
+         */
+        diet?: 'veg' | 'nonveg' | 'egg' | null;
+        /**
+         * Food Type
+         */
+        food_type?: 'fast_food' | 'meals' | 'snacks' | 'beverages' | 'desserts' | 'bakery' | 'healthy' | 'chinese' | 'south_indian' | 'north_indian' | null;
+        /**
+         * Store
+         */
+        store?: string | null;
+        /**
+         * After
+         */
+        after?: string | null;
+        /**
+         * Limit
+         */
+        limit?: number;
+    };
+    url: '/api/v1/public/malls/{mall_slug}/items';
+};
+
+export type PublicPublicItemsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PublicPublicItemsError = PublicPublicItemsErrors[keyof PublicPublicItemsErrors];
+
+export type PublicPublicItemsResponses = {
+    /**
+     * Successful Response
+     */
+    200: PublicItemsOut;
+};
+
+export type PublicPublicItemsResponse = PublicPublicItemsResponses[keyof PublicPublicItemsResponses];
 
 export type PublicPublicStoresData = {
     body?: never;

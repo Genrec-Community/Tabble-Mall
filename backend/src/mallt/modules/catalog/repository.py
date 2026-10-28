@@ -139,3 +139,33 @@ class CatalogRepository:
             .values(stock_count=ProductVariant.stock_count + quantity)
         )
         await self.session.execute(stmt)
+
+    async def search_products(
+        self,
+        store_ids: list[uuid.UUID],
+        *,
+        q: str | None,
+        diet: str | None,
+        after: uuid.UUID | None,
+        limit: int,
+    ) -> list[Product]:
+        if not store_ids:
+            return []
+        stmt = (
+            select(Product)
+            .where(Product.store_id.in_(store_ids), Product.is_archived.is_(False))
+            .options(*_PRODUCT_LOAD)
+            .order_by(Product.id)
+            .limit(limit)
+        )
+        if q:
+            # Escaped so a customer typing % or _ searches for those characters, not a pattern.
+            like = "%" + q.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
+            stmt = stmt.where(
+                Product.name.ilike(like, escape="\\") | Product.description.ilike(like, escape="\\")
+            )
+        if diet:
+            stmt = stmt.where(Product.diet == diet)
+        if after is not None:
+            stmt = stmt.where(Product.id > after)
+        return list((await self.session.execute(stmt)).scalars())

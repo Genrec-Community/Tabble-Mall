@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import type { PublicMallOut, PublicStoreCardOut } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 
@@ -16,7 +17,16 @@ export const FOOD_TYPE_LABELS: Record<string, string> = {
 };
 
 /** What a customer sees after scanning the mall's QR code: every food store, open or closed. */
-export function MallView({ mall, stores }: { mall: PublicMallOut; stores: PublicStoreCardOut[] }) {
+export function MallView({
+  mall,
+  stores,
+  children,
+}: {
+  mall: PublicMallOut;
+  stores: PublicStoreCardOut[];
+  /** Rendered between the heading and the store list (the dish search on the home page). */
+  children?: ReactNode;
+}) {
   const cards = new Map(stores.map((s) => [s.slug, s]));
   return (
     <main className="mx-auto max-w-2xl space-y-6 p-4">
@@ -24,6 +34,8 @@ export function MallView({ mall, stores }: { mall: PublicMallOut; stores: Public
         <h1 className="text-2xl font-semibold">{mall.name}</h1>
         {mall.city && <p className="text-muted-foreground">{mall.city}</p>}
       </header>
+      {children}
+      {mall.stores.length > 0 && <h2 className="text-lg font-medium">Stores</h2>}
       {mall.stores.length === 0 ? (
         <p className="text-muted-foreground">No stores are open here yet. Please check back soon.</p>
       ) : (

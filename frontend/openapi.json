@@ -2940,6 +2940,62 @@
         "title": "PublicCategoryOut",
         "type": "object"
       },
+      "PublicItemOut": {
+        "description": "A dish on the mall home page, with the store it comes from.",
+        "properties": {
+          "accepting_orders": {
+            "title": "Accepting Orders",
+            "type": "boolean"
+          },
+          "product": {
+            "$ref": "#/components/schemas/PublicProductOut"
+          },
+          "store_name": {
+            "title": "Store Name",
+            "type": "string"
+          },
+          "store_slug": {
+            "title": "Store Slug",
+            "type": "string"
+          }
+        },
+        "required": [
+          "store_slug",
+          "store_name",
+          "accepting_orders",
+          "product"
+        ],
+        "title": "PublicItemOut",
+        "type": "object"
+      },
+      "PublicItemsOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PublicItemOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "PublicItemsOut",
+        "type": "object"
+      },
       "PublicMallOut": {
         "properties": {
           "city": {
@@ -6987,6 +7043,160 @@
         "summary": "Suspend Org",
         "tags": [
           "orgs"
+        ]
+      }
+    },
+    "/api/v1/public/malls/{mall_slug}/items": {
+      "get": {
+        "operationId": "public_public_items",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mall_slug",
+            "required": true,
+            "schema": {
+              "title": "Mall Slug",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 60,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "diet",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "veg",
+                    "nonveg",
+                    "egg"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Diet"
+            }
+          },
+          {
+            "in": "query",
+            "name": "food_type",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "fast_food",
+                    "meals",
+                    "snacks",
+                    "beverages",
+                    "desserts",
+                    "bakery",
+                    "healthy",
+                    "chinese",
+                    "south_indian",
+                    "north_indian"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Food Type"
+            }
+          },
+          {
+            "in": "query",
+            "name": "store",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 60,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Store"
+            }
+          },
+          {
+            "in": "query",
+            "name": "after",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "After"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 30,
+              "maximum": 60,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicItemsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Public Items",
+        "tags": [
+          "public"
         ]
       }
     },
