@@ -1,0 +1,51 @@
+# Dev stack. Postgres is NOT here: dev uses Neon (DATABASE_URL in .env).
+# Redis is optional: `make dev` runs without it (Postgres-backed KV, inline jobs);
+# `make dev-redis` adds redis + the ARQ worker.
+services:
+  nginx:
+    image: nginx:1.27-alpine
+    ports: ["8080:80"]
+    volumes: ["./infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro"]
+    depends_on: [api, web]
+
+  web:
+    build:
+      context: .
+      dockerfile: infra/docker/web.Dockerfile
+    environment:
+      API_INTERNAL_URL: http://api:8000
+
+  api:
+    build:
+      context: .
+      dockerfile: infra/docker/api.Dockerfile
+    env_file: .env
+    environment:
+      REDIS_URL: ${COMPOSE_REDIS_URL:-}
+
+  worker:
+    profiles: [redis]
+    build:
+      context: .
+      dockerfile: infra/docker/api.Dockerfile
+    command: ["arq", "mallt.workers.main.WorkerSettings"]
+    env_file: .env
+    environment:
+      REDIS_URL: redis://redis:6379/0
+    depends_on: [redis]
+
+  redis:
+    profiles: [redis]
+    image: redis:7-alpine
+
+  # Test-only databases for `make test` (profile: test).
+  postgres-test:
+    profiles: [test]
+    image: postgres:17-alpine
+    environment: { POSTGRES_PASSWORD: test, POSTGRES_DB: mallt_test }
+    ports: ["55432:5432"]
+
+  redis-test:
+    profiles: [test]
+    image: redis:7-alpine
+    ports: ["56379:6379"]

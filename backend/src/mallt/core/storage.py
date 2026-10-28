@@ -37,7 +37,13 @@ class Storage:
             region_name=settings.s3_region,
             aws_access_key_id=settings.s3_access_key_id or None,
             aws_secret_access_key=settings.s3_secret_access_key or None,
-            config=Config(signature_version="s3v4"),
+            # Neon requires path-style addressing, and a checksum baked into a presigned PUT
+            # (computed from an empty body) would reject every real upload.
+            config=Config(
+                signature_version="s3v4",
+                s3={"addressing_style": "path"},
+                request_checksum_calculation="when_required",
+            ),
         )
 
     def presign_put(self, key: str, content_type: str, expires_in: int = 300) -> PresignedUpload:

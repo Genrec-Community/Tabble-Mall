@@ -50,3 +50,15 @@ def test_object_key_is_tenant_scoped_and_unique(storage: Storage) -> None:
 
 def test_public_url_has_no_double_slash(storage: Storage) -> None:
     assert storage.public_url("org/x/a.webp") == "https://cdn.example.test/org/x/a.webp"
+
+
+def test_presign_put_is_path_style_for_custom_endpoints(storage: Storage) -> None:
+    up = storage.presign_put("org/x/a.webp", "image/webp")
+    assert urlsplit(up.url).netloc == "s3.example.test"
+    assert urlsplit(up.url).path == "/mallt-dev/org/x/a.webp"
+
+
+def test_presign_put_has_no_embedded_checksum(storage: Storage) -> None:
+    # A checksum computed from an empty body at presign time would reject every real upload.
+    query = parse_qs(urlsplit(storage.presign_put("k.webp", "image/webp").url).query)
+    assert not [k for k in query if "checksum" in k.lower()]
