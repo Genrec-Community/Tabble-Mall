@@ -416,3 +416,16 @@ async def test_history_and_active_filters(
         "items"
     ]
     assert len(active) == 1 and len(history) == 1 and history[0]["status"] == "refunded"
+
+
+async def test_checkout_needs_a_verified_phone_number(
+    client: httpx.AsyncClient, menu: Menu, world: World
+) -> None:
+    google = await client.post(
+        "/api/v1/auth/customer/google", json={"id_token": "good:sub-1|g@example.com|Gia"}
+    )
+    assert google.status_code == 200, google.text
+    headers = {"Authorization": f"Bearer {google.json()['access_token']}"}
+    await client.post(f"{CART}/lines", json=line(menu.burger), headers=headers)
+    r = await checkout(client, headers)
+    assert r.status_code == 400 and r.json()["code"] == "phone_required"

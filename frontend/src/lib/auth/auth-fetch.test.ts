@@ -24,6 +24,18 @@ describe("kindForUrl", () => {
   it("routes customer endpoints to the customer session and everything else to staff", () => {
     expect(kindForUrl("http://x/api/v1/auth/customer/me")).toBe("customer");
     expect(kindForUrl("http://x/api/v1/customer/orders")).toBe("customer");
+    expect(kindForUrl("http://x/api/v1/malls/phoenix/cart")).toBe("customer");
+    expect(kindForUrl("http://x/api/v1/malls/phoenix/cart/lines/abc")).toBe("customer");
+    expect(kindForUrl("http://x/api/v1/malls/phoenix/checkout")).toBe("customer");
+    expect(kindForUrl("http://x/api/v1/orders")).toBe("customer");
+    expect(kindForUrl("http://x/api/v1/orders?limit=20")).toBe("customer");
+    expect(kindForUrl("http://x/api/v1/orders/abc")).toBe("customer");
+    expect(kindForUrl("http://x/api/v1/orders/stores/abc/cancel")).toBe("customer");
+    // staff routes that merely contain "orders" or sit under /malls/
+    expect(kindForUrl("http://x/api/v1/stores/abc/orders")).toBe("staff");
+    expect(kindForUrl("http://x/api/v1/orgs/abc/orders")).toBe("staff");
+    expect(kindForUrl("http://x/api/v1/malls/0192abcd-0000-7000-8000-000000000001/orders")).toBe("staff");
+    expect(kindForUrl("http://x/api/v1/malls/0192abcd-0000-7000-8000-000000000001/stores")).toBe("staff");
     expect(kindForUrl("http://x/api/v1/auth/staff/me")).toBe("staff");
     expect(kindForUrl("http://x/api/v1/orgs")).toBe("staff");
   });

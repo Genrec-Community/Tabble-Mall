@@ -15,6 +15,65 @@ export type ActiveStatus = 'active' | 'suspended';
 export type ActorType = 'staff' | 'customer' | 'system';
 
 /**
+ * AgentCreate
+ */
+export type AgentCreate = {
+    /**
+     * Name
+     */
+    name: string;
+};
+
+/**
+ * AgentCreatedOut
+ */
+export type AgentCreatedOut = {
+    agent: AgentOut;
+    /**
+     * Token
+     */
+    token: string;
+};
+
+/**
+ * AgentOut
+ */
+export type AgentOut = {
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Is Active
+     */
+    is_active: boolean;
+    /**
+     * Last Seen At
+     */
+    last_seen_at: string | null;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Online
+     */
+    online?: boolean;
+    /**
+     * Token Prefix
+     */
+    token_prefix: string;
+    /**
+     * Version
+     */
+    version: string | null;
+};
+
+/**
  * AssignmentOut
  */
 export type AssignmentOut = {
@@ -111,6 +170,232 @@ export type AuditPage = {
 };
 
 /**
+ * AvailabilityUpdate
+ */
+export type AvailabilityUpdate = {
+    /**
+     * Is Available
+     */
+    is_available?: boolean | null;
+    /**
+     * Variants
+     */
+    variants?: Array<AvailabilityVariant> | null;
+};
+
+/**
+ * AvailabilityVariant
+ */
+export type AvailabilityVariant = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Stock Count
+     */
+    stock_count: number;
+};
+
+/**
+ * CartLineIn
+ */
+export type CartLineIn = {
+    /**
+     * Note
+     */
+    note?: string | null;
+    /**
+     * Option Ids
+     */
+    option_ids?: Array<string>;
+    /**
+     * Product Id
+     */
+    product_id: string;
+    /**
+     * Quantity
+     */
+    quantity: number;
+    /**
+     * Variant Id
+     */
+    variant_id: string;
+};
+
+/**
+ * CartLineOut
+ */
+export type CartLineOut = {
+    /**
+     * Diet
+     */
+    diet: string;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Line Total Paise
+     */
+    line_total_paise: number;
+    /**
+     * Note
+     */
+    note: string | null;
+    /**
+     * Options
+     */
+    options: Array<string>;
+    /**
+     * Problem
+     */
+    problem: 'unavailable' | 'sold_out' | 'store_closed' | null;
+    /**
+     * Product Id
+     */
+    product_id: string;
+    /**
+     * Product Name
+     */
+    product_name: string;
+    /**
+     * Quantity
+     */
+    quantity: number;
+    /**
+     * Unit Price Paise
+     */
+    unit_price_paise: number;
+    /**
+     * Variant Name
+     */
+    variant_name: string;
+};
+
+/**
+ * CartLineUpdate
+ */
+export type CartLineUpdate = {
+    /**
+     * Note
+     */
+    note?: string | null;
+    /**
+     * Quantity
+     */
+    quantity?: number | null;
+};
+
+/**
+ * CartOut
+ */
+export type CartOut = {
+    /**
+     * Can Checkout
+     */
+    can_checkout: boolean;
+    /**
+     * Mall Slug
+     */
+    mall_slug: string;
+    /**
+     * Stores
+     */
+    stores: Array<CartStoreOut>;
+    /**
+     * Total Paise
+     */
+    total_paise: number;
+};
+
+/**
+ * CartStoreOut
+ */
+export type CartStoreOut = {
+    /**
+     * Accepting Orders
+     */
+    accepting_orders: boolean;
+    /**
+     * Lines
+     */
+    lines: Array<CartLineOut>;
+    /**
+     * Prep Minutes
+     */
+    prep_minutes: number;
+    /**
+     * Store Name
+     */
+    store_name: string;
+    /**
+     * Store Slug
+     */
+    store_slug: string;
+    /**
+     * Subtotal Paise
+     */
+    subtotal_paise: number;
+};
+
+/**
+ * CategoryCreate
+ */
+export type CategoryCreate = {
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Position
+     */
+    position?: number;
+};
+
+/**
+ * CategoryOut
+ */
+export type CategoryOut = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Position
+     */
+    position: number;
+};
+
+/**
+ * CategoryUpdate
+ */
+export type CategoryUpdate = {
+    /**
+     * Name
+     */
+    name?: string | null;
+    /**
+     * Position
+     */
+    position?: number | null;
+};
+
+/**
+ * CheckoutIn
+ */
+export type CheckoutIn = {
+    /**
+     * Note
+     */
+    note?: string | null;
+};
+
+/**
  * CustomerMe
  */
 export type CustomerMe = {
@@ -137,6 +422,101 @@ export type CustomerMe = {
 };
 
 /**
+ * CustomerOrderOut
+ */
+export type CustomerOrderOut = {
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Mall Slug
+     */
+    mall_slug?: string | null;
+    status: CustomerOrderStatus;
+    /**
+     * Stores
+     */
+    stores: Array<CustomerStoreOrderOut>;
+    /**
+     * Total Paise
+     */
+    total_paise: number;
+};
+
+/**
+ * CustomerOrderStatus
+ */
+export type CustomerOrderStatus = 'placed' | 'paid' | 'payment_failed';
+
+/**
+ * CustomerStoreOrderOut
+ */
+export type CustomerStoreOrderOut = {
+    /**
+     * Accept By
+     */
+    accept_by: string | null;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Lines
+     */
+    lines: Array<OrderLineOut>;
+    /**
+     * Note
+     */
+    note: string | null;
+    /**
+     * Order No
+     */
+    order_no: number;
+    /**
+     * Pickup Code
+     */
+    pickup_code: string;
+    /**
+     * Prep Minutes
+     */
+    prep_minutes: number;
+    /**
+     * Reason
+     */
+    reason: string | null;
+    status: StoreOrderStatus;
+    /**
+     * Steps
+     */
+    steps: Array<OrderStepOut>;
+    /**
+     * Store Name
+     */
+    store_name: string;
+    /**
+     * Store Slug
+     */
+    store_slug: string;
+    /**
+     * Tax Paise
+     */
+    tax_paise: number;
+    /**
+     * Total Paise
+     */
+    total_paise: number;
+};
+
+/**
  * CustomerUpdate
  */
 export type CustomerUpdate = {
@@ -149,6 +529,108 @@ export type CustomerUpdate = {
      */
     name?: string | null;
 };
+
+/**
+ * DesignIn
+ */
+export type DesignIn = {
+    /**
+     * Footer Text
+     */
+    footer_text?: string | null;
+    /**
+     * Header Address
+     */
+    header_address?: string | null;
+    /**
+     * Header Extra
+     */
+    header_extra?: string | null;
+    /**
+     * Header Name
+     */
+    header_name?: string | null;
+    /**
+     * Header Phone
+     */
+    header_phone?: string | null;
+    options?: SlipOptions;
+};
+
+/**
+ * DesignOut
+ */
+export type DesignOut = {
+    /**
+     * Footer Text
+     */
+    footer_text: string | null;
+    /**
+     * Has Logo
+     */
+    has_logo: boolean;
+    /**
+     * Header Address
+     */
+    header_address: string | null;
+    /**
+     * Header Extra
+     */
+    header_extra: string | null;
+    /**
+     * Header Name
+     */
+    header_name: string | null;
+    /**
+     * Header Phone
+     */
+    header_phone: string | null;
+    options: SlipOptions;
+};
+
+/**
+ * DetectedPrinterOut
+ */
+export type DetectedPrinterOut = {
+    /**
+     * Agent Id
+     */
+    agent_id: string;
+    /**
+     * Agent Name
+     */
+    agent_name: string;
+    connection: PrinterConnection;
+    /**
+     * Driver
+     */
+    driver: string | null;
+    /**
+     * Is Default
+     */
+    is_default: boolean;
+    /**
+     * Key
+     */
+    key: string;
+    /**
+     * Likely Thermal
+     */
+    likely_thermal: boolean;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Target
+     */
+    target: string;
+};
+
+/**
+ * Diet
+ */
+export type Diet = 'veg' | 'nonveg' | 'egg';
 
 /**
  * GoogleLogin
@@ -196,6 +678,76 @@ export type HttpValidationError = {
      */
     detail?: Array<ValidationError>;
 };
+
+/**
+ * HoursWindow
+ */
+export type HoursWindow = {
+    /**
+     * Close
+     */
+    close: string;
+    /**
+     * Days
+     */
+    days: Array<number>;
+    /**
+     * Open
+     */
+    open: string;
+};
+
+/**
+ * ImagePresignIn
+ */
+export type ImagePresignIn = {
+    /**
+     * Content Type
+     */
+    content_type: 'image/jpeg' | 'image/png' | 'image/webp';
+    /**
+     * Kind
+     */
+    kind: 'product' | 'logo' | 'banner';
+};
+
+/**
+ * ImagePresignOut
+ */
+export type ImagePresignOut = {
+    /**
+     * Expires In
+     */
+    expires_in: number;
+    /**
+     * Headers
+     */
+    headers: {
+        [key: string]: string;
+    };
+    /**
+     * Key
+     */
+    key: string;
+    /**
+     * Public Url
+     */
+    public_url: string;
+    /**
+     * Url
+     */
+    url: string;
+};
+
+/**
+ * JobKind
+ */
+export type JobKind = 'ticket' | 'bill' | 'test';
+
+/**
+ * JobStatus
+ */
+export type JobStatus = 'queued' | 'sent' | 'printed' | 'failed';
 
 /**
  * MallCreate
@@ -266,6 +818,153 @@ export type MallUpdate = {
      * Name
      */
     name?: string | null;
+};
+
+/**
+ * OptionGroupIn
+ */
+export type OptionGroupIn = {
+    /**
+     * Id
+     */
+    id?: string | null;
+    /**
+     * Max Select
+     */
+    max_select?: number;
+    /**
+     * Min Select
+     */
+    min_select?: number;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Options
+     */
+    options: Array<OptionIn>;
+};
+
+/**
+ * OptionGroupOut
+ */
+export type OptionGroupOut = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Max Select
+     */
+    max_select: number;
+    /**
+     * Min Select
+     */
+    min_select: number;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Options
+     */
+    options: Array<OptionOut>;
+};
+
+/**
+ * OptionIn
+ */
+export type OptionIn = {
+    /**
+     * Id
+     */
+    id?: string | null;
+    /**
+     * Is Available
+     */
+    is_available?: boolean;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Price Delta Paise
+     */
+    price_delta_paise?: number;
+};
+
+/**
+ * OptionOut
+ */
+export type OptionOut = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Is Available
+     */
+    is_available: boolean;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Price Delta Paise
+     */
+    price_delta_paise: number;
+};
+
+/**
+ * OrderLineOut
+ */
+export type OrderLineOut = {
+    /**
+     * Diet
+     */
+    diet: string;
+    /**
+     * Line Total Paise
+     */
+    line_total_paise: number;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Note
+     */
+    note: string | null;
+    /**
+     * Options
+     */
+    options: Array<{
+        [key: string]: unknown;
+    }>;
+    /**
+     * Quantity
+     */
+    quantity: number;
+    /**
+     * Unit Price Paise
+     */
+    unit_price_paise: number;
+    /**
+     * Variant Name
+     */
+    variant_name: string;
+};
+
+/**
+ * OrderStepOut
+ */
+export type OrderStepOut = {
+    /**
+     * At
+     */
+    at: string;
+    status: StoreOrderStatus;
 };
 
 /**
@@ -400,6 +1099,20 @@ export type OwnerCreate = {
 };
 
 /**
+ * Page[CustomerOrderOut]
+ */
+export type PageCustomerOrderOut = {
+    /**
+     * Items
+     */
+    items: Array<CustomerOrderOut>;
+    /**
+     * Next Cursor
+     */
+    next_cursor?: string | null;
+};
+
+/**
  * Page[OrgOut]
  */
 export type PageOrgOut = {
@@ -407,6 +1120,20 @@ export type PageOrgOut = {
      * Items
      */
     items: Array<OrgOut>;
+    /**
+     * Next Cursor
+     */
+    next_cursor?: string | null;
+};
+
+/**
+ * Page[StoreOrderOut]
+ */
+export type PageStoreOrderOut = {
+    /**
+     * Items
+     */
+    items: Array<StoreOrderOut>;
     /**
      * Next Cursor
      */
@@ -428,6 +1155,362 @@ export type PasswordChange = {
 };
 
 /**
+ * PickupIn
+ */
+export type PickupIn = {
+    /**
+     * Code
+     */
+    code: string;
+};
+
+/**
+ * PrintJobOut
+ */
+export type PrintJobOut = {
+    /**
+     * Acked At
+     */
+    acked_at: string | null;
+    /**
+     * Attempts
+     */
+    attempts: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Id
+     */
+    id: string;
+    kind: JobKind;
+    /**
+     * Last Error
+     */
+    last_error: string | null;
+    /**
+     * Printer Id
+     */
+    printer_id: string;
+    status: JobStatus;
+    /**
+     * Store Order Id
+     */
+    store_order_id: string | null;
+};
+
+/**
+ * PrinterConnection
+ */
+export type PrinterConnection = 'usb' | 'lan' | 'bluetooth' | 'system';
+
+/**
+ * PrinterCreate
+ */
+export type PrinterCreate = {
+    connection: PrinterConnection;
+    layout?: PrinterLayout | null;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Paper Width
+     */
+    paper_width?: 32 | 42 | 48;
+    role?: PrinterRole;
+    /**
+     * Target
+     */
+    target: string;
+};
+
+/**
+ * PrinterLayout
+ *
+ * Per-printer hardware layout. Only fields that are set are stored.
+ */
+export type PrinterLayout = {
+    /**
+     * Beep
+     */
+    beep?: boolean | null;
+    /**
+     * Bold Items
+     */
+    bold_items?: boolean | null;
+    /**
+     * Copies
+     */
+    copies?: number | null;
+    /**
+     * Cut
+     */
+    cut?: 'full' | 'partial' | 'none' | null;
+    /**
+     * Feed After
+     */
+    feed_after?: number | null;
+    /**
+     * Feed Before
+     */
+    feed_before?: number | null;
+    /**
+     * Font
+     */
+    font?: 'a' | 'b' | null;
+    /**
+     * Heading Height
+     */
+    heading_height?: number | null;
+    /**
+     * Heading Width
+     */
+    heading_width?: number | null;
+    /**
+     * Item Height
+     */
+    item_height?: number | null;
+    /**
+     * Item Width
+     */
+    item_width?: number | null;
+    /**
+     * Left Margin
+     */
+    left_margin?: number | null;
+    /**
+     * Line Spacing
+     */
+    line_spacing?: number | null;
+    /**
+     * Open Drawer
+     */
+    open_drawer?: boolean | null;
+    /**
+     * Print Width Dots
+     */
+    print_width_dots?: number | null;
+    /**
+     * Qr Size
+     */
+    qr_size?: number | null;
+    /**
+     * Rule Char
+     */
+    rule_char?: '-' | '=' | '*' | '_' | '.' | null;
+    /**
+     * Text Height
+     */
+    text_height?: number | null;
+    /**
+     * Text Width
+     */
+    text_width?: number | null;
+};
+
+/**
+ * PrinterOut
+ */
+export type PrinterOut = {
+    connection: PrinterConnection;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Is Active
+     */
+    is_active: boolean;
+    /**
+     * Last Printed At
+     */
+    last_printed_at: string | null;
+    layout: PrinterLayout;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Paper Width
+     */
+    paper_width: number;
+    role: PrinterRole;
+    /**
+     * Target
+     */
+    target: string;
+};
+
+/**
+ * PrinterRole
+ */
+export type PrinterRole = 'kitchen' | 'counter';
+
+/**
+ * PrinterUpdate
+ */
+export type PrinterUpdate = {
+    /**
+     * Is Active
+     */
+    is_active?: boolean | null;
+    layout?: PrinterLayout | null;
+    /**
+     * Name
+     */
+    name?: string | null;
+    /**
+     * Paper Width
+     */
+    paper_width?: 32 | 42 | 48 | null;
+    role?: PrinterRole | null;
+    /**
+     * Target
+     */
+    target?: string | null;
+};
+
+/**
+ * ProductIn
+ */
+export type ProductIn = {
+    /**
+     * Allergens
+     */
+    allergens?: string | null;
+    /**
+     * Category Id
+     */
+    category_id?: string | null;
+    /**
+     * Description
+     */
+    description?: string | null;
+    diet?: Diet;
+    /**
+     * Image Key
+     */
+    image_key?: string | null;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Option Groups
+     */
+    option_groups?: Array<OptionGroupIn>;
+    /**
+     * Position
+     */
+    position?: number;
+    /**
+     * Prep Minutes
+     */
+    prep_minutes?: number;
+    stock_mode?: StockMode;
+    /**
+     * Tax Bps
+     */
+    tax_bps?: number;
+    /**
+     * Variants
+     */
+    variants: Array<VariantIn>;
+    /**
+     * Windows
+     */
+    windows?: Array<Window>;
+};
+
+/**
+ * ProductOut
+ */
+export type ProductOut = {
+    /**
+     * Allergens
+     */
+    allergens: string | null;
+    /**
+     * Category Id
+     */
+    category_id: string | null;
+    /**
+     * Description
+     */
+    description: string | null;
+    diet: Diet;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Image Key
+     */
+    image_key: string | null;
+    /**
+     * Image Url
+     */
+    image_url?: string | null;
+    /**
+     * Is Available
+     */
+    is_available: boolean;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Option Groups
+     */
+    option_groups: Array<OptionGroupOut>;
+    /**
+     * Position
+     */
+    position: number;
+    /**
+     * Prep Minutes
+     */
+    prep_minutes: number;
+    stock_mode: StockMode;
+    /**
+     * Store Id
+     */
+    store_id: string;
+    /**
+     * Tax Bps
+     */
+    tax_bps: number;
+    /**
+     * Variants
+     */
+    variants: Array<VariantOut>;
+    /**
+     * Windows
+     */
+    windows: Array<Window>;
+};
+
+/**
+ * PublicCategoryOut
+ */
+export type PublicCategoryOut = {
+    /**
+     * Id
+     */
+    id: string | null;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Products
+     */
+    products: Array<PublicProductOut>;
+};
+
+/**
  * PublicMallOut
  */
 export type PublicMallOut = {
@@ -446,17 +1529,135 @@ export type PublicMallOut = {
     /**
      * Stores
      */
-    stores: Array<PublicStoreOut>;
+    stores: Array<MalltModulesTenancySchemasPublicStoreOut>;
 };
 
 /**
- * PublicStoreOut
+ * PublicMenuOut
  */
-export type PublicStoreOut = {
+export type PublicMenuOut = {
+    /**
+     * Categories
+     */
+    categories: Array<PublicCategoryOut>;
+    store: MalltModulesCatalogSchemasPublicStoreOut;
+};
+
+/**
+ * PublicOptionGroupOut
+ */
+export type PublicOptionGroupOut = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Max Select
+     */
+    max_select: number;
+    /**
+     * Min Select
+     */
+    min_select: number;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Options
+     */
+    options: Array<PublicOptionOut>;
+};
+
+/**
+ * PublicOptionOut
+ */
+export type PublicOptionOut = {
+    /**
+     * Available
+     */
+    available: boolean;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Price Delta Paise
+     */
+    price_delta_paise: number;
+};
+
+/**
+ * PublicProductOut
+ */
+export type PublicProductOut = {
+    /**
+     * Allergens
+     */
+    allergens: string | null;
+    /**
+     * Available
+     */
+    available: boolean;
     /**
      * Description
      */
     description: string | null;
+    diet: Diet;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Image Url
+     */
+    image_url: string | null;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Option Groups
+     */
+    option_groups: Array<PublicOptionGroupOut>;
+    /**
+     * Prep Minutes
+     */
+    prep_minutes: number;
+    /**
+     * Unavailable Reason
+     */
+    unavailable_reason: 'sold_out' | 'not_now' | null;
+    /**
+     * Variants
+     */
+    variants: Array<PublicVariantOut>;
+};
+
+/**
+ * PublicStoreCardOut
+ */
+export type PublicStoreCardOut = {
+    /**
+     * Accepting Orders
+     */
+    accepting_orders: boolean;
+    /**
+     * Description
+     */
+    description: string | null;
+    /**
+     * Food Types
+     */
+    food_types: Array<string>;
+    /**
+     * Logo Url
+     */
+    logo_url: string | null;
     /**
      * Name
      */
@@ -465,6 +1666,58 @@ export type PublicStoreOut = {
      * Slug
      */
     slug: string;
+};
+
+/**
+ * PublicVariantOut
+ */
+export type PublicVariantOut = {
+    /**
+     * Available
+     */
+    available: boolean;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Price Paise
+     */
+    price_paise: number;
+};
+
+/**
+ * ReasonIn
+ */
+export type ReasonIn = {
+    /**
+     * Reason
+     */
+    reason: string;
+};
+
+/**
+ * ReprintIn
+ */
+export type ReprintIn = {
+    /**
+     * What
+     */
+    what: 'ticket' | 'bill';
+};
+
+/**
+ * ReprintOut
+ */
+export type ReprintOut = {
+    /**
+     * Queued
+     */
+    queued: number;
 };
 
 /**
@@ -506,6 +1759,16 @@ export type RoleOut = {
 };
 
 /**
+ * ScanOut
+ */
+export type ScanOut = {
+    /**
+     * Requested
+     */
+    requested: boolean;
+};
+
+/**
  * ScopeType
  */
 export type ScopeType = 'platform' | 'organization' | 'mall' | 'store';
@@ -538,6 +1801,218 @@ export type SessionOut = {
      * User Agent
      */
     user_agent: string | null;
+};
+
+/**
+ * SettingsOut
+ */
+export type SettingsOut = {
+    /**
+     * Accepting Orders
+     */
+    accepting_orders?: boolean;
+    /**
+     * Auto Print
+     */
+    auto_print: boolean;
+    /**
+     * Banner Key
+     */
+    banner_key: string | null;
+    /**
+     * Banner Url
+     */
+    banner_url?: string | null;
+    /**
+     * Bill When
+     */
+    bill_when: string;
+    /**
+     * Food Types
+     */
+    food_types: Array<string>;
+    /**
+     * Fssai
+     */
+    fssai: string | null;
+    /**
+     * Gstin
+     */
+    gstin: string | null;
+    /**
+     * Hours
+     */
+    hours: Array<HoursWindow>;
+    /**
+     * Is Open
+     */
+    is_open: boolean;
+    /**
+     * Is Paused
+     */
+    is_paused: boolean;
+    /**
+     * Kot When
+     */
+    kot_when: string;
+    /**
+     * Logo Key
+     */
+    logo_key: string | null;
+    /**
+     * Logo Url
+     */
+    logo_url?: string | null;
+    /**
+     * Store Id
+     */
+    store_id: string;
+    theme: Theme;
+    /**
+     * Timezone
+     */
+    timezone: string;
+};
+
+/**
+ * SettingsUpdate
+ */
+export type SettingsUpdate = {
+    /**
+     * Auto Print
+     */
+    auto_print?: boolean | null;
+    /**
+     * Banner Key
+     */
+    banner_key?: string | null;
+    /**
+     * Bill When
+     */
+    bill_when?: string | null;
+    /**
+     * Food Types
+     */
+    food_types?: Array<string> | null;
+    /**
+     * Fssai
+     */
+    fssai?: string | null;
+    /**
+     * Gstin
+     */
+    gstin?: string | null;
+    /**
+     * Hours
+     */
+    hours?: Array<HoursWindow> | null;
+    /**
+     * Is Open
+     */
+    is_open?: boolean | null;
+    /**
+     * Is Paused
+     */
+    is_paused?: boolean | null;
+    /**
+     * Kot When
+     */
+    kot_when?: string | null;
+    /**
+     * Logo Key
+     */
+    logo_key?: string | null;
+    theme?: Theme | null;
+    /**
+     * Timezone
+     */
+    timezone?: string | null;
+};
+
+/**
+ * SlipOptions
+ */
+export type SlipOptions = {
+    /**
+     * Bill Title
+     */
+    bill_title?: string | null;
+    /**
+     * Currency Symbol
+     */
+    currency_symbol?: string | null;
+    /**
+     * Order Label
+     */
+    order_label?: string | null;
+    /**
+     * Show Customer
+     */
+    show_customer?: boolean | null;
+    /**
+     * Show Date
+     */
+    show_date?: boolean | null;
+    /**
+     * Show Invoice No
+     */
+    show_invoice_no?: boolean | null;
+    /**
+     * Show Item Notes
+     */
+    show_item_notes?: boolean | null;
+    /**
+     * Show Item Numbers
+     */
+    show_item_numbers?: boolean | null;
+    /**
+     * Show Logo
+     */
+    show_logo?: boolean | null;
+    /**
+     * Show Tax Breakdown
+     */
+    show_tax_breakdown?: boolean | null;
+    /**
+     * Show Unit Price
+     */
+    show_unit_price?: boolean | null;
+    /**
+     * Subtotal Label
+     */
+    subtotal_label?: string | null;
+    /**
+     * Tax Invoice Title
+     */
+    tax_invoice_title?: string | null;
+    /**
+     * Ticket Show Allergens
+     */
+    ticket_show_allergens?: boolean | null;
+    /**
+     * Ticket Show Customer
+     */
+    ticket_show_customer?: boolean | null;
+    /**
+     * Ticket Show Eta
+     */
+    ticket_show_eta?: boolean | null;
+    /**
+     * Ticket Show Store
+     */
+    ticket_show_store?: boolean | null;
+    /**
+     * Ticket Show Time
+     */
+    ticket_show_time?: boolean | null;
+    /**
+     * Ticket Title
+     */
+    ticket_title?: string | null;
+    /**
+     * Total Label
+     */
+    total_label?: string | null;
 };
 
 /**
@@ -671,6 +2146,11 @@ export type StatusOut = {
 };
 
 /**
+ * StockMode
+ */
+export type StockMode = 'manual' | 'counted';
+
+/**
  * StoreCreate
  */
 export type StoreCreate = {
@@ -687,6 +2167,88 @@ export type StoreCreate = {
      */
     slug: string;
 };
+
+/**
+ * StoreOrderOut
+ *
+ * What a store sees. The pickup code is deliberately absent: only the customer has it.
+ */
+export type StoreOrderOut = {
+    /**
+     * Accept By
+     */
+    accept_by: string | null;
+    /**
+     * Accepted At
+     */
+    accepted_at: string | null;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Customer Name
+     */
+    customer_name: string | null;
+    /**
+     * Customer Phone
+     */
+    customer_phone: string | null;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Lines
+     */
+    lines: Array<OrderLineOut>;
+    /**
+     * Note
+     */
+    note: string | null;
+    /**
+     * Order No
+     */
+    order_no: number;
+    /**
+     * Picked Up At
+     */
+    picked_up_at: string | null;
+    /**
+     * Prep Minutes
+     */
+    prep_minutes: number;
+    /**
+     * Ready At
+     */
+    ready_at: string | null;
+    /**
+     * Reason
+     */
+    reason: string | null;
+    status: StoreOrderStatus;
+    /**
+     * Steps
+     */
+    steps: Array<OrderStepOut>;
+    /**
+     * Store Id
+     */
+    store_id: string;
+    /**
+     * Tax Paise
+     */
+    tax_paise: number;
+    /**
+     * Total Paise
+     */
+    total_paise: number;
+};
+
+/**
+ * StoreOrderStatus
+ */
+export type StoreOrderStatus = 'pending_payment' | 'paid' | 'accepted' | 'preparing' | 'ready' | 'picked_up' | 'rejected' | 'expired' | 'cancelled' | 'refunded' | 'payment_failed';
 
 /**
  * StoreOut
@@ -749,6 +2311,30 @@ export type TempPasswordOut = {
      * Temp Password
      */
     temp_password: string;
+};
+
+/**
+ * Theme
+ *
+ * Design tokens only: the storefront renders these through CSS variables.
+ */
+export type Theme = {
+    /**
+     * Accent
+     */
+    accent?: string;
+    /**
+     * Font
+     */
+    font?: 'system' | 'serif' | 'rounded' | 'mono';
+    /**
+     * Primary
+     */
+    primary?: string;
+    /**
+     * Template
+     */
+    template?: 1 | 2 | 3;
 };
 
 /**
@@ -819,6 +2405,125 @@ export type ValidationError = {
      * Error Type
      */
     type: string;
+};
+
+/**
+ * VariantIn
+ */
+export type VariantIn = {
+    /**
+     * Id
+     */
+    id?: string | null;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Price Paise
+     */
+    price_paise: number;
+    /**
+     * Stock Count
+     */
+    stock_count?: number | null;
+};
+
+/**
+ * VariantOut
+ */
+export type VariantOut = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Price Paise
+     */
+    price_paise: number;
+    /**
+     * Stock Count
+     */
+    stock_count: number | null;
+};
+
+/**
+ * Window
+ */
+export type Window = {
+    /**
+     * Days
+     */
+    days: Array<number>;
+    /**
+     * End
+     */
+    end: string;
+    /**
+     * Start
+     */
+    start: string;
+};
+
+/**
+ * PublicStoreOut
+ */
+export type MalltModulesCatalogSchemasPublicStoreOut = {
+    /**
+     * Accepting Orders
+     */
+    accepting_orders: boolean;
+    /**
+     * Banner Url
+     */
+    banner_url: string | null;
+    /**
+     * Description
+     */
+    description: string | null;
+    /**
+     * Food Types
+     */
+    food_types: Array<string>;
+    /**
+     * Hours
+     */
+    hours: Array<HoursWindow>;
+    /**
+     * Logo Url
+     */
+    logo_url: string | null;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Slug
+     */
+    slug: string;
+    theme: Theme;
+};
+
+/**
+ * PublicStoreOut
+ */
+export type MalltModulesTenancySchemasPublicStoreOut = {
+    /**
+     * Description
+     */
+    description: string | null;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Slug
+     */
+    slug: string;
 };
 
 export type AuditListAllAuditData = {
@@ -1311,6 +3016,49 @@ export type MallsActivateMallResponses = {
 
 export type MallsActivateMallResponse = MallsActivateMallResponses[keyof MallsActivateMallResponses];
 
+export type StoreOrdersListMallOrdersData = {
+    body?: never;
+    path: {
+        /**
+         * Mall Id
+         */
+        mall_id: string;
+    };
+    query?: {
+        /**
+         * View
+         */
+        view?: string;
+        /**
+         * Before
+         */
+        before?: string | null;
+        /**
+         * Limit
+         */
+        limit?: number;
+    };
+    url: '/api/v1/malls/{mall_id}/orders';
+};
+
+export type StoreOrdersListMallOrdersErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type StoreOrdersListMallOrdersError = StoreOrdersListMallOrdersErrors[keyof StoreOrdersListMallOrdersErrors];
+
+export type StoreOrdersListMallOrdersResponses = {
+    /**
+     * Successful Response
+     */
+    200: PageStoreOrderOut;
+};
+
+export type StoreOrdersListMallOrdersResponse = StoreOrdersListMallOrdersResponses[keyof StoreOrdersListMallOrdersResponses];
+
 export type StaffListMallStaffData = {
     body?: never;
     path: {
@@ -1464,6 +3212,260 @@ export type MallsSuspendMallResponses = {
 };
 
 export type MallsSuspendMallResponse = MallsSuspendMallResponses[keyof MallsSuspendMallResponses];
+
+export type CartClearCartData = {
+    body?: never;
+    path: {
+        /**
+         * Mall Slug
+         */
+        mall_slug: string;
+    };
+    query?: never;
+    url: '/api/v1/malls/{mall_slug}/cart';
+};
+
+export type CartClearCartErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CartClearCartError = CartClearCartErrors[keyof CartClearCartErrors];
+
+export type CartClearCartResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type CartClearCartResponse = CartClearCartResponses[keyof CartClearCartResponses];
+
+export type CartGetCartData = {
+    body?: never;
+    path: {
+        /**
+         * Mall Slug
+         */
+        mall_slug: string;
+    };
+    query?: never;
+    url: '/api/v1/malls/{mall_slug}/cart';
+};
+
+export type CartGetCartErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CartGetCartError = CartGetCartErrors[keyof CartGetCartErrors];
+
+export type CartGetCartResponses = {
+    /**
+     * Successful Response
+     */
+    200: CartOut;
+};
+
+export type CartGetCartResponse = CartGetCartResponses[keyof CartGetCartResponses];
+
+export type CartAddLineData = {
+    body: CartLineIn;
+    path: {
+        /**
+         * Mall Slug
+         */
+        mall_slug: string;
+    };
+    query?: never;
+    url: '/api/v1/malls/{mall_slug}/cart/lines';
+};
+
+export type CartAddLineErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CartAddLineError = CartAddLineErrors[keyof CartAddLineErrors];
+
+export type CartAddLineResponses = {
+    /**
+     * Successful Response
+     */
+    201: CartOut;
+};
+
+export type CartAddLineResponse = CartAddLineResponses[keyof CartAddLineResponses];
+
+export type CartUpdateLineData = {
+    body: CartLineUpdate;
+    path: {
+        /**
+         * Mall Slug
+         */
+        mall_slug: string;
+        /**
+         * Line Id
+         */
+        line_id: string;
+    };
+    query?: never;
+    url: '/api/v1/malls/{mall_slug}/cart/lines/{line_id}';
+};
+
+export type CartUpdateLineErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CartUpdateLineError = CartUpdateLineErrors[keyof CartUpdateLineErrors];
+
+export type CartUpdateLineResponses = {
+    /**
+     * Successful Response
+     */
+    200: CartOut;
+};
+
+export type CartUpdateLineResponse = CartUpdateLineResponses[keyof CartUpdateLineResponses];
+
+export type OrdersCheckoutData = {
+    body: CheckoutIn;
+    headers?: {
+        /**
+         * Idempotency-Key
+         */
+        'idempotency-key'?: string | null;
+    };
+    path: {
+        /**
+         * Mall Slug
+         */
+        mall_slug: string;
+    };
+    query?: never;
+    url: '/api/v1/malls/{mall_slug}/checkout';
+};
+
+export type OrdersCheckoutErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type OrdersCheckoutError = OrdersCheckoutErrors[keyof OrdersCheckoutErrors];
+
+export type OrdersCheckoutResponses = {
+    /**
+     * Successful Response
+     */
+    200: CustomerOrderOut;
+};
+
+export type OrdersCheckoutResponse = OrdersCheckoutResponses[keyof OrdersCheckoutResponses];
+
+export type OrdersListMyOrdersData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Before
+         */
+        before?: string | null;
+        /**
+         * Limit
+         */
+        limit?: number;
+    };
+    url: '/api/v1/orders';
+};
+
+export type OrdersListMyOrdersErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type OrdersListMyOrdersError = OrdersListMyOrdersErrors[keyof OrdersListMyOrdersErrors];
+
+export type OrdersListMyOrdersResponses = {
+    /**
+     * Successful Response
+     */
+    200: PageCustomerOrderOut;
+};
+
+export type OrdersListMyOrdersResponse = OrdersListMyOrdersResponses[keyof OrdersListMyOrdersResponses];
+
+export type OrdersCancelMyOrderData = {
+    body?: never;
+    path: {
+        /**
+         * Store Order Id
+         */
+        store_order_id: string;
+    };
+    query?: never;
+    url: '/api/v1/orders/stores/{store_order_id}/cancel';
+};
+
+export type OrdersCancelMyOrderErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type OrdersCancelMyOrderError = OrdersCancelMyOrderErrors[keyof OrdersCancelMyOrderErrors];
+
+export type OrdersCancelMyOrderResponses = {
+    /**
+     * Successful Response
+     */
+    200: CustomerOrderOut;
+};
+
+export type OrdersCancelMyOrderResponse = OrdersCancelMyOrderResponses[keyof OrdersCancelMyOrderResponses];
+
+export type OrdersGetMyOrderData = {
+    body?: never;
+    path: {
+        /**
+         * Order Id
+         */
+        order_id: string;
+    };
+    query?: never;
+    url: '/api/v1/orders/{order_id}';
+};
+
+export type OrdersGetMyOrderErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type OrdersGetMyOrderError = OrdersGetMyOrderErrors[keyof OrdersGetMyOrderErrors];
+
+export type OrdersGetMyOrderResponses = {
+    /**
+     * Successful Response
+     */
+    200: CustomerOrderOut;
+};
+
+export type OrdersGetMyOrderResponse = OrdersGetMyOrderResponses[keyof OrdersGetMyOrderResponses];
 
 export type OrgsListOrgsData = {
     body?: never;
@@ -1715,6 +3717,49 @@ export type MallsCreateMallResponses = {
 
 export type MallsCreateMallResponse = MallsCreateMallResponses[keyof MallsCreateMallResponses];
 
+export type StoreOrdersListOrgOrdersData = {
+    body?: never;
+    path: {
+        /**
+         * Org Id
+         */
+        org_id: string;
+    };
+    query?: {
+        /**
+         * View
+         */
+        view?: string;
+        /**
+         * Before
+         */
+        before?: string | null;
+        /**
+         * Limit
+         */
+        limit?: number;
+    };
+    url: '/api/v1/orgs/{org_id}/orders';
+};
+
+export type StoreOrdersListOrgOrdersErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type StoreOrdersListOrgOrdersError = StoreOrdersListOrgOrdersErrors[keyof StoreOrdersListOrgOrdersErrors];
+
+export type StoreOrdersListOrgOrdersResponses = {
+    /**
+     * Successful Response
+     */
+    200: PageStoreOrderOut;
+};
+
+export type StoreOrdersListOrgOrdersResponse = StoreOrdersListOrgOrdersResponses[keyof StoreOrdersListOrgOrdersResponses];
+
 export type StaffListOrgStaffData = {
     body?: never;
     path: {
@@ -1806,6 +3851,72 @@ export type OrgsSuspendOrgResponses = {
 };
 
 export type OrgsSuspendOrgResponse = OrgsSuspendOrgResponses[keyof OrgsSuspendOrgResponses];
+
+export type PublicPublicStoresData = {
+    body?: never;
+    path: {
+        /**
+         * Mall Slug
+         */
+        mall_slug: string;
+    };
+    query?: never;
+    url: '/api/v1/public/malls/{mall_slug}/stores';
+};
+
+export type PublicPublicStoresErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PublicPublicStoresError = PublicPublicStoresErrors[keyof PublicPublicStoresErrors];
+
+export type PublicPublicStoresResponses = {
+    /**
+     * Response Public Public Stores
+     *
+     * Successful Response
+     */
+    200: Array<PublicStoreCardOut>;
+};
+
+export type PublicPublicStoresResponse = PublicPublicStoresResponses[keyof PublicPublicStoresResponses];
+
+export type PublicPublicMenuData = {
+    body?: never;
+    path: {
+        /**
+         * Mall Slug
+         */
+        mall_slug: string;
+        /**
+         * Store Slug
+         */
+        store_slug: string;
+    };
+    query?: never;
+    url: '/api/v1/public/malls/{mall_slug}/stores/{store_slug}/menu';
+};
+
+export type PublicPublicMenuErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PublicPublicMenuError = PublicPublicMenuErrors[keyof PublicPublicMenuErrors];
+
+export type PublicPublicMenuResponses = {
+    /**
+     * Successful Response
+     */
+    200: PublicMenuOut;
+};
+
+export type PublicPublicMenuResponse = PublicPublicMenuResponses[keyof PublicPublicMenuResponses];
 
 export type PublicGetPublicMallData = {
     body?: never;
@@ -2114,6 +4225,1250 @@ export type StoresActivateStoreResponses = {
 };
 
 export type StoresActivateStoreResponse = StoresActivateStoreResponses[keyof StoresActivateStoreResponses];
+
+export type CatalogListCategoriesData = {
+    body?: never;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/categories';
+};
+
+export type CatalogListCategoriesErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CatalogListCategoriesError = CatalogListCategoriesErrors[keyof CatalogListCategoriesErrors];
+
+export type CatalogListCategoriesResponses = {
+    /**
+     * Response Catalog List Categories
+     *
+     * Successful Response
+     */
+    200: Array<CategoryOut>;
+};
+
+export type CatalogListCategoriesResponse = CatalogListCategoriesResponses[keyof CatalogListCategoriesResponses];
+
+export type CatalogCreateCategoryData = {
+    body: CategoryCreate;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/categories';
+};
+
+export type CatalogCreateCategoryErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CatalogCreateCategoryError = CatalogCreateCategoryErrors[keyof CatalogCreateCategoryErrors];
+
+export type CatalogCreateCategoryResponses = {
+    /**
+     * Successful Response
+     */
+    201: CategoryOut;
+};
+
+export type CatalogCreateCategoryResponse = CatalogCreateCategoryResponses[keyof CatalogCreateCategoryResponses];
+
+export type CatalogDeleteCategoryData = {
+    body?: never;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+        /**
+         * Category Id
+         */
+        category_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/categories/{category_id}';
+};
+
+export type CatalogDeleteCategoryErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CatalogDeleteCategoryError = CatalogDeleteCategoryErrors[keyof CatalogDeleteCategoryErrors];
+
+export type CatalogDeleteCategoryResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type CatalogDeleteCategoryResponse = CatalogDeleteCategoryResponses[keyof CatalogDeleteCategoryResponses];
+
+export type CatalogUpdateCategoryData = {
+    body: CategoryUpdate;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+        /**
+         * Category Id
+         */
+        category_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/categories/{category_id}';
+};
+
+export type CatalogUpdateCategoryErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CatalogUpdateCategoryError = CatalogUpdateCategoryErrors[keyof CatalogUpdateCategoryErrors];
+
+export type CatalogUpdateCategoryResponses = {
+    /**
+     * Successful Response
+     */
+    200: CategoryOut;
+};
+
+export type CatalogUpdateCategoryResponse = CatalogUpdateCategoryResponses[keyof CatalogUpdateCategoryResponses];
+
+export type PrintingDetectedPrintersData = {
+    body?: never;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/detected-printers';
+};
+
+export type PrintingDetectedPrintersErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PrintingDetectedPrintersError = PrintingDetectedPrintersErrors[keyof PrintingDetectedPrintersErrors];
+
+export type PrintingDetectedPrintersResponses = {
+    /**
+     * Response Printing Detected Printers
+     *
+     * Successful Response
+     */
+    200: Array<DetectedPrinterOut>;
+};
+
+export type PrintingDetectedPrintersResponse = PrintingDetectedPrintersResponses[keyof PrintingDetectedPrintersResponses];
+
+export type CatalogPresignImageData = {
+    body: ImagePresignIn;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/images/presign';
+};
+
+export type CatalogPresignImageErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CatalogPresignImageError = CatalogPresignImageErrors[keyof CatalogPresignImageErrors];
+
+export type CatalogPresignImageResponses = {
+    /**
+     * Successful Response
+     */
+    200: ImagePresignOut;
+};
+
+export type CatalogPresignImageResponse = CatalogPresignImageResponses[keyof CatalogPresignImageResponses];
+
+export type StoreOrdersListStoreOrdersData = {
+    body?: never;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+    };
+    query?: {
+        /**
+         * View
+         */
+        view?: string;
+        /**
+         * Before
+         */
+        before?: string | null;
+        /**
+         * Limit
+         */
+        limit?: number;
+    };
+    url: '/api/v1/stores/{store_id}/orders';
+};
+
+export type StoreOrdersListStoreOrdersErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type StoreOrdersListStoreOrdersError = StoreOrdersListStoreOrdersErrors[keyof StoreOrdersListStoreOrdersErrors];
+
+export type StoreOrdersListStoreOrdersResponses = {
+    /**
+     * Successful Response
+     */
+    200: PageStoreOrderOut;
+};
+
+export type StoreOrdersListStoreOrdersResponse = StoreOrdersListStoreOrdersResponses[keyof StoreOrdersListStoreOrdersResponses];
+
+export type StoreOrdersGetStoreOrderData = {
+    body?: never;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+        /**
+         * Order Id
+         */
+        order_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/orders/{order_id}';
+};
+
+export type StoreOrdersGetStoreOrderErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type StoreOrdersGetStoreOrderError = StoreOrdersGetStoreOrderErrors[keyof StoreOrdersGetStoreOrderErrors];
+
+export type StoreOrdersGetStoreOrderResponses = {
+    /**
+     * Successful Response
+     */
+    200: StoreOrderOut;
+};
+
+export type StoreOrdersGetStoreOrderResponse = StoreOrdersGetStoreOrderResponses[keyof StoreOrdersGetStoreOrderResponses];
+
+export type StoreOrdersAcceptData = {
+    body?: never;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+        /**
+         * Order Id
+         */
+        order_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/orders/{order_id}/accept';
+};
+
+export type StoreOrdersAcceptErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type StoreOrdersAcceptError = StoreOrdersAcceptErrors[keyof StoreOrdersAcceptErrors];
+
+export type StoreOrdersAcceptResponses = {
+    /**
+     * Successful Response
+     */
+    200: StoreOrderOut;
+};
+
+export type StoreOrdersAcceptResponse = StoreOrdersAcceptResponses[keyof StoreOrdersAcceptResponses];
+
+export type StoreOrdersCancelOrderData = {
+    body: ReasonIn;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+        /**
+         * Order Id
+         */
+        order_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/orders/{order_id}/cancel';
+};
+
+export type StoreOrdersCancelOrderErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type StoreOrdersCancelOrderError = StoreOrdersCancelOrderErrors[keyof StoreOrdersCancelOrderErrors];
+
+export type StoreOrdersCancelOrderResponses = {
+    /**
+     * Successful Response
+     */
+    200: StoreOrderOut;
+};
+
+export type StoreOrdersCancelOrderResponse = StoreOrdersCancelOrderResponses[keyof StoreOrdersCancelOrderResponses];
+
+export type StoreOrdersVerifyPickupData = {
+    body: PickupIn;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+        /**
+         * Order Id
+         */
+        order_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/orders/{order_id}/pickup';
+};
+
+export type StoreOrdersVerifyPickupErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type StoreOrdersVerifyPickupError = StoreOrdersVerifyPickupErrors[keyof StoreOrdersVerifyPickupErrors];
+
+export type StoreOrdersVerifyPickupResponses = {
+    /**
+     * Successful Response
+     */
+    200: StoreOrderOut;
+};
+
+export type StoreOrdersVerifyPickupResponse = StoreOrdersVerifyPickupResponses[keyof StoreOrdersVerifyPickupResponses];
+
+export type StoreOrdersPreparingData = {
+    body?: never;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+        /**
+         * Order Id
+         */
+        order_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/orders/{order_id}/preparing';
+};
+
+export type StoreOrdersPreparingErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type StoreOrdersPreparingError = StoreOrdersPreparingErrors[keyof StoreOrdersPreparingErrors];
+
+export type StoreOrdersPreparingResponses = {
+    /**
+     * Successful Response
+     */
+    200: StoreOrderOut;
+};
+
+export type StoreOrdersPreparingResponse = StoreOrdersPreparingResponses[keyof StoreOrdersPreparingResponses];
+
+export type StoreOrdersReprintOrderData = {
+    body: ReprintIn;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+        /**
+         * Order Id
+         */
+        order_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/orders/{order_id}/print';
+};
+
+export type StoreOrdersReprintOrderErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type StoreOrdersReprintOrderError = StoreOrdersReprintOrderErrors[keyof StoreOrdersReprintOrderErrors];
+
+export type StoreOrdersReprintOrderResponses = {
+    /**
+     * Successful Response
+     */
+    202: ReprintOut;
+};
+
+export type StoreOrdersReprintOrderResponse = StoreOrdersReprintOrderResponses[keyof StoreOrdersReprintOrderResponses];
+
+export type StoreOrdersReadyData = {
+    body?: never;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+        /**
+         * Order Id
+         */
+        order_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/orders/{order_id}/ready';
+};
+
+export type StoreOrdersReadyErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type StoreOrdersReadyError = StoreOrdersReadyErrors[keyof StoreOrdersReadyErrors];
+
+export type StoreOrdersReadyResponses = {
+    /**
+     * Successful Response
+     */
+    200: StoreOrderOut;
+};
+
+export type StoreOrdersReadyResponse = StoreOrdersReadyResponses[keyof StoreOrdersReadyResponses];
+
+export type StoreOrdersRejectOrderData = {
+    body: ReasonIn;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+        /**
+         * Order Id
+         */
+        order_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/orders/{order_id}/reject';
+};
+
+export type StoreOrdersRejectOrderErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type StoreOrdersRejectOrderError = StoreOrdersRejectOrderErrors[keyof StoreOrdersRejectOrderErrors];
+
+export type StoreOrdersRejectOrderResponses = {
+    /**
+     * Successful Response
+     */
+    200: StoreOrderOut;
+};
+
+export type StoreOrdersRejectOrderResponse = StoreOrdersRejectOrderResponses[keyof StoreOrdersRejectOrderResponses];
+
+export type PrintingListAgentsData = {
+    body?: never;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/print-agents';
+};
+
+export type PrintingListAgentsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PrintingListAgentsError = PrintingListAgentsErrors[keyof PrintingListAgentsErrors];
+
+export type PrintingListAgentsResponses = {
+    /**
+     * Response Printing List Agents
+     *
+     * Successful Response
+     */
+    200: Array<AgentOut>;
+};
+
+export type PrintingListAgentsResponse = PrintingListAgentsResponses[keyof PrintingListAgentsResponses];
+
+export type PrintingCreateAgentData = {
+    body: AgentCreate;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/print-agents';
+};
+
+export type PrintingCreateAgentErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PrintingCreateAgentError = PrintingCreateAgentErrors[keyof PrintingCreateAgentErrors];
+
+export type PrintingCreateAgentResponses = {
+    /**
+     * Successful Response
+     */
+    201: AgentCreatedOut;
+};
+
+export type PrintingCreateAgentResponse = PrintingCreateAgentResponses[keyof PrintingCreateAgentResponses];
+
+export type PrintingRevokeAgentData = {
+    body?: never;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+        /**
+         * Agent Id
+         */
+        agent_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/print-agents/{agent_id}/revoke';
+};
+
+export type PrintingRevokeAgentErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PrintingRevokeAgentError = PrintingRevokeAgentErrors[keyof PrintingRevokeAgentErrors];
+
+export type PrintingRevokeAgentResponses = {
+    /**
+     * Successful Response
+     */
+    200: AgentOut;
+};
+
+export type PrintingRevokeAgentResponse = PrintingRevokeAgentResponses[keyof PrintingRevokeAgentResponses];
+
+export type PrintingRotateAgentData = {
+    body?: never;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+        /**
+         * Agent Id
+         */
+        agent_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/print-agents/{agent_id}/rotate';
+};
+
+export type PrintingRotateAgentErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PrintingRotateAgentError = PrintingRotateAgentErrors[keyof PrintingRotateAgentErrors];
+
+export type PrintingRotateAgentResponses = {
+    /**
+     * Successful Response
+     */
+    200: AgentCreatedOut;
+};
+
+export type PrintingRotateAgentResponse = PrintingRotateAgentResponses[keyof PrintingRotateAgentResponses];
+
+export type PrintingScanNetworkData = {
+    body?: never;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+        /**
+         * Agent Id
+         */
+        agent_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/print-agents/{agent_id}/scan';
+};
+
+export type PrintingScanNetworkErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PrintingScanNetworkError = PrintingScanNetworkErrors[keyof PrintingScanNetworkErrors];
+
+export type PrintingScanNetworkResponses = {
+    /**
+     * Successful Response
+     */
+    202: ScanOut;
+};
+
+export type PrintingScanNetworkResponse = PrintingScanNetworkResponses[keyof PrintingScanNetworkResponses];
+
+export type PrintingGetDesignData = {
+    body?: never;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/print-design';
+};
+
+export type PrintingGetDesignErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PrintingGetDesignError = PrintingGetDesignErrors[keyof PrintingGetDesignErrors];
+
+export type PrintingGetDesignResponses = {
+    /**
+     * Successful Response
+     */
+    200: DesignOut;
+};
+
+export type PrintingGetDesignResponse = PrintingGetDesignResponses[keyof PrintingGetDesignResponses];
+
+export type PrintingPutDesignData = {
+    body: DesignIn;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/print-design';
+};
+
+export type PrintingPutDesignErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PrintingPutDesignError = PrintingPutDesignErrors[keyof PrintingPutDesignErrors];
+
+export type PrintingPutDesignResponses = {
+    /**
+     * Successful Response
+     */
+    200: DesignOut;
+};
+
+export type PrintingPutDesignResponse = PrintingPutDesignResponses[keyof PrintingPutDesignResponses];
+
+export type PrintingDeleteLogoData = {
+    body?: never;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/print-design/logo';
+};
+
+export type PrintingDeleteLogoErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PrintingDeleteLogoError = PrintingDeleteLogoErrors[keyof PrintingDeleteLogoErrors];
+
+export type PrintingDeleteLogoResponses = {
+    /**
+     * Successful Response
+     */
+    200: DesignOut;
+};
+
+export type PrintingDeleteLogoResponse = PrintingDeleteLogoResponses[keyof PrintingDeleteLogoResponses];
+
+export type PrintingGetLogoData = {
+    body?: never;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/print-design/logo';
+};
+
+export type PrintingGetLogoErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PrintingGetLogoError = PrintingGetLogoErrors[keyof PrintingGetLogoErrors];
+
+export type PrintingGetLogoResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type PrintingPutLogoData = {
+    body?: never;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/print-design/logo';
+};
+
+export type PrintingPutLogoErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PrintingPutLogoError = PrintingPutLogoErrors[keyof PrintingPutLogoErrors];
+
+export type PrintingPutLogoResponses = {
+    /**
+     * Successful Response
+     */
+    200: DesignOut;
+};
+
+export type PrintingPutLogoResponse = PrintingPutLogoResponses[keyof PrintingPutLogoResponses];
+
+export type PrintingRecentJobsData = {
+    body?: never;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+    };
+    query?: {
+        /**
+         * Limit
+         */
+        limit?: number;
+    };
+    url: '/api/v1/stores/{store_id}/print-jobs';
+};
+
+export type PrintingRecentJobsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PrintingRecentJobsError = PrintingRecentJobsErrors[keyof PrintingRecentJobsErrors];
+
+export type PrintingRecentJobsResponses = {
+    /**
+     * Response Printing Recent Jobs
+     *
+     * Successful Response
+     */
+    200: Array<PrintJobOut>;
+};
+
+export type PrintingRecentJobsResponse = PrintingRecentJobsResponses[keyof PrintingRecentJobsResponses];
+
+export type PrintingListPrintersData = {
+    body?: never;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/printers';
+};
+
+export type PrintingListPrintersErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PrintingListPrintersError = PrintingListPrintersErrors[keyof PrintingListPrintersErrors];
+
+export type PrintingListPrintersResponses = {
+    /**
+     * Response Printing List Printers
+     *
+     * Successful Response
+     */
+    200: Array<PrinterOut>;
+};
+
+export type PrintingListPrintersResponse = PrintingListPrintersResponses[keyof PrintingListPrintersResponses];
+
+export type PrintingCreatePrinterData = {
+    body: PrinterCreate;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/printers';
+};
+
+export type PrintingCreatePrinterErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PrintingCreatePrinterError = PrintingCreatePrinterErrors[keyof PrintingCreatePrinterErrors];
+
+export type PrintingCreatePrinterResponses = {
+    /**
+     * Successful Response
+     */
+    201: PrinterOut;
+};
+
+export type PrintingCreatePrinterResponse = PrintingCreatePrinterResponses[keyof PrintingCreatePrinterResponses];
+
+export type PrintingUpdatePrinterData = {
+    body: PrinterUpdate;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+        /**
+         * Printer Id
+         */
+        printer_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/printers/{printer_id}';
+};
+
+export type PrintingUpdatePrinterErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PrintingUpdatePrinterError = PrintingUpdatePrinterErrors[keyof PrintingUpdatePrinterErrors];
+
+export type PrintingUpdatePrinterResponses = {
+    /**
+     * Successful Response
+     */
+    200: PrinterOut;
+};
+
+export type PrintingUpdatePrinterResponse = PrintingUpdatePrinterResponses[keyof PrintingUpdatePrinterResponses];
+
+export type PrintingTestPrintData = {
+    body?: never;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+        /**
+         * Printer Id
+         */
+        printer_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/printers/{printer_id}/test';
+};
+
+export type PrintingTestPrintErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PrintingTestPrintError = PrintingTestPrintErrors[keyof PrintingTestPrintErrors];
+
+export type PrintingTestPrintResponses = {
+    /**
+     * Successful Response
+     */
+    202: PrintJobOut;
+};
+
+export type PrintingTestPrintResponse = PrintingTestPrintResponses[keyof PrintingTestPrintResponses];
+
+export type CatalogListProductsData = {
+    body?: never;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/products';
+};
+
+export type CatalogListProductsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CatalogListProductsError = CatalogListProductsErrors[keyof CatalogListProductsErrors];
+
+export type CatalogListProductsResponses = {
+    /**
+     * Response Catalog List Products
+     *
+     * Successful Response
+     */
+    200: Array<ProductOut>;
+};
+
+export type CatalogListProductsResponse = CatalogListProductsResponses[keyof CatalogListProductsResponses];
+
+export type CatalogCreateProductData = {
+    body: ProductIn;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/products';
+};
+
+export type CatalogCreateProductErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CatalogCreateProductError = CatalogCreateProductErrors[keyof CatalogCreateProductErrors];
+
+export type CatalogCreateProductResponses = {
+    /**
+     * Successful Response
+     */
+    201: ProductOut;
+};
+
+export type CatalogCreateProductResponse = CatalogCreateProductResponses[keyof CatalogCreateProductResponses];
+
+export type CatalogArchiveProductData = {
+    body?: never;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+        /**
+         * Product Id
+         */
+        product_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/products/{product_id}';
+};
+
+export type CatalogArchiveProductErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CatalogArchiveProductError = CatalogArchiveProductErrors[keyof CatalogArchiveProductErrors];
+
+export type CatalogArchiveProductResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type CatalogArchiveProductResponse = CatalogArchiveProductResponses[keyof CatalogArchiveProductResponses];
+
+export type CatalogGetProductData = {
+    body?: never;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+        /**
+         * Product Id
+         */
+        product_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/products/{product_id}';
+};
+
+export type CatalogGetProductErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CatalogGetProductError = CatalogGetProductErrors[keyof CatalogGetProductErrors];
+
+export type CatalogGetProductResponses = {
+    /**
+     * Successful Response
+     */
+    200: ProductOut;
+};
+
+export type CatalogGetProductResponse = CatalogGetProductResponses[keyof CatalogGetProductResponses];
+
+export type CatalogUpdateProductData = {
+    body: ProductIn;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+        /**
+         * Product Id
+         */
+        product_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/products/{product_id}';
+};
+
+export type CatalogUpdateProductErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CatalogUpdateProductError = CatalogUpdateProductErrors[keyof CatalogUpdateProductErrors];
+
+export type CatalogUpdateProductResponses = {
+    /**
+     * Successful Response
+     */
+    200: ProductOut;
+};
+
+export type CatalogUpdateProductResponse = CatalogUpdateProductResponses[keyof CatalogUpdateProductResponses];
+
+export type CatalogSetAvailabilityData = {
+    body: AvailabilityUpdate;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+        /**
+         * Product Id
+         */
+        product_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/products/{product_id}/availability';
+};
+
+export type CatalogSetAvailabilityErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CatalogSetAvailabilityError = CatalogSetAvailabilityErrors[keyof CatalogSetAvailabilityErrors];
+
+export type CatalogSetAvailabilityResponses = {
+    /**
+     * Successful Response
+     */
+    200: ProductOut;
+};
+
+export type CatalogSetAvailabilityResponse = CatalogSetAvailabilityResponses[keyof CatalogSetAvailabilityResponses];
+
+export type CatalogGetSettingsData = {
+    body?: never;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/settings';
+};
+
+export type CatalogGetSettingsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CatalogGetSettingsError = CatalogGetSettingsErrors[keyof CatalogGetSettingsErrors];
+
+export type CatalogGetSettingsResponses = {
+    /**
+     * Successful Response
+     */
+    200: SettingsOut;
+};
+
+export type CatalogGetSettingsResponse = CatalogGetSettingsResponses[keyof CatalogGetSettingsResponses];
+
+export type CatalogUpdateSettingsData = {
+    body: SettingsUpdate;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/settings';
+};
+
+export type CatalogUpdateSettingsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CatalogUpdateSettingsError = CatalogUpdateSettingsErrors[keyof CatalogUpdateSettingsErrors];
+
+export type CatalogUpdateSettingsResponses = {
+    /**
+     * Successful Response
+     */
+    200: SettingsOut;
+};
+
+export type CatalogUpdateSettingsResponse = CatalogUpdateSettingsResponses[keyof CatalogUpdateSettingsResponses];
 
 export type StaffListStoreStaffData = {
     body?: never;

@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AuditListAllAuditData, AuditListAllAuditErrors, AuditListAllAuditResponses, AuditListOrgAuditData, AuditListOrgAuditErrors, AuditListOrgAuditResponses, AuthCustomerGoogleLoginData, AuthCustomerGoogleLoginErrors, AuthCustomerGoogleLoginResponses, AuthCustomerLinkPhoneData, AuthCustomerLinkPhoneErrors, AuthCustomerLinkPhoneResponses, AuthCustomerLogoutData, AuthCustomerLogoutResponses, AuthCustomerMeData, AuthCustomerMeResponses, AuthCustomerRefreshData, AuthCustomerRefreshResponses, AuthCustomerRequestOtpData, AuthCustomerRequestOtpErrors, AuthCustomerRequestOtpResponses, AuthCustomerUpdateMeData, AuthCustomerUpdateMeErrors, AuthCustomerUpdateMeResponses, AuthCustomerVerifyOtpData, AuthCustomerVerifyOtpErrors, AuthCustomerVerifyOtpResponses, AuthStaffChangePasswordData, AuthStaffChangePasswordErrors, AuthStaffChangePasswordResponses, AuthStaffLoginData, AuthStaffLoginErrors, AuthStaffLoginResponses, AuthStaffLogoutAllData, AuthStaffLogoutAllResponses, AuthStaffLogoutData, AuthStaffLogoutResponses, AuthStaffMeData, AuthStaffMeResponses, AuthStaffRefreshData, AuthStaffRefreshResponses, AuthStaffSessionsData, AuthStaffSessionsResponses, AuthStaffTotpConfirmData, AuthStaffTotpConfirmErrors, AuthStaffTotpConfirmResponses, AuthStaffTotpSetupData, AuthStaffTotpSetupResponses, HealthGetHealthData, HealthGetHealthResponses, HealthGetReadyData, HealthGetReadyResponses, MallsActivateMallData, MallsActivateMallErrors, MallsActivateMallResponses, MallsCreateMallData, MallsCreateMallErrors, MallsCreateMallResponses, MallsGetMallData, MallsGetMallErrors, MallsGetMallResponses, MallsListMallsData, MallsListMallsErrors, MallsListMallsResponses, MallsSuspendMallData, MallsSuspendMallErrors, MallsSuspendMallResponses, MallsUpdateMallData, MallsUpdateMallErrors, MallsUpdateMallResponses, OrgsActivateOrgData, OrgsActivateOrgErrors, OrgsActivateOrgResponses, OrgsCreateOrgData, OrgsCreateOrgErrors, OrgsCreateOrgResponses, OrgsGetOrgData, OrgsGetOrgErrors, OrgsGetOrgResponses, OrgsListOrgsData, OrgsListOrgsErrors, OrgsListOrgsResponses, OrgsSuspendOrgData, OrgsSuspendOrgErrors, OrgsSuspendOrgResponses, OrgsUpdateOrgData, OrgsUpdateOrgErrors, OrgsUpdateOrgResponses, PublicGetPublicMallData, PublicGetPublicMallErrors, PublicGetPublicMallResponses, StaffActivateStaffData, StaffActivateStaffErrors, StaffActivateStaffResponses, StaffAssignRoleData, StaffAssignRoleErrors, StaffAssignRoleResponses, StaffCreateMallStaffData, StaffCreateMallStaffErrors, StaffCreateMallStaffResponses, StaffCreateOrgStaffData, StaffCreateOrgStaffErrors, StaffCreateOrgStaffResponses, StaffCreateStoreStaffData, StaffCreateStoreStaffErrors, StaffCreateStoreStaffResponses, StaffListMallStaffData, StaffListMallStaffErrors, StaffListMallStaffResponses, StaffListOrgStaffData, StaffListOrgStaffErrors, StaffListOrgStaffResponses, StaffListRolesData, StaffListRolesResponses, StaffListStoreStaffData, StaffListStoreStaffErrors, StaffListStoreStaffResponses, StaffResetStaffPasswordData, StaffResetStaffPasswordErrors, StaffResetStaffPasswordResponses, StaffRevokeRoleData, StaffRevokeRoleErrors, StaffRevokeRoleResponses, StaffSuspendStaffData, StaffSuspendStaffErrors, StaffSuspendStaffResponses, StoresActivateStoreData, StoresActivateStoreErrors, StoresActivateStoreResponses, StoresCreateStoreData, StoresCreateStoreErrors, StoresCreateStoreResponses, StoresGetStoreData, StoresGetStoreErrors, StoresGetStoreResponses, StoresListStoresData, StoresListStoresErrors, StoresListStoresResponses, StoresSuspendStoreData, StoresSuspendStoreErrors, StoresSuspendStoreResponses, StoresUpdateStoreData, StoresUpdateStoreErrors, StoresUpdateStoreResponses } from './types.gen';
+import type { AuditListAllAuditData, AuditListAllAuditErrors, AuditListAllAuditResponses, AuditListOrgAuditData, AuditListOrgAuditErrors, AuditListOrgAuditResponses, AuthCustomerGoogleLoginData, AuthCustomerGoogleLoginErrors, AuthCustomerGoogleLoginResponses, AuthCustomerLinkPhoneData, AuthCustomerLinkPhoneErrors, AuthCustomerLinkPhoneResponses, AuthCustomerLogoutData, AuthCustomerLogoutResponses, AuthCustomerMeData, AuthCustomerMeResponses, AuthCustomerRefreshData, AuthCustomerRefreshResponses, AuthCustomerRequestOtpData, AuthCustomerRequestOtpErrors, AuthCustomerRequestOtpResponses, AuthCustomerUpdateMeData, AuthCustomerUpdateMeErrors, AuthCustomerUpdateMeResponses, AuthCustomerVerifyOtpData, AuthCustomerVerifyOtpErrors, AuthCustomerVerifyOtpResponses, AuthStaffChangePasswordData, AuthStaffChangePasswordErrors, AuthStaffChangePasswordResponses, AuthStaffLoginData, AuthStaffLoginErrors, AuthStaffLoginResponses, AuthStaffLogoutAllData, AuthStaffLogoutAllResponses, AuthStaffLogoutData, AuthStaffLogoutResponses, AuthStaffMeData, AuthStaffMeResponses, AuthStaffRefreshData, AuthStaffRefreshResponses, AuthStaffSessionsData, AuthStaffSessionsResponses, AuthStaffTotpConfirmData, AuthStaffTotpConfirmErrors, AuthStaffTotpConfirmResponses, AuthStaffTotpSetupData, AuthStaffTotpSetupResponses, CartAddLineData, CartAddLineErrors, CartAddLineResponses, CartClearCartData, CartClearCartErrors, CartClearCartResponses, CartGetCartData, CartGetCartErrors, CartGetCartResponses, CartUpdateLineData, CartUpdateLineErrors, CartUpdateLineResponses, CatalogArchiveProductData, CatalogArchiveProductErrors, CatalogArchiveProductResponses, CatalogCreateCategoryData, CatalogCreateCategoryErrors, CatalogCreateCategoryResponses, CatalogCreateProductData, CatalogCreateProductErrors, CatalogCreateProductResponses, CatalogDeleteCategoryData, CatalogDeleteCategoryErrors, CatalogDeleteCategoryResponses, CatalogGetProductData, CatalogGetProductErrors, CatalogGetProductResponses, CatalogGetSettingsData, CatalogGetSettingsErrors, CatalogGetSettingsResponses, CatalogListCategoriesData, CatalogListCategoriesErrors, CatalogListCategoriesResponses, CatalogListProductsData, CatalogListProductsErrors, CatalogListProductsResponses, CatalogPresignImageData, CatalogPresignImageErrors, CatalogPresignImageResponses, CatalogSetAvailabilityData, CatalogSetAvailabilityErrors, CatalogSetAvailabilityResponses, CatalogUpdateCategoryData, CatalogUpdateCategoryErrors, CatalogUpdateCategoryResponses, CatalogUpdateProductData, CatalogUpdateProductErrors, CatalogUpdateProductResponses, CatalogUpdateSettingsData, CatalogUpdateSettingsErrors, CatalogUpdateSettingsResponses, HealthGetHealthData, HealthGetHealthResponses, HealthGetReadyData, HealthGetReadyResponses, MallsActivateMallData, MallsActivateMallErrors, MallsActivateMallResponses, MallsCreateMallData, MallsCreateMallErrors, MallsCreateMallResponses, MallsGetMallData, MallsGetMallErrors, MallsGetMallResponses, MallsListMallsData, MallsListMallsErrors, MallsListMallsResponses, MallsSuspendMallData, MallsSuspendMallErrors, MallsSuspendMallResponses, MallsUpdateMallData, MallsUpdateMallErrors, MallsUpdateMallResponses, OrdersCancelMyOrderData, OrdersCancelMyOrderErrors, OrdersCancelMyOrderResponses, OrdersCheckoutData, OrdersCheckoutErrors, OrdersCheckoutResponses, OrdersGetMyOrderData, OrdersGetMyOrderErrors, OrdersGetMyOrderResponses, OrdersListMyOrdersData, OrdersListMyOrdersErrors, OrdersListMyOrdersResponses, OrgsActivateOrgData, OrgsActivateOrgErrors, OrgsActivateOrgResponses, OrgsCreateOrgData, OrgsCreateOrgErrors, OrgsCreateOrgResponses, OrgsGetOrgData, OrgsGetOrgErrors, OrgsGetOrgResponses, OrgsListOrgsData, OrgsListOrgsErrors, OrgsListOrgsResponses, OrgsSuspendOrgData, OrgsSuspendOrgErrors, OrgsSuspendOrgResponses, OrgsUpdateOrgData, OrgsUpdateOrgErrors, OrgsUpdateOrgResponses, PrintingCreateAgentData, PrintingCreateAgentErrors, PrintingCreateAgentResponses, PrintingCreatePrinterData, PrintingCreatePrinterErrors, PrintingCreatePrinterResponses, PrintingDeleteLogoData, PrintingDeleteLogoErrors, PrintingDeleteLogoResponses, PrintingDetectedPrintersData, PrintingDetectedPrintersErrors, PrintingDetectedPrintersResponses, PrintingGetDesignData, PrintingGetDesignErrors, PrintingGetDesignResponses, PrintingGetLogoData, PrintingGetLogoErrors, PrintingGetLogoResponses, PrintingListAgentsData, PrintingListAgentsErrors, PrintingListAgentsResponses, PrintingListPrintersData, PrintingListPrintersErrors, PrintingListPrintersResponses, PrintingPutDesignData, PrintingPutDesignErrors, PrintingPutDesignResponses, PrintingPutLogoData, PrintingPutLogoErrors, PrintingPutLogoResponses, PrintingRecentJobsData, PrintingRecentJobsErrors, PrintingRecentJobsResponses, PrintingRevokeAgentData, PrintingRevokeAgentErrors, PrintingRevokeAgentResponses, PrintingRotateAgentData, PrintingRotateAgentErrors, PrintingRotateAgentResponses, PrintingScanNetworkData, PrintingScanNetworkErrors, PrintingScanNetworkResponses, PrintingTestPrintData, PrintingTestPrintErrors, PrintingTestPrintResponses, PrintingUpdatePrinterData, PrintingUpdatePrinterErrors, PrintingUpdatePrinterResponses, PublicGetPublicMallData, PublicGetPublicMallErrors, PublicGetPublicMallResponses, PublicPublicMenuData, PublicPublicMenuErrors, PublicPublicMenuResponses, PublicPublicStoresData, PublicPublicStoresErrors, PublicPublicStoresResponses, StaffActivateStaffData, StaffActivateStaffErrors, StaffActivateStaffResponses, StaffAssignRoleData, StaffAssignRoleErrors, StaffAssignRoleResponses, StaffCreateMallStaffData, StaffCreateMallStaffErrors, StaffCreateMallStaffResponses, StaffCreateOrgStaffData, StaffCreateOrgStaffErrors, StaffCreateOrgStaffResponses, StaffCreateStoreStaffData, StaffCreateStoreStaffErrors, StaffCreateStoreStaffResponses, StaffListMallStaffData, StaffListMallStaffErrors, StaffListMallStaffResponses, StaffListOrgStaffData, StaffListOrgStaffErrors, StaffListOrgStaffResponses, StaffListRolesData, StaffListRolesResponses, StaffListStoreStaffData, StaffListStoreStaffErrors, StaffListStoreStaffResponses, StaffResetStaffPasswordData, StaffResetStaffPasswordErrors, StaffResetStaffPasswordResponses, StaffRevokeRoleData, StaffRevokeRoleErrors, StaffRevokeRoleResponses, StaffSuspendStaffData, StaffSuspendStaffErrors, StaffSuspendStaffResponses, StoreOrdersAcceptData, StoreOrdersAcceptErrors, StoreOrdersAcceptResponses, StoreOrdersCancelOrderData, StoreOrdersCancelOrderErrors, StoreOrdersCancelOrderResponses, StoreOrdersGetStoreOrderData, StoreOrdersGetStoreOrderErrors, StoreOrdersGetStoreOrderResponses, StoreOrdersListMallOrdersData, StoreOrdersListMallOrdersErrors, StoreOrdersListMallOrdersResponses, StoreOrdersListOrgOrdersData, StoreOrdersListOrgOrdersErrors, StoreOrdersListOrgOrdersResponses, StoreOrdersListStoreOrdersData, StoreOrdersListStoreOrdersErrors, StoreOrdersListStoreOrdersResponses, StoreOrdersPreparingData, StoreOrdersPreparingErrors, StoreOrdersPreparingResponses, StoreOrdersReadyData, StoreOrdersReadyErrors, StoreOrdersReadyResponses, StoreOrdersRejectOrderData, StoreOrdersRejectOrderErrors, StoreOrdersRejectOrderResponses, StoreOrdersReprintOrderData, StoreOrdersReprintOrderErrors, StoreOrdersReprintOrderResponses, StoreOrdersVerifyPickupData, StoreOrdersVerifyPickupErrors, StoreOrdersVerifyPickupResponses, StoresActivateStoreData, StoresActivateStoreErrors, StoresActivateStoreResponses, StoresCreateStoreData, StoresCreateStoreErrors, StoresCreateStoreResponses, StoresGetStoreData, StoresGetStoreErrors, StoresGetStoreResponses, StoresListStoresData, StoresListStoresErrors, StoresListStoresResponses, StoresSuspendStoreData, StoresSuspendStoreErrors, StoresSuspendStoreResponses, StoresUpdateStoreData, StoresUpdateStoreErrors, StoresUpdateStoreResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -192,6 +192,11 @@ export const mallsUpdateMall = <ThrowOnError extends boolean = false>(options: O
 export const mallsActivateMall = <ThrowOnError extends boolean = false>(options: Options<MallsActivateMallData, ThrowOnError>): RequestResult<MallsActivateMallResponses, MallsActivateMallErrors, ThrowOnError> => (options.client ?? client).post<MallsActivateMallResponses, MallsActivateMallErrors, ThrowOnError>({ url: '/api/v1/malls/{mall_id}/activate', ...options });
 
 /**
+ * List Mall Orders
+ */
+export const storeOrdersListMallOrders = <ThrowOnError extends boolean = false>(options: Options<StoreOrdersListMallOrdersData, ThrowOnError>): RequestResult<StoreOrdersListMallOrdersResponses, StoreOrdersListMallOrdersErrors, ThrowOnError> => (options.client ?? client).get<StoreOrdersListMallOrdersResponses, StoreOrdersListMallOrdersErrors, ThrowOnError>({ url: '/api/v1/malls/{mall_id}/orders', ...options });
+
+/**
  * List Mall Staff
  */
 export const staffListMallStaff = <ThrowOnError extends boolean = false>(options: Options<StaffListMallStaffData, ThrowOnError>): RequestResult<StaffListMallStaffResponses, StaffListMallStaffErrors, ThrowOnError> => (options.client ?? client).get<StaffListMallStaffResponses, StaffListMallStaffErrors, ThrowOnError>({ url: '/api/v1/malls/{mall_id}/staff', ...options });
@@ -229,6 +234,67 @@ export const storesCreateStore = <ThrowOnError extends boolean = false>(options:
  * Suspend Mall
  */
 export const mallsSuspendMall = <ThrowOnError extends boolean = false>(options: Options<MallsSuspendMallData, ThrowOnError>): RequestResult<MallsSuspendMallResponses, MallsSuspendMallErrors, ThrowOnError> => (options.client ?? client).post<MallsSuspendMallResponses, MallsSuspendMallErrors, ThrowOnError>({ url: '/api/v1/malls/{mall_id}/suspend', ...options });
+
+/**
+ * Clear Cart
+ */
+export const cartClearCart = <ThrowOnError extends boolean = false>(options: Options<CartClearCartData, ThrowOnError>): RequestResult<CartClearCartResponses, CartClearCartErrors, ThrowOnError> => (options.client ?? client).delete<CartClearCartResponses, CartClearCartErrors, ThrowOnError>({ url: '/api/v1/malls/{mall_slug}/cart', ...options });
+
+/**
+ * Get Cart
+ */
+export const cartGetCart = <ThrowOnError extends boolean = false>(options: Options<CartGetCartData, ThrowOnError>): RequestResult<CartGetCartResponses, CartGetCartErrors, ThrowOnError> => (options.client ?? client).get<CartGetCartResponses, CartGetCartErrors, ThrowOnError>({ url: '/api/v1/malls/{mall_slug}/cart', ...options });
+
+/**
+ * Add Line
+ */
+export const cartAddLine = <ThrowOnError extends boolean = false>(options: Options<CartAddLineData, ThrowOnError>): RequestResult<CartAddLineResponses, CartAddLineErrors, ThrowOnError> => (options.client ?? client).post<CartAddLineResponses, CartAddLineErrors, ThrowOnError>({
+    url: '/api/v1/malls/{mall_slug}/cart/lines',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Update Line
+ */
+export const cartUpdateLine = <ThrowOnError extends boolean = false>(options: Options<CartUpdateLineData, ThrowOnError>): RequestResult<CartUpdateLineResponses, CartUpdateLineErrors, ThrowOnError> => (options.client ?? client).patch<CartUpdateLineResponses, CartUpdateLineErrors, ThrowOnError>({
+    url: '/api/v1/malls/{mall_slug}/cart/lines/{line_id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Checkout
+ */
+export const ordersCheckout = <ThrowOnError extends boolean = false>(options: Options<OrdersCheckoutData, ThrowOnError>): RequestResult<OrdersCheckoutResponses, OrdersCheckoutErrors, ThrowOnError> => (options.client ?? client).post<OrdersCheckoutResponses, OrdersCheckoutErrors, ThrowOnError>({
+    url: '/api/v1/malls/{mall_slug}/checkout',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * List My Orders
+ */
+export const ordersListMyOrders = <ThrowOnError extends boolean = false>(options?: Options<OrdersListMyOrdersData, ThrowOnError>): RequestResult<OrdersListMyOrdersResponses, OrdersListMyOrdersErrors, ThrowOnError> => (options?.client ?? client).get<OrdersListMyOrdersResponses, OrdersListMyOrdersErrors, ThrowOnError>({ url: '/api/v1/orders', ...options });
+
+/**
+ * Cancel My Order
+ */
+export const ordersCancelMyOrder = <ThrowOnError extends boolean = false>(options: Options<OrdersCancelMyOrderData, ThrowOnError>): RequestResult<OrdersCancelMyOrderResponses, OrdersCancelMyOrderErrors, ThrowOnError> => (options.client ?? client).post<OrdersCancelMyOrderResponses, OrdersCancelMyOrderErrors, ThrowOnError>({ url: '/api/v1/orders/stores/{store_order_id}/cancel', ...options });
+
+/**
+ * Get My Order
+ */
+export const ordersGetMyOrder = <ThrowOnError extends boolean = false>(options: Options<OrdersGetMyOrderData, ThrowOnError>): RequestResult<OrdersGetMyOrderResponses, OrdersGetMyOrderErrors, ThrowOnError> => (options.client ?? client).get<OrdersGetMyOrderResponses, OrdersGetMyOrderErrors, ThrowOnError>({ url: '/api/v1/orders/{order_id}', ...options });
 
 /**
  * List Orgs
@@ -292,6 +358,11 @@ export const mallsCreateMall = <ThrowOnError extends boolean = false>(options: O
 });
 
 /**
+ * List Org Orders
+ */
+export const storeOrdersListOrgOrders = <ThrowOnError extends boolean = false>(options: Options<StoreOrdersListOrgOrdersData, ThrowOnError>): RequestResult<StoreOrdersListOrgOrdersResponses, StoreOrdersListOrgOrdersErrors, ThrowOnError> => (options.client ?? client).get<StoreOrdersListOrgOrdersResponses, StoreOrdersListOrgOrdersErrors, ThrowOnError>({ url: '/api/v1/orgs/{org_id}/orders', ...options });
+
+/**
  * List Org Staff
  */
 export const staffListOrgStaff = <ThrowOnError extends boolean = false>(options: Options<StaffListOrgStaffData, ThrowOnError>): RequestResult<StaffListOrgStaffResponses, StaffListOrgStaffErrors, ThrowOnError> => (options.client ?? client).get<StaffListOrgStaffResponses, StaffListOrgStaffErrors, ThrowOnError>({ url: '/api/v1/orgs/{org_id}/staff', ...options });
@@ -312,6 +383,16 @@ export const staffCreateOrgStaff = <ThrowOnError extends boolean = false>(option
  * Suspend Org
  */
 export const orgsSuspendOrg = <ThrowOnError extends boolean = false>(options: Options<OrgsSuspendOrgData, ThrowOnError>): RequestResult<OrgsSuspendOrgResponses, OrgsSuspendOrgErrors, ThrowOnError> => (options.client ?? client).post<OrgsSuspendOrgResponses, OrgsSuspendOrgErrors, ThrowOnError>({ url: '/api/v1/orgs/{org_id}/suspend', ...options });
+
+/**
+ * Public Stores
+ */
+export const publicPublicStores = <ThrowOnError extends boolean = false>(options: Options<PublicPublicStoresData, ThrowOnError>): RequestResult<PublicPublicStoresResponses, PublicPublicStoresErrors, ThrowOnError> => (options.client ?? client).get<PublicPublicStoresResponses, PublicPublicStoresErrors, ThrowOnError>({ url: '/api/v1/public/malls/{mall_slug}/stores', ...options });
+
+/**
+ * Public Menu
+ */
+export const publicPublicMenu = <ThrowOnError extends boolean = false>(options: Options<PublicPublicMenuData, ThrowOnError>): RequestResult<PublicPublicMenuResponses, PublicPublicMenuErrors, ThrowOnError> => (options.client ?? client).get<PublicPublicMenuResponses, PublicPublicMenuErrors, ThrowOnError>({ url: '/api/v1/public/malls/{mall_slug}/stores/{store_slug}/menu', ...options });
 
 /**
  * Get Public Mall
@@ -381,6 +462,301 @@ export const storesUpdateStore = <ThrowOnError extends boolean = false>(options:
  * Activate Store
  */
 export const storesActivateStore = <ThrowOnError extends boolean = false>(options: Options<StoresActivateStoreData, ThrowOnError>): RequestResult<StoresActivateStoreResponses, StoresActivateStoreErrors, ThrowOnError> => (options.client ?? client).post<StoresActivateStoreResponses, StoresActivateStoreErrors, ThrowOnError>({ url: '/api/v1/stores/{store_id}/activate', ...options });
+
+/**
+ * List Categories
+ */
+export const catalogListCategories = <ThrowOnError extends boolean = false>(options: Options<CatalogListCategoriesData, ThrowOnError>): RequestResult<CatalogListCategoriesResponses, CatalogListCategoriesErrors, ThrowOnError> => (options.client ?? client).get<CatalogListCategoriesResponses, CatalogListCategoriesErrors, ThrowOnError>({ url: '/api/v1/stores/{store_id}/categories', ...options });
+
+/**
+ * Create Category
+ */
+export const catalogCreateCategory = <ThrowOnError extends boolean = false>(options: Options<CatalogCreateCategoryData, ThrowOnError>): RequestResult<CatalogCreateCategoryResponses, CatalogCreateCategoryErrors, ThrowOnError> => (options.client ?? client).post<CatalogCreateCategoryResponses, CatalogCreateCategoryErrors, ThrowOnError>({
+    url: '/api/v1/stores/{store_id}/categories',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Delete Category
+ */
+export const catalogDeleteCategory = <ThrowOnError extends boolean = false>(options: Options<CatalogDeleteCategoryData, ThrowOnError>): RequestResult<CatalogDeleteCategoryResponses, CatalogDeleteCategoryErrors, ThrowOnError> => (options.client ?? client).delete<CatalogDeleteCategoryResponses, CatalogDeleteCategoryErrors, ThrowOnError>({ url: '/api/v1/stores/{store_id}/categories/{category_id}', ...options });
+
+/**
+ * Update Category
+ */
+export const catalogUpdateCategory = <ThrowOnError extends boolean = false>(options: Options<CatalogUpdateCategoryData, ThrowOnError>): RequestResult<CatalogUpdateCategoryResponses, CatalogUpdateCategoryErrors, ThrowOnError> => (options.client ?? client).patch<CatalogUpdateCategoryResponses, CatalogUpdateCategoryErrors, ThrowOnError>({
+    url: '/api/v1/stores/{store_id}/categories/{category_id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Detected Printers
+ */
+export const printingDetectedPrinters = <ThrowOnError extends boolean = false>(options: Options<PrintingDetectedPrintersData, ThrowOnError>): RequestResult<PrintingDetectedPrintersResponses, PrintingDetectedPrintersErrors, ThrowOnError> => (options.client ?? client).get<PrintingDetectedPrintersResponses, PrintingDetectedPrintersErrors, ThrowOnError>({ url: '/api/v1/stores/{store_id}/detected-printers', ...options });
+
+/**
+ * Presign Image
+ */
+export const catalogPresignImage = <ThrowOnError extends boolean = false>(options: Options<CatalogPresignImageData, ThrowOnError>): RequestResult<CatalogPresignImageResponses, CatalogPresignImageErrors, ThrowOnError> => (options.client ?? client).post<CatalogPresignImageResponses, CatalogPresignImageErrors, ThrowOnError>({
+    url: '/api/v1/stores/{store_id}/images/presign',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * List Store Orders
+ */
+export const storeOrdersListStoreOrders = <ThrowOnError extends boolean = false>(options: Options<StoreOrdersListStoreOrdersData, ThrowOnError>): RequestResult<StoreOrdersListStoreOrdersResponses, StoreOrdersListStoreOrdersErrors, ThrowOnError> => (options.client ?? client).get<StoreOrdersListStoreOrdersResponses, StoreOrdersListStoreOrdersErrors, ThrowOnError>({ url: '/api/v1/stores/{store_id}/orders', ...options });
+
+/**
+ * Get Store Order
+ */
+export const storeOrdersGetStoreOrder = <ThrowOnError extends boolean = false>(options: Options<StoreOrdersGetStoreOrderData, ThrowOnError>): RequestResult<StoreOrdersGetStoreOrderResponses, StoreOrdersGetStoreOrderErrors, ThrowOnError> => (options.client ?? client).get<StoreOrdersGetStoreOrderResponses, StoreOrdersGetStoreOrderErrors, ThrowOnError>({ url: '/api/v1/stores/{store_id}/orders/{order_id}', ...options });
+
+/**
+ * Accept
+ */
+export const storeOrdersAccept = <ThrowOnError extends boolean = false>(options: Options<StoreOrdersAcceptData, ThrowOnError>): RequestResult<StoreOrdersAcceptResponses, StoreOrdersAcceptErrors, ThrowOnError> => (options.client ?? client).post<StoreOrdersAcceptResponses, StoreOrdersAcceptErrors, ThrowOnError>({ url: '/api/v1/stores/{store_id}/orders/{order_id}/accept', ...options });
+
+/**
+ * Cancel Order
+ */
+export const storeOrdersCancelOrder = <ThrowOnError extends boolean = false>(options: Options<StoreOrdersCancelOrderData, ThrowOnError>): RequestResult<StoreOrdersCancelOrderResponses, StoreOrdersCancelOrderErrors, ThrowOnError> => (options.client ?? client).post<StoreOrdersCancelOrderResponses, StoreOrdersCancelOrderErrors, ThrowOnError>({
+    url: '/api/v1/stores/{store_id}/orders/{order_id}/cancel',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Verify Pickup
+ */
+export const storeOrdersVerifyPickup = <ThrowOnError extends boolean = false>(options: Options<StoreOrdersVerifyPickupData, ThrowOnError>): RequestResult<StoreOrdersVerifyPickupResponses, StoreOrdersVerifyPickupErrors, ThrowOnError> => (options.client ?? client).post<StoreOrdersVerifyPickupResponses, StoreOrdersVerifyPickupErrors, ThrowOnError>({
+    url: '/api/v1/stores/{store_id}/orders/{order_id}/pickup',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Preparing
+ */
+export const storeOrdersPreparing = <ThrowOnError extends boolean = false>(options: Options<StoreOrdersPreparingData, ThrowOnError>): RequestResult<StoreOrdersPreparingResponses, StoreOrdersPreparingErrors, ThrowOnError> => (options.client ?? client).post<StoreOrdersPreparingResponses, StoreOrdersPreparingErrors, ThrowOnError>({ url: '/api/v1/stores/{store_id}/orders/{order_id}/preparing', ...options });
+
+/**
+ * Reprint Order
+ */
+export const storeOrdersReprintOrder = <ThrowOnError extends boolean = false>(options: Options<StoreOrdersReprintOrderData, ThrowOnError>): RequestResult<StoreOrdersReprintOrderResponses, StoreOrdersReprintOrderErrors, ThrowOnError> => (options.client ?? client).post<StoreOrdersReprintOrderResponses, StoreOrdersReprintOrderErrors, ThrowOnError>({
+    url: '/api/v1/stores/{store_id}/orders/{order_id}/print',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Ready
+ */
+export const storeOrdersReady = <ThrowOnError extends boolean = false>(options: Options<StoreOrdersReadyData, ThrowOnError>): RequestResult<StoreOrdersReadyResponses, StoreOrdersReadyErrors, ThrowOnError> => (options.client ?? client).post<StoreOrdersReadyResponses, StoreOrdersReadyErrors, ThrowOnError>({ url: '/api/v1/stores/{store_id}/orders/{order_id}/ready', ...options });
+
+/**
+ * Reject Order
+ */
+export const storeOrdersRejectOrder = <ThrowOnError extends boolean = false>(options: Options<StoreOrdersRejectOrderData, ThrowOnError>): RequestResult<StoreOrdersRejectOrderResponses, StoreOrdersRejectOrderErrors, ThrowOnError> => (options.client ?? client).post<StoreOrdersRejectOrderResponses, StoreOrdersRejectOrderErrors, ThrowOnError>({
+    url: '/api/v1/stores/{store_id}/orders/{order_id}/reject',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * List Agents
+ */
+export const printingListAgents = <ThrowOnError extends boolean = false>(options: Options<PrintingListAgentsData, ThrowOnError>): RequestResult<PrintingListAgentsResponses, PrintingListAgentsErrors, ThrowOnError> => (options.client ?? client).get<PrintingListAgentsResponses, PrintingListAgentsErrors, ThrowOnError>({ url: '/api/v1/stores/{store_id}/print-agents', ...options });
+
+/**
+ * Create Agent
+ */
+export const printingCreateAgent = <ThrowOnError extends boolean = false>(options: Options<PrintingCreateAgentData, ThrowOnError>): RequestResult<PrintingCreateAgentResponses, PrintingCreateAgentErrors, ThrowOnError> => (options.client ?? client).post<PrintingCreateAgentResponses, PrintingCreateAgentErrors, ThrowOnError>({
+    url: '/api/v1/stores/{store_id}/print-agents',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Revoke Agent
+ */
+export const printingRevokeAgent = <ThrowOnError extends boolean = false>(options: Options<PrintingRevokeAgentData, ThrowOnError>): RequestResult<PrintingRevokeAgentResponses, PrintingRevokeAgentErrors, ThrowOnError> => (options.client ?? client).post<PrintingRevokeAgentResponses, PrintingRevokeAgentErrors, ThrowOnError>({ url: '/api/v1/stores/{store_id}/print-agents/{agent_id}/revoke', ...options });
+
+/**
+ * Rotate Agent
+ */
+export const printingRotateAgent = <ThrowOnError extends boolean = false>(options: Options<PrintingRotateAgentData, ThrowOnError>): RequestResult<PrintingRotateAgentResponses, PrintingRotateAgentErrors, ThrowOnError> => (options.client ?? client).post<PrintingRotateAgentResponses, PrintingRotateAgentErrors, ThrowOnError>({ url: '/api/v1/stores/{store_id}/print-agents/{agent_id}/rotate', ...options });
+
+/**
+ * Scan Network
+ */
+export const printingScanNetwork = <ThrowOnError extends boolean = false>(options: Options<PrintingScanNetworkData, ThrowOnError>): RequestResult<PrintingScanNetworkResponses, PrintingScanNetworkErrors, ThrowOnError> => (options.client ?? client).post<PrintingScanNetworkResponses, PrintingScanNetworkErrors, ThrowOnError>({ url: '/api/v1/stores/{store_id}/print-agents/{agent_id}/scan', ...options });
+
+/**
+ * Get Design
+ */
+export const printingGetDesign = <ThrowOnError extends boolean = false>(options: Options<PrintingGetDesignData, ThrowOnError>): RequestResult<PrintingGetDesignResponses, PrintingGetDesignErrors, ThrowOnError> => (options.client ?? client).get<PrintingGetDesignResponses, PrintingGetDesignErrors, ThrowOnError>({ url: '/api/v1/stores/{store_id}/print-design', ...options });
+
+/**
+ * Put Design
+ */
+export const printingPutDesign = <ThrowOnError extends boolean = false>(options: Options<PrintingPutDesignData, ThrowOnError>): RequestResult<PrintingPutDesignResponses, PrintingPutDesignErrors, ThrowOnError> => (options.client ?? client).put<PrintingPutDesignResponses, PrintingPutDesignErrors, ThrowOnError>({
+    url: '/api/v1/stores/{store_id}/print-design',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Delete Logo
+ */
+export const printingDeleteLogo = <ThrowOnError extends boolean = false>(options: Options<PrintingDeleteLogoData, ThrowOnError>): RequestResult<PrintingDeleteLogoResponses, PrintingDeleteLogoErrors, ThrowOnError> => (options.client ?? client).delete<PrintingDeleteLogoResponses, PrintingDeleteLogoErrors, ThrowOnError>({ url: '/api/v1/stores/{store_id}/print-design/logo', ...options });
+
+/**
+ * Get Logo
+ */
+export const printingGetLogo = <ThrowOnError extends boolean = false>(options: Options<PrintingGetLogoData, ThrowOnError>): RequestResult<PrintingGetLogoResponses, PrintingGetLogoErrors, ThrowOnError> => (options.client ?? client).get<PrintingGetLogoResponses, PrintingGetLogoErrors, ThrowOnError>({ url: '/api/v1/stores/{store_id}/print-design/logo', ...options });
+
+/**
+ * Put Logo
+ */
+export const printingPutLogo = <ThrowOnError extends boolean = false>(options: Options<PrintingPutLogoData, ThrowOnError>): RequestResult<PrintingPutLogoResponses, PrintingPutLogoErrors, ThrowOnError> => (options.client ?? client).put<PrintingPutLogoResponses, PrintingPutLogoErrors, ThrowOnError>({ url: '/api/v1/stores/{store_id}/print-design/logo', ...options });
+
+/**
+ * Recent Jobs
+ */
+export const printingRecentJobs = <ThrowOnError extends boolean = false>(options: Options<PrintingRecentJobsData, ThrowOnError>): RequestResult<PrintingRecentJobsResponses, PrintingRecentJobsErrors, ThrowOnError> => (options.client ?? client).get<PrintingRecentJobsResponses, PrintingRecentJobsErrors, ThrowOnError>({ url: '/api/v1/stores/{store_id}/print-jobs', ...options });
+
+/**
+ * List Printers
+ */
+export const printingListPrinters = <ThrowOnError extends boolean = false>(options: Options<PrintingListPrintersData, ThrowOnError>): RequestResult<PrintingListPrintersResponses, PrintingListPrintersErrors, ThrowOnError> => (options.client ?? client).get<PrintingListPrintersResponses, PrintingListPrintersErrors, ThrowOnError>({ url: '/api/v1/stores/{store_id}/printers', ...options });
+
+/**
+ * Create Printer
+ */
+export const printingCreatePrinter = <ThrowOnError extends boolean = false>(options: Options<PrintingCreatePrinterData, ThrowOnError>): RequestResult<PrintingCreatePrinterResponses, PrintingCreatePrinterErrors, ThrowOnError> => (options.client ?? client).post<PrintingCreatePrinterResponses, PrintingCreatePrinterErrors, ThrowOnError>({
+    url: '/api/v1/stores/{store_id}/printers',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Update Printer
+ */
+export const printingUpdatePrinter = <ThrowOnError extends boolean = false>(options: Options<PrintingUpdatePrinterData, ThrowOnError>): RequestResult<PrintingUpdatePrinterResponses, PrintingUpdatePrinterErrors, ThrowOnError> => (options.client ?? client).patch<PrintingUpdatePrinterResponses, PrintingUpdatePrinterErrors, ThrowOnError>({
+    url: '/api/v1/stores/{store_id}/printers/{printer_id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Test Print
+ */
+export const printingTestPrint = <ThrowOnError extends boolean = false>(options: Options<PrintingTestPrintData, ThrowOnError>): RequestResult<PrintingTestPrintResponses, PrintingTestPrintErrors, ThrowOnError> => (options.client ?? client).post<PrintingTestPrintResponses, PrintingTestPrintErrors, ThrowOnError>({ url: '/api/v1/stores/{store_id}/printers/{printer_id}/test', ...options });
+
+/**
+ * List Products
+ */
+export const catalogListProducts = <ThrowOnError extends boolean = false>(options: Options<CatalogListProductsData, ThrowOnError>): RequestResult<CatalogListProductsResponses, CatalogListProductsErrors, ThrowOnError> => (options.client ?? client).get<CatalogListProductsResponses, CatalogListProductsErrors, ThrowOnError>({ url: '/api/v1/stores/{store_id}/products', ...options });
+
+/**
+ * Create Product
+ */
+export const catalogCreateProduct = <ThrowOnError extends boolean = false>(options: Options<CatalogCreateProductData, ThrowOnError>): RequestResult<CatalogCreateProductResponses, CatalogCreateProductErrors, ThrowOnError> => (options.client ?? client).post<CatalogCreateProductResponses, CatalogCreateProductErrors, ThrowOnError>({
+    url: '/api/v1/stores/{store_id}/products',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Archive Product
+ */
+export const catalogArchiveProduct = <ThrowOnError extends boolean = false>(options: Options<CatalogArchiveProductData, ThrowOnError>): RequestResult<CatalogArchiveProductResponses, CatalogArchiveProductErrors, ThrowOnError> => (options.client ?? client).delete<CatalogArchiveProductResponses, CatalogArchiveProductErrors, ThrowOnError>({ url: '/api/v1/stores/{store_id}/products/{product_id}', ...options });
+
+/**
+ * Get Product
+ */
+export const catalogGetProduct = <ThrowOnError extends boolean = false>(options: Options<CatalogGetProductData, ThrowOnError>): RequestResult<CatalogGetProductResponses, CatalogGetProductErrors, ThrowOnError> => (options.client ?? client).get<CatalogGetProductResponses, CatalogGetProductErrors, ThrowOnError>({ url: '/api/v1/stores/{store_id}/products/{product_id}', ...options });
+
+/**
+ * Update Product
+ */
+export const catalogUpdateProduct = <ThrowOnError extends boolean = false>(options: Options<CatalogUpdateProductData, ThrowOnError>): RequestResult<CatalogUpdateProductResponses, CatalogUpdateProductErrors, ThrowOnError> => (options.client ?? client).put<CatalogUpdateProductResponses, CatalogUpdateProductErrors, ThrowOnError>({
+    url: '/api/v1/stores/{store_id}/products/{product_id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Set Availability
+ */
+export const catalogSetAvailability = <ThrowOnError extends boolean = false>(options: Options<CatalogSetAvailabilityData, ThrowOnError>): RequestResult<CatalogSetAvailabilityResponses, CatalogSetAvailabilityErrors, ThrowOnError> => (options.client ?? client).patch<CatalogSetAvailabilityResponses, CatalogSetAvailabilityErrors, ThrowOnError>({
+    url: '/api/v1/stores/{store_id}/products/{product_id}/availability',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Get Settings
+ */
+export const catalogGetSettings = <ThrowOnError extends boolean = false>(options: Options<CatalogGetSettingsData, ThrowOnError>): RequestResult<CatalogGetSettingsResponses, CatalogGetSettingsErrors, ThrowOnError> => (options.client ?? client).get<CatalogGetSettingsResponses, CatalogGetSettingsErrors, ThrowOnError>({ url: '/api/v1/stores/{store_id}/settings', ...options });
+
+/**
+ * Update Settings
+ */
+export const catalogUpdateSettings = <ThrowOnError extends boolean = false>(options: Options<CatalogUpdateSettingsData, ThrowOnError>): RequestResult<CatalogUpdateSettingsResponses, CatalogUpdateSettingsErrors, ThrowOnError> => (options.client ?? client).patch<CatalogUpdateSettingsResponses, CatalogUpdateSettingsErrors, ThrowOnError>({
+    url: '/api/v1/stores/{store_id}/settings',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
 
 /**
  * List Store Staff

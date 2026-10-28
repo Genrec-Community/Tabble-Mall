@@ -11,3 +11,10 @@ export async function refreshMallPage(slug: string): Promise<void> {
   if (!/^[a-z0-9-]{3,60}$/.test(slug)) return;
   updateTag(`mall:${slug}`);
 }
+
+/** Same idea for one store's menu: call after the store edits its menu, hours or open/closed state. */
+export async function refreshMenuPage(mallSlug: string, storeSlug: string): Promise<void> {
+  if (!/^[a-z0-9-]{3,60}$/.test(mallSlug) || !/^[a-z0-9-]{3,60}$/.test(storeSlug)) return;
+  updateTag(`menu:${mallSlug}:${storeSlug}`);
+  updateTag(`mall:${mallSlug}`);
+}

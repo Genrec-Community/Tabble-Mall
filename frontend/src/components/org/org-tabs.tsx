@@ -14,6 +14,7 @@ export function OrgTabs() {
   const tabs = [
     { href: `/org/${orgId}`, label: "Overview", show: true },
     { href: `/org/${orgId}/malls`, label: "Malls", show: true },
+    { href: `/org/${orgId}/orders`, label: "Orders", show: can("store.order.read", scope) },
     { href: `/org/${orgId}/staff`, label: "Staff", show: can("org.staff.manage", scope) },
     { href: `/org/${orgId}/audit`, label: "Audit log", show: can("audit.read", scope) },
   ].filter((t) => t.show);

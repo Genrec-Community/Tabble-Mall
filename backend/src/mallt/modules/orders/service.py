@@ -220,6 +220,8 @@ class OrderService:
             raise Conflict("cart_has_problems", "Some items in your cart are no longer available.")
 
         contact = await self.customers.contact(customer_id)
+        if contact.phone_masked is None:
+            raise BadRequest("phone_required", "Verify your mobile number before ordering.")
         org_bps, accept_timeout = await self.tenancy.org_terms(mall.organization_id)
         holds: dict[uuid.UUID, int] = {}
         for p in priced:

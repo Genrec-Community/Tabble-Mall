@@ -4,10 +4,13 @@
  */
 import type { AuthKind } from "@/lib/auth/token-store";
 
+// Which kind of person calls a URL decides which access token goes with it. Customer routes are
+// the customer auth routes, the cart and checkout of a mall (addressed by slug), and "my orders".
+// Staff routes that look similar (/stores/…/orders, /malls/<id>/orders) never match.
+const CUSTOMER_URL = /\/api\/v1\/(auth\/customer|customer\/|orders(\/|\?|$)|malls\/[^/]+\/(cart|checkout)(\/|\?|$))/;
+
 export function kindForUrl(url: string): AuthKind {
-  return url.includes("/api/v1/auth/customer") || url.includes("/api/v1/customer/")
-    ? "customer"
-    : "staff";
+  return CUSTOMER_URL.test(url) ? "customer" : "staff";
 }
 
 async function problemCode(response: Response): Promise<string | null> {
