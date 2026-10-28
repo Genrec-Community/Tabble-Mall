@@ -26,6 +26,7 @@ from mallt.modules.iam.models import StaffUser
 from mallt.modules.iam.repository import IamRepository
 from mallt.modules.iam.schemas import GrantOut, StaffMe
 from mallt.modules.iam.sessions import SessionInfo, SessionService
+from mallt.modules.iam.users import normalize_username
 
 LOGIN_LIMIT = 10
 LOGIN_WINDOW_S = 900
@@ -49,10 +50,6 @@ class SuspendedOnRefresh(Unauthorized):
 def _dummy_hash() -> str:
     # Verified when the username does not exist, so unknown users cost as much time as known ones.
     return hash_password("dummy-password-for-timing")
-
-
-def normalize_username(raw: str) -> str:
-    return raw.strip().lower()
 
 
 class StaffAuthService:

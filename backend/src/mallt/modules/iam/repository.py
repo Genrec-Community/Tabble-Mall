@@ -34,6 +34,14 @@ class IamRepository:
     async def get_staff(self, staff_id: uuid.UUID) -> StaffUser | None:
         return await self.session.get(StaffUser, staff_id)
 
+    def add(self, obj: StaffUser | RoleAssignment) -> None:
+        self.session.add(obj)
+
+    async def get_role_by_key(self, key: str) -> Role | None:
+        return (
+            await self.session.execute(select(Role).where(Role.key == key))
+        ).scalar_one_or_none()
+
     async def get_staff_by_username(self, username: str) -> StaffUser | None:
         stmt = select(StaffUser).where(StaffUser.username == username)
         return (await self.session.execute(stmt)).scalar_one_or_none()
