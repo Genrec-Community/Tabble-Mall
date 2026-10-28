@@ -1,0 +1,38 @@
+[project]
+name = "mallt-print-agent"
+version = "0.1.0"
+requires-python = ">=3.12"
+# One dependency. This is installed on hotel PCs by people following an instruction
+# sheet, so every package added here is another thing that can fail to build on a
+# machine nobody can log into. `python-escpos` is the notable omission -- it needs
+# libusb present on the system; see the note at the top of `escpos.py`.
+dependencies = ["websockets>=15,<18"]
+
+[project.scripts]
+print-agent = "print_agent.__main__:main"
+
+[tool.pytest.ini_options]
+# No database and no shared loop, so unlike the backend these can stay
+# function-scoped -- the reason that suite pins both scopes to "session" does not
+# apply here.
+asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = "-q --strict-markers --tb=short"
+markers = [
+    "unit: pure logic, no socket and no hardware",
+    "ws: exercises the agent's socket loop against a fake server",
+]
+
+# Matching the backend's settings rather than choosing fresh ones: this is the same
+# codebase to whoever is reading it, and a different line length between two Python
+# directories is a diff nobody can explain later.
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["E501"]
+"tests/test_reporting.py" = ["E501", "F811"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "ASYNC"]
