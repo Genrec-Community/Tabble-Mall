@@ -151,6 +151,9 @@ class IamUsers:
         ids = await self.repo.staff_ids_at(scope)
         return await self._records(await self.repo.staff_by_ids(ids)) if ids else []
 
+    async def usernames_by_ids(self, ids: set[uuid.UUID]) -> dict[uuid.UUID, str]:
+        return await self.repo.usernames(list(ids)) if ids else {}
+
     async def other_active_owners(self, org_id: uuid.UUID, excluding: uuid.UUID) -> int:
         return await self.repo.count_active_owners(org_id, excluding)
 

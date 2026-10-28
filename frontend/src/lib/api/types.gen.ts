@@ -10,6 +10,11 @@ export type ClientOptions = {
 export type ActiveStatus = 'active' | 'suspended';
 
 /**
+ * ActorType
+ */
+export type ActorType = 'staff' | 'customer' | 'system';
+
+/**
  * AssignmentOut
  */
 export type AssignmentOut = {
@@ -38,6 +43,71 @@ export type AssignmentOut = {
      * Store Id
      */
     store_id: string | null;
+};
+
+/**
+ * AuditOut
+ */
+export type AuditOut = {
+    /**
+     * Action
+     */
+    action: string;
+    /**
+     * Actor Id
+     */
+    actor_id: string | null;
+    actor_type: ActorType;
+    /**
+     * Actor Username
+     */
+    actor_username: string | null;
+    /**
+     * After
+     */
+    after: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Before
+     */
+    before: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Organization Id
+     */
+    organization_id: string | null;
+    /**
+     * Target Id
+     */
+    target_id: string | null;
+    /**
+     * Target Type
+     */
+    target_type: string;
+};
+
+/**
+ * AuditPage
+ */
+export type AuditPage = {
+    /**
+     * Items
+     */
+    items: Array<AuditOut>;
+    /**
+     * Next Cursor
+     */
+    next_cursor?: string | null;
 };
 
 /**
@@ -746,6 +816,44 @@ export type ValidationError = {
      */
     type: string;
 };
+
+export type AuditListAllAuditData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Organization Id
+         */
+        organization_id?: string | null;
+        /**
+         * Cursor
+         */
+        cursor?: string | null;
+        /**
+         * Limit
+         */
+        limit?: number;
+    };
+    url: '/api/v1/admin/audit';
+};
+
+export type AuditListAllAuditErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AuditListAllAuditError = AuditListAllAuditErrors[keyof AuditListAllAuditErrors];
+
+export type AuditListAllAuditResponses = {
+    /**
+     * Successful Response
+     */
+    200: AuditPage;
+};
+
+export type AuditListAllAuditResponse = AuditListAllAuditResponses[keyof AuditListAllAuditResponses];
 
 export type AuthCustomerGoogleLoginData = {
     body: GoogleLogin;
@@ -1501,6 +1609,45 @@ export type OrgsActivateOrgResponses = {
 };
 
 export type OrgsActivateOrgResponse = OrgsActivateOrgResponses[keyof OrgsActivateOrgResponses];
+
+export type AuditListOrgAuditData = {
+    body?: never;
+    path: {
+        /**
+         * Org Id
+         */
+        org_id: string;
+    };
+    query?: {
+        /**
+         * Cursor
+         */
+        cursor?: string | null;
+        /**
+         * Limit
+         */
+        limit?: number;
+    };
+    url: '/api/v1/orgs/{org_id}/audit';
+};
+
+export type AuditListOrgAuditErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AuditListOrgAuditError = AuditListOrgAuditErrors[keyof AuditListOrgAuditErrors];
+
+export type AuditListOrgAuditResponses = {
+    /**
+     * Successful Response
+     */
+    200: AuditPage;
+};
+
+export type AuditListOrgAuditResponse = AuditListOrgAuditResponses[keyof AuditListOrgAuditResponses];
 
 export type MallsListMallsData = {
     body?: never;

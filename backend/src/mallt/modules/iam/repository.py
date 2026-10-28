@@ -58,6 +58,10 @@ class IamRepository:
         )
         return (await self.session.execute(stmt)).first() is not None
 
+    async def usernames(self, ids: list[uuid.UUID]) -> dict[uuid.UUID, str]:
+        stmt = select(StaffUser.id, StaffUser.username).where(StaffUser.id.in_(ids))
+        return {row[0]: row[1] for row in (await self.session.execute(stmt)).all()}
+
     async def staff_by_ids(self, ids: list[uuid.UUID]) -> list[StaffUser]:
         stmt = select(StaffUser).where(StaffUser.id.in_(ids)).order_by(StaffUser.username)
         return list((await self.session.execute(stmt)).scalars())

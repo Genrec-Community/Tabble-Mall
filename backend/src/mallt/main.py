@@ -11,6 +11,7 @@ from mallt.core.db import make_engine
 from mallt.core.errors import install_error_handlers
 from mallt.core.kv import make_kv
 from mallt.core.logging import RequestIdMiddleware, configure_logging
+from mallt.modules.audit.router import router as audit_router
 from mallt.modules.health.router import router as health_router
 from mallt.modules.iam.customer_router import customer_router
 from mallt.modules.iam.google import make_google_verifier
@@ -65,4 +66,5 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     for router in tenancy_routers:
         app.include_router(router)
     app.include_router(staff_mgmt_router)
+    app.include_router(audit_router)
     return app
