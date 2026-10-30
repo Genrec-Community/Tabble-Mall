@@ -16,6 +16,8 @@ PREFIX="/$NAME/env"
 INSTANCE_TYPE=${INSTANCE_TYPE:-t3.small}
 DB_CLASS=${DB_CLASS:-db.t4g.micro}
 export AWS_DEFAULT_REGION=$REGION AWS_PAGER=""
+# Git Bash on Windows rewrites "/tabble-mall/env/..." arguments into Windows paths; keep them as-is.
+export MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL="*"
 
 ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
 BUCKET="$NAME-$ACCOUNT-$REGION"
@@ -90,8 +92,10 @@ JSON
 )"
 
 log "Source bundle"
-git archive --format=tar.gz -o /tmp/$NAME-source.tar.gz HEAD
-aws s3 cp /tmp/$NAME-source.tar.gz "s3://$BUCKET/source.tar.gz" >/dev/null
+SOURCE_TGZ=".$NAME-source.tar.gz"  # relative, so a native (Windows) aws CLI can read it too
+git archive --format=tar.gz -o "$SOURCE_TGZ" HEAD
+aws s3 cp "$SOURCE_TGZ" "s3://$BUCKET/source.tar.gz" >/dev/null
+rm -f "$SOURCE_TGZ"
 
 log "Instance"
 INSTANCE=$(aws ec2 describe-instances --filters "Name=tag:app,Values=$NAME" "Name=instance-state-name,Values=pending,running,stopped" \
