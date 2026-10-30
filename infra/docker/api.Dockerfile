@@ -14,8 +14,8 @@ FROM python:3.13-slim
 RUN useradd --system --uid 10001 --create-home mallt
 WORKDIR /app
 COPY --from=build --chown=mallt:mallt /app /app
+COPY --chown=mallt:mallt infra/docker/api-start.sh /app/start.sh
 ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1
 USER mallt
 EXPOSE 8000
-CMD ["uvicorn", "mallt.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", \
-     "--proxy-headers", "--forwarded-allow-ips=*"]
+CMD ["sh", "/app/start.sh"]
