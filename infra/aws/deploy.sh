@@ -15,9 +15,15 @@ NAME=${NAME:-tabble-mall}
 PREFIX="/$NAME/env"
 INSTANCE_TYPE=${INSTANCE_TYPE:-t3.small}
 DB_CLASS=${DB_CLASS:-db.t4g.micro}
+DB_BACKUP_DAYS=${DB_BACKUP_DAYS:-7}  # accounts on the AWS Free plan allow at most 1
+# rds: managed RDS instance. local: Postgres in docker on the app instance (no RDS; for accounts
+# whose plan has no RDS capacity left). Pick one per deployment; switching does not move data.
+DB_MODE=${DB_MODE:-rds}
 export AWS_DEFAULT_REGION=$REGION AWS_PAGER=""
 # Git Bash on Windows rewrites "/tabble-mall/env/..." arguments into Windows paths; keep them as-is.
 export MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL="*"
+# The Windows aws CLI ends text output with CRLF, which would leak "\r" into captured IDs.
+aws() { command aws "$@" | tr -d '\r'; }
 
 ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
 BUCKET="$NAME-$ACCOUNT-$REGION"
@@ -61,16 +67,16 @@ aws ec2 authorize-security-group-ingress --group-id "$WEB_SG" \
 aws ec2 authorize-security-group-ingress --group-id "$DB_SG" \
   --ip-permissions "IpProtocol=tcp,FromPort=5432,ToPort=5432,UserIdGroupPairs=[{GroupId=$WEB_SG}]" >/dev/null 2>&1 || true
 
-log "Database (RDS PostgreSQL 17)"
+log "Database (PostgreSQL 17, $DB_MODE)"
 DB_ID="$NAME-db"
 put_secret_once DB_PASSWORD_RAW
-if ! aws rds describe-db-instances --db-instance-identifier "$DB_ID" >/dev/null 2>&1; then
+if [ "$DB_MODE" = rds ] && ! aws rds describe-db-instances --db-instance-identifier "$DB_ID" >/dev/null 2>&1; then
   aws rds create-db-instance --db-instance-identifier "$DB_ID" --engine postgres --engine-version 17 \
     --db-instance-class "$DB_CLASS" --allocated-storage 20 --storage-type gp3 \
     --master-username mallt \
     --master-user-password "$(aws ssm get-parameter --name "$PREFIX/DB_PASSWORD_RAW" --with-decryption --query Parameter.Value --output text)" \
     --db-name mallt --vpc-security-group-ids "$DB_SG" --no-publicly-accessible \
-    --backup-retention-period 7 --storage-encrypted --tags "Key=app,Value=$NAME" >/dev/null
+    --backup-retention-period "$DB_BACKUP_DAYS" --storage-encrypted --tags "Key=app,Value=$NAME" >/dev/null
 fi
 
 log "Instance role"
@@ -161,12 +167,20 @@ fi
 MEDIA_DOMAIN=$(aws cloudfront get-distribution --id "$MEDIA_DIST" --query Distribution.DomainName --output text)
 
 log "Waiting for the database"
-aws rds wait db-instance-available --db-instance-identifier "$DB_ID"
-DB_HOST=$(aws rds describe-db-instances --db-instance-identifier "$DB_ID" --query 'DBInstances[0].Endpoint.Address' --output text)
 DB_PASSWORD=$(aws ssm get-parameter --name "$PREFIX/DB_PASSWORD_RAW" --with-decryption --query Parameter.Value --output text)
+if [ "$DB_MODE" = rds ]; then
+  aws rds wait db-instance-available --db-instance-identifier "$DB_ID"
+  DB_HOST=$(aws rds describe-db-instances --db-instance-identifier "$DB_ID" --query 'DBInstances[0].Endpoint.Address' --output text)
+  DB_URL="postgresql://mallt:$DB_PASSWORD@$DB_HOST:5432/mallt?sslmode=require"
+else
+  DB_HOST="postgres (docker, on the instance)"
+  DB_URL="postgresql://mallt:$DB_PASSWORD@postgres:5432/mallt"
+fi
 
 log "App settings ($PREFIX)"
-put_param DATABASE_URL "postgresql://mallt:$DB_PASSWORD@$DB_HOST:5432/mallt?sslmode=require" SecureString
+put_param LOCAL_DB "$([ "$DB_MODE" = local ] && echo true || echo false)"
+put_param DATABASE_URL "$DB_URL" SecureString
+unset DB_URL
 unset DB_PASSWORD
 put_secret_once JWT_SECRET
 put_secret_once OTP_PEPPER

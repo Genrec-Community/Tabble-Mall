@@ -24,7 +24,9 @@ aws ssm get-parameters-by-path --region "$REGION" --path "$PREFIX/" --with-decry
   --query 'Parameters[].[Name,Value]' --output text \
   | while IFS=\$'\t' read -r name value; do echo "\${name##*/}=\$value"; done > /opt/tabble/.env
 chmod 600 /opt/tabble/.env
-docker compose -f docker-compose.yml -f infra/aws/docker-compose.aws.yml up -d --build nginx web api
+FILES="-f docker-compose.yml -f infra/aws/docker-compose.aws.yml"
+grep -q '^LOCAL_DB=true$' .env && FILES="\$FILES -f infra/aws/docker-compose.localdb.yml"
+docker compose \$FILES up -d --build nginx web api
 docker image prune -f
 SCRIPT
 chmod +x /usr/local/bin/tabble-deploy
