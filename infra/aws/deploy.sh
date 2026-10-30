@@ -19,6 +19,10 @@ DB_BACKUP_DAYS=${DB_BACKUP_DAYS:-7}  # accounts on the AWS Free plan allow at mo
 # rds: managed RDS instance. local: Postgres in docker on the app instance (no RDS; for accounts
 # whose plan has no RDS capacity left). Pick one per deployment; switching does not move data.
 DB_MODE=${DB_MODE:-rds}
+# cloudfront: HTTPS at CloudFront (app + media distributions). caddy: no CloudFront (e.g. an
+# account not yet verified for it); Caddy on the instance gets a Let's Encrypt certificate for
+# <elastic-ip>.sslip.io and images are served straight from a public-read media bucket.
+EDGE=${EDGE:-cloudfront}
 export AWS_DEFAULT_REGION=$REGION AWS_PAGER=""
 # Git Bash on Windows rewrites "/tabble-mall/env/..." arguments into Windows paths; keep them as-is.
 export MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL="*"
@@ -46,6 +50,13 @@ for b in "$BUCKET" "$MEDIA_BUCKET"; do
 done
 aws s3api put-bucket-cors --bucket "$MEDIA_BUCKET" --cors-configuration \
   '{"CORSRules":[{"AllowedMethods":["PUT","GET"],"AllowedOrigins":["*"],"AllowedHeaders":["*"],"MaxAgeSeconds":3000}]}'
+if [ "$EDGE" = caddy ]; then
+  # Images are public anyway; without CloudFront the bucket serves them directly (read-only).
+  aws s3api put-public-access-block --bucket "$MEDIA_BUCKET" --public-access-block-configuration \
+    BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=false,RestrictPublicBuckets=false
+  aws s3api put-bucket-policy --bucket "$MEDIA_BUCKET" --policy \
+    "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":\"*\",\"Action\":\"s3:GetObject\",\"Resource\":\"arn:aws:s3:::$MEDIA_BUCKET/*\"}]}"
+fi
 
 log "Network"
 VPC=$(aws ec2 describe-vpcs --filters Name=isDefault,Values=true --query 'Vpcs[0].VpcId' --output text)
@@ -64,6 +75,12 @@ CF_PL=$(aws ec2 describe-managed-prefix-lists --filters Name=prefix-list-name,Va
   --query 'PrefixLists[0].PrefixListId' --output text)
 aws ec2 authorize-security-group-ingress --group-id "$WEB_SG" \
   --ip-permissions "IpProtocol=tcp,FromPort=80,ToPort=80,PrefixListIds=[{PrefixListId=$CF_PL}]" >/dev/null 2>&1 || true
+if [ "$EDGE" = caddy ]; then
+  for port in 80 443; do
+    aws ec2 authorize-security-group-ingress --group-id "$WEB_SG" \
+      --ip-permissions "IpProtocol=tcp,FromPort=$port,ToPort=$port,IpRanges=[{CidrIp=0.0.0.0/0}]" >/dev/null 2>&1 || true
+  done
+fi
 aws ec2 authorize-security-group-ingress --group-id "$DB_SG" \
   --ip-permissions "IpProtocol=tcp,FromPort=5432,ToPort=5432,UserIdGroupPairs=[{GroupId=$WEB_SG}]" >/dev/null 2>&1 || true
 
@@ -122,6 +139,18 @@ fi
 aws ec2 wait instance-running --instance-ids "$INSTANCE"
 ORIGIN=$(aws ec2 describe-instances --instance-ids "$INSTANCE" --query 'Reservations[0].Instances[0].PublicDnsName' --output text)
 
+if [ "$EDGE" = caddy ]; then
+log "Elastic IP and HTTPS (Caddy on the instance)"
+EIP=$(aws ec2 describe-addresses --filters "Name=tag:app,Values=$NAME" --query 'Addresses[0].PublicIp' --output text)
+if [ "$EIP" = "None" ]; then
+  EIP=$(aws ec2 allocate-address --domain vpc --tag-specifications "$(printf "$TAG" elastic-ip)" --query PublicIp --output text)
+fi
+ALLOC=$(aws ec2 describe-addresses --public-ips "$EIP" --query 'Addresses[0].AllocationId' --output text)
+aws ec2 associate-address --allocation-id "$ALLOC" --instance-id "$INSTANCE" --allow-reassociation >/dev/null
+ORIGIN=$EIP
+DOMAIN="${EIP//./-}.sslip.io"
+MEDIA_DOMAIN="$MEDIA_BUCKET.s3.$REGION.amazonaws.com"
+else
 log "CloudFront"
 CACHING_DISABLED=4135ea2d-6df8-44a3-9df3-4b5a84be39ad
 CACHING_OPTIMIZED=658327ea-f89d-4fab-a63d-7e88639e58f6
@@ -165,6 +194,7 @@ JSON
 )"
 fi
 MEDIA_DOMAIN=$(aws cloudfront get-distribution --id "$MEDIA_DIST" --query Distribution.DomainName --output text)
+fi
 
 log "Waiting for the database"
 DB_PASSWORD=$(aws ssm get-parameter --name "$PREFIX/DB_PASSWORD_RAW" --with-decryption --query Parameter.Value --output text)
@@ -179,6 +209,8 @@ fi
 
 log "App settings ($PREFIX)"
 put_param LOCAL_DB "$([ "$DB_MODE" = local ] && echo true || echo false)"
+put_param EDGE "$EDGE"
+put_param SITE_DOMAIN "$DOMAIN"
 put_param DATABASE_URL "$DB_URL" SecureString
 unset DB_URL
 unset DB_PASSWORD
