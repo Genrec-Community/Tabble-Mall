@@ -1,0 +1,22 @@
+# Postgres on the instance itself, for DB_MODE=local (infra/aws/deploy.sh) when RDS is not an
+# option, e.g. on the AWS Free plan. Data lives in a named volume on the instance's EBS disk,
+# which survives redeploys but not instance termination.
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: mallt
+      POSTGRES_DB: mallt
+      POSTGRES_PASSWORD: ${DB_PASSWORD_RAW}
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mallt -d mallt"]
+      interval: 5s
+      retries: 20
+  api:
+    depends_on:
+      postgres: { condition: service_healthy }
+
+volumes:
+  pgdata:

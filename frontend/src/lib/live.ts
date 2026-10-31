@@ -14,7 +14,9 @@ export interface LiveMessage {
 export type LiveSubscription = { channel: "customer" } | { channel: "store"; store_id: string };
 
 export function liveSocketUrl(): string {
-  const base = process.env.NEXT_PUBLIC_API_BASE || window.location.origin;
+  // NEXT_PUBLIC_WS_BASE: the API's own origin when the web host can't proxy WebSockets.
+  const base =
+    process.env.NEXT_PUBLIC_WS_BASE || process.env.NEXT_PUBLIC_API_BASE || window.location.origin;
   return `${base.replace(/^http/, "ws")}/ws/orders`;
 }
 
