@@ -45,6 +45,16 @@ class Settings(BaseSettings):
     s3_secret_access_key: str = ""
     s3_public_base_url: str = ""
 
+    # Payments. "fake" pays instantly (dev/tests); "zoho" is Zoho Payments with Split.
+    payments_provider: Literal["fake", "zoho"] = "fake"
+    zoho_account_id: str = ""
+    zoho_client_id: str = ""
+    zoho_client_secret: str = ""
+    zoho_refresh_token: str = ""
+    zoho_api_key: str = ""  # the widget's public API key (Settings > Developer Space)
+    zoho_webhook_signing_key: str = ""
+    zoho_sandbox: bool = True
+
     @model_validator(mode="after")
     def _prod_must_be_safe(self) -> "Settings":
         if self.env != "prod":
@@ -62,6 +72,17 @@ class Settings(BaseSettings):
             raise ValueError("cookie_secure must be true in prod")
         if self.sms_backend != "fast2sms":
             raise ValueError("sms_backend must be fast2sms in prod (OTPs would never be sent)")
+        if self.payments_provider == "zoho":
+            zoho = (
+                "zoho_account_id",
+                "zoho_client_id",
+                "zoho_client_secret",
+                "zoho_refresh_token",
+                "zoho_api_key",
+                "zoho_webhook_signing_key",
+            )
+            if missing := [name for name in zoho if not getattr(self, name)]:
+                raise ValueError(f"payments_provider=zoho needs {', '.join(missing)}")
         if any("localhost" in o or "127.0.0.1" in o for o in self.cors_origins):
             raise ValueError("cors_origins must not include localhost in prod")
         return self

@@ -56,6 +56,7 @@ class CustomerOrder(IdMixin, TimestampMixin, Base):
     __tablename__ = "customer_orders"
     __table_args__ = (
         UniqueConstraint("customer_id", "idempotency_key", name="uq_customer_orders_idem"),
+        Index("ix_customer_orders_unpaid", "status", "pay_by"),
         CheckConstraint("fulfilment_type = 'pickup'", name="pickup_only"),
     )
 
@@ -72,6 +73,12 @@ class CustomerOrder(IdMixin, TimestampMixin, Base):
     total_paise: Mapped[int] = mapped_column(BigInteger)
     commission_paise: Mapped[int] = mapped_column(BigInteger, default=0)
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # The provider's checkout session and, once paid, its payment id.
+    payment_provider: Mapped[str | None] = mapped_column(Text, nullable=True)
+    payment_session_ref: Mapped[str | None] = mapped_column(Text, nullable=True)
+    payment_ref: Mapped[str | None] = mapped_column(Text, nullable=True, index=True)
+    # An unpaid order is given up (stock returned) after this.
+    pay_by: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     store_orders: Mapped[list["StoreOrder"]] = relationship(
         back_populates="customer_order", order_by="StoreOrder.id", lazy="raise"

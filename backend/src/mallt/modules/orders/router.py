@@ -20,13 +20,15 @@ from mallt.modules.orders.schemas import (
 )
 from mallt.modules.orders.service import OrderService
 from mallt.modules.payments.provider import PaymentProvider
+from mallt.modules.payments.runner import money_kick
+from mallt.modules.payments.schemas import PaymentConfirmIn
 from mallt.modules.printing.schemas import ReprintIn
 
 
 def _svc(session: SessionDep, kv: KvDep, request: Request) -> OrderService:
     bus: Bus = request.app.state.bus
     payments: PaymentProvider = request.app.state.payments
-    return OrderService(session, kv, bus, payments)
+    return OrderService(session, kv, bus, payments, money_kick(request.app))
 
 
 Svc = Annotated[OrderService, Depends(_svc, scope="function")]
@@ -66,6 +68,14 @@ async def list_my_orders(
 @customer_router.get("/orders/{order_id}")
 async def get_my_order(order_id: uuid.UUID, customer_id: CustomerId, svc: Svc) -> CustomerOrderOut:
     return await svc.get_customer_order(customer_id, order_id)
+
+
+@customer_router.post("/orders/{order_id}/payment")
+async def confirm_my_payment(
+    order_id: uuid.UUID, body: PaymentConfirmIn, customer_id: CustomerId, svc: Svc
+) -> CustomerOrderOut:
+    """After the provider's checkout says it paid: the server checks with the provider."""
+    return await svc.confirm_payment(customer_id, order_id, body.payment_id)
 
 
 @customer_router.post("/orders/stores/{store_order_id}/cancel")

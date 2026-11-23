@@ -11,7 +11,7 @@ from mallt.core.bus import make_bus
 from mallt.core.config import Settings, get_settings
 from mallt.core.db import make_engine
 from mallt.core.errors import install_error_handlers
-from mallt.core.kv import make_kv
+from mallt.core.kv import KV, make_kv
 from mallt.core.logging import RequestIdMiddleware, configure_logging
 from mallt.core.storage import Storage
 from mallt.modules.audit.router import router as audit_router
@@ -27,7 +27,9 @@ from mallt.modules.orders.router import customer_router as orders_customer_route
 from mallt.modules.orders.router import store_router as orders_store_router
 from mallt.modules.orders.service import sweep_loop
 from mallt.modules.orders.ws import serve_orders
-from mallt.modules.payments.provider import FakePaymentProvider
+from mallt.modules.payments.provider import FakePaymentProvider, PaymentProvider
+from mallt.modules.payments.router import router as payments_router
+from mallt.modules.payments.zoho import ZohoPaymentProvider
 from mallt.modules.printing.router import router as printing_router
 from mallt.modules.printing.ws import serve_agent
 from mallt.modules.staff.router import router as staff_mgmt_router
@@ -37,6 +39,20 @@ from mallt.modules.tenancy.router import routers as tenancy_routers
 def _operation_id(route: APIRoute) -> str:
     tag = route.tags[0] if route.tags else "default"
     return f"{tag}_{route.name}"
+
+
+def make_payment_provider(settings: Settings, kv: KV) -> PaymentProvider:
+    if settings.payments_provider == "zoho":
+        return ZohoPaymentProvider(
+            account_id=settings.zoho_account_id,
+            client_id=settings.zoho_client_id,
+            client_secret=settings.zoho_client_secret,
+            refresh_token=settings.zoho_refresh_token,
+            api_key=settings.zoho_api_key,
+            kv=kv,
+            sandbox=settings.zoho_sandbox,
+        )
+    return FakePaymentProvider()
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -70,7 +86,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.kv = kv
     app.state.storage = Storage(settings)
     app.state.bus = make_bus(settings, engine)
-    app.state.payments = FakePaymentProvider()  # until payments are reopened
+    app.state.payments = make_payment_provider(settings, kv)
     app.state.sms = make_sms_sender(settings)
     app.state.google = make_google_verifier(settings)
     app.state.session_factory = async_sessionmaker(engine, expire_on_commit=False)
@@ -96,6 +112,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(orders_customer_router)
     app.include_router(orders_store_router)
     app.include_router(audit_router)
+    app.include_router(payments_router)
 
     @app.websocket("/ws/print-agent")
     async def print_agent_socket(websocket: WebSocket) -> None:

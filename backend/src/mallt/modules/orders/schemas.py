@@ -103,12 +103,35 @@ class CustomerStoreOrderOut(BaseModel):
     steps: list[OrderStepOut]
 
 
+class ZohoCheckoutOut(BaseModel):
+    """What the browser passes to Zoho's checkout widget (zpayments.js). No secrets: the API key
+    is Zoho's public widget key."""
+
+    account_id: str
+    api_key: str
+    domain: str
+    is_test_mode: bool
+    payments_session_id: str
+    amount: str
+    currency_code: str
+    description: str
+
+
+class OrderPaymentOut(BaseModel):
+    provider: str
+    # When set, the browser must open the provider's checkout with these and then confirm.
+    zoho: ZohoCheckoutOut | None = None
+    pay_by: datetime | None = None
+
+
 class CustomerOrderOut(BaseModel):
     id: uuid.UUID
     status: CustomerOrderStatus
     total_paise: int
     created_at: datetime
     mall_slug: str | None = None
+    # Present while the order still has to be paid.
+    payment: OrderPaymentOut | None = None
     stores: list[CustomerStoreOrderOut]
 
 

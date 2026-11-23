@@ -6,7 +6,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from mallt.modules.orders.enums import StoreOrderStatus
+from mallt.modules.orders.enums import CustomerOrderStatus, StoreOrderStatus
 from mallt.modules.orders.models import (
     Cart,
     CartLine,
@@ -87,7 +87,8 @@ class OrdersRepository:
 
     async def open_pickup_codes(self, store_id: uuid.UUID) -> set[str]:
         stmt = select(StoreOrder.pickup_code).where(
-            StoreOrder.store_id == store_id, StoreOrder.status.in_(OPEN_STATES)
+            StoreOrder.store_id == store_id,
+            StoreOrder.status.in_(OPEN_STATES | {StoreOrderStatus.PENDING_PAYMENT}),
         )
         return set((await self.session.execute(stmt)).scalars())
 
@@ -107,6 +108,43 @@ class OrdersRepository:
             .execution_options(populate_existing=True)
         )
         return (await self.session.execute(stmt)).scalar_one_or_none()
+
+    async def customer_order_for_update(self, order_id: uuid.UUID) -> CustomerOrder | None:
+        stmt = (
+            select(CustomerOrder)
+            .where(CustomerOrder.id == order_id)
+            .with_for_update()
+            .execution_options(populate_existing=True)
+        )
+        return (await self.session.execute(stmt)).scalar_one_or_none()
+
+    async def store_orders_of(
+        self, customer_order_id: uuid.UUID, *, lock: bool = False
+    ) -> list[StoreOrder]:
+        stmt = (
+            select(StoreOrder)
+            .where(StoreOrder.customer_order_id == customer_order_id)
+            .options(*_ORDER_LOAD)
+            .order_by(StoreOrder.id)
+            .execution_options(populate_existing=True)
+        )
+        if lock:
+            stmt = stmt.with_for_update(of=StoreOrder)
+        return list((await self.session.execute(stmt)).scalars())
+
+    async def unpaid_overdue(self, limit: int) -> list[CustomerOrder]:
+        stmt = (
+            select(CustomerOrder)
+            .where(
+                CustomerOrder.status == CustomerOrderStatus.PLACED,
+                CustomerOrder.pay_by < datetime.now(UTC),
+            )
+            .order_by(CustomerOrder.pay_by)
+            .limit(limit)
+            .with_for_update(skip_locked=True)
+            .execution_options(populate_existing=True)
+        )
+        return list((await self.session.execute(stmt)).scalars())
 
     async def customer_orders(
         self, customer_id: uuid.UUID, before: uuid.UUID | None, limit: int

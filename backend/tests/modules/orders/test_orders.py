@@ -3,7 +3,8 @@ from fastapi import FastAPI
 from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from mallt.modules.orders.models import OrderEvent, Payment, StoreOrder
+from mallt.modules.orders.models import OrderEvent, StoreOrder
+from mallt.modules.payments.models import LedgerEntry
 from mallt.modules.payments.provider import FakePaymentProvider
 from tests.modules.catalog.conftest import World, product_body
 from tests.modules.orders.conftest import CART, Menu, line
@@ -308,10 +309,20 @@ async def test_reject_refunds_and_records_the_reason(
     assert r.status_code == 200 and r.json()["status"] == "refunded"
     assert r.json()["reason"] == "kitchen closed"
     assert payments.refunds[0][0] == 12000
-    refunds = (
-        (await db_session.execute(select(Payment).where(Payment.kind == "refund"))).scalars().all()
-    )
-    assert len(refunds) == 1 and refunds[0].amount_paise == 12000
+    # The store's share (12000 - 5% commission) left at payment and was taken back first.
+    assert payments.transfers[0][0] == 11400 and payments.reversals[0][0] == 11400
+    ledger = (
+        await db_session.execute(
+            select(LedgerEntry.kind, LedgerEntry.amount_paise).order_by(LedgerEntry.id)
+        )
+    ).all()
+    assert [tuple(r) for r in ledger] == [
+        ("charge", 12000),
+        ("commission", 600),
+        ("transfer", 11400),
+        ("transfer_reversal", -11400),
+        ("refund", -12000),
+    ]
     assert (
         await client.post(
             store_url(world, f"/{order['id']}/reject"), json={"reason": "x"}, headers=world.owner
@@ -345,6 +356,7 @@ async def test_unaccepted_orders_expire_and_refund(
     db_session: AsyncSession,
 ) -> None:
     from mallt.modules.orders.service import OrderService
+    from mallt.modules.payments.runner import run_money_tasks
 
     order = await place(client, alice, menu)
     await db_session.execute(
@@ -352,6 +364,7 @@ async def test_unaccepted_orders_expire_and_refund(
     )
     svc = OrderService(db_session, app.state.kv, app.state.bus, payments)
     assert await svc.sweep_expired() == 1
+    await run_money_tasks(app)
     got = await client.get(f"/api/v1/orders/{order['id']}", headers=alice)
     assert got.status_code == 404  # store-order id is not a customer-order id
     mine = (await client.get("/api/v1/orders", headers=alice)).json()["items"]

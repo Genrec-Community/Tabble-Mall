@@ -36,11 +36,21 @@ from mallt.modules.orders.schemas import (
     CustomerOrderOut,
     CustomerStoreOrderOut,
     OrderLineOut,
+    OrderPaymentOut,
     OrderStepOut,
     StoreOrderOut,
+    ZohoCheckoutOut,
 )
 from mallt.modules.orders.state import CUSTOMER_CANCELLABLE, REFUND_STATES, can_transition
-from mallt.modules.payments.provider import PaymentProvider
+from mallt.modules.payments.enums import LedgerKind
+from mallt.modules.payments.provider import (
+    PaymentInfo,
+    PaymentProvider,
+    PaymentState,
+    ProviderError,
+)
+from mallt.modules.payments.runner import run_money_tasks
+from mallt.modules.payments.service import Kick, Owner, PaymentsService
 from mallt.modules.printing.service import PrintingService
 from mallt.modules.printing.types import PrintableLine, PrintableOrder
 from mallt.modules.tenancy.service import TenancyService
@@ -48,9 +58,12 @@ from mallt.modules.tenancy.service import TenancyService
 S = StoreOrderStatus
 log = logging.getLogger(__name__)
 
+UNPAID = frozenset({S.PENDING_PAYMENT, S.PAYMENT_FAILED})
 PRINT_TRIGGERS = frozenset({S.PAID, S.ACCEPTED, S.READY, S.PICKED_UP})
 PICKUP_ATTEMPTS_PER_ORDER = (5, 600)  # tries, per seconds
 PICKUP_ATTEMPTS_PER_STORE = (60, 600)
+# How long past the provider's session expiry an unpaid order waits before it is given up.
+UNPAID_GRACE = timedelta(minutes=5)
 
 
 class PaymentFailed(AppError):
@@ -58,11 +71,19 @@ class PaymentFailed(AppError):
 
 
 class OrderService:
-    def __init__(self, session: AsyncSession, kv: KV, bus: Bus, payments: PaymentProvider) -> None:
+    def __init__(
+        self,
+        session: AsyncSession,
+        kv: KV,
+        bus: Bus,
+        payments: PaymentProvider,
+        kick: Kick | None = None,
+    ) -> None:
         self.session = session
         self.kv = kv
         self.bus = bus
         self.payments = payments
+        self.money = PaymentsService(session, kv, payments, kick)
         self.repo = OrdersRepository(session)
         self.cart = CartService(session, kv)
         self.catalog = self.cart.catalog
@@ -133,22 +154,29 @@ class OrderService:
         self._announce(order, "order.created" if to is S.PAID else "order.updated")
         if to in PRINT_TRIGGERS:
             await self.printing.on_order_status(await self._printable(order), to.value)
+        if to is S.PAYMENT_FAILED:
+            await self._release_stock(order)
         if to in REFUND_STATES:
             await self._release_stock(order)
-            result = await self.payments.refund(
-                amount_paise=order.total_paise, reference=str(order.id)
-            )
-            self.session.add(
-                Payment(
-                    customer_order_id=order.customer_order_id,
-                    store_order_id=order.id,
-                    provider=self.payments.name,
-                    provider_ref=result.provider_ref,
-                    amount_paise=order.total_paise,
-                    kind="refund",
-                )
+            # REFUNDED = the refund is queued irrevocably; the money outbox carries it out.
+            await self.money.queue_refund(
+                self._owner(order),
+                customer_order_id=order.customer_order_id,
+                store_order_id=order.id,
+                payment_ref=await self._payment_ref(order),
+                amount_paise=order.total_paise,
             )
             await self._transition(order, S.REFUNDED, ActorType.SYSTEM, None)
+
+    @staticmethod
+    def _owner(order: StoreOrder) -> Owner:
+        return Owner(order.organization_id, order.mall_id, order.store_id)
+
+    async def _payment_ref(self, order: StoreOrder) -> str:
+        parent = await self.session.get(CustomerOrder, order.customer_order_id)
+        if parent is None or not parent.payment_ref:  # pragma: no cover - paid orders have one
+            raise Conflict("not_paid", "This order has no payment.")
+        return parent.payment_ref
 
     async def _printable(self, order: StoreOrder) -> PrintableOrder:
         if order.store_id not in self._store_names:
@@ -222,6 +250,15 @@ class OrderService:
         contact = await self.customers.contact(customer_id)
         if contact.phone_masked is None:
             raise BadRequest("phone_required", "Verify your mobile number before ordering.")
+        cart_stores = list(dict.fromkeys(p.line.store_id for p in priced))
+        if unpayable := await self.money.unpayable_stores(cart_stores):
+            names = sorted(mall.stores[s].name for s in unpayable)
+            raise Conflict(
+                "store_not_payable",
+                f"{', '.join(names)} cannot take online orders yet. Remove their items to"
+                " continue.",
+                extra={"store_ids": [str(s) for s in unpayable]},
+            )
         org_bps, accept_timeout = await self.tenancy.org_terms(mall.organization_id)
         holds: dict[uuid.UUID, int] = {}
         for p in priced:
@@ -299,28 +336,160 @@ class OrderService:
                 )
             )
 
-        result = await self.payments.charge(amount_paise=order.total_paise, reference=str(order.id))
-        if not result.ok:
+        started = await self.payments.start(
+            amount_paise=order.total_paise,
+            reference=str(order.id),
+            description=f"Pickup order at {mall.slug}",
+        )
+        if not started.ok:
             # Raising rolls the whole request back: no orders, and the held stock is released.
             raise PaymentFailed(detail="The payment did not go through. Please try again.")
+        order.payment_provider = self.payments.name
+        order.payment_session_ref = started.session_ref
+        if started.expires_at is not None:
+            order.pay_by = started.expires_at + UNPAID_GRACE
+        await self.session.flush()
+        if started.paid:
+            await self._settle(order, started.payment_ref)
+        view = await self._customer_view(customer_id, order.id)
+        view.mall_slug = mall.slug
+        return view, True
+
+    # ------------------------------------------------------------------ payment settlement
+
+    async def _settle(self, order: CustomerOrder, payment_ref: str) -> None:
+        """Mark a customer order paid (idempotent). The caller holds the order's row lock or
+        just created it. A payment for an order already given up is refunded in full."""
+        if order.status is CustomerOrderStatus.PAID:
+            return
+        store_orders = await self.repo.store_orders_of(order.id, lock=True)
+        order.payment_ref = payment_ref
         self.session.add(
             Payment(
                 customer_order_id=order.id,
                 provider=self.payments.name,
-                provider_ref=result.provider_ref,
+                provider_ref=payment_ref,
                 amount_paise=order.total_paise,
                 kind="charge",
             )
         )
+        self.money.record(
+            LedgerKind.CHARGE,
+            organization_id=order.organization_id,
+            mall_id=order.mall_id,
+            customer_order_id=order.id,
+            amount_paise=order.total_paise,
+            provider_ref=payment_ref,
+        )
+        if order.status is CustomerOrderStatus.PAYMENT_FAILED:
+            log.warning("payment arrived for given-up order %s: refunding it", order.id)
+            for so in store_orders:
+                await self.money.queue_refund(
+                    self._owner(so),
+                    customer_order_id=order.id,
+                    store_order_id=so.id,
+                    payment_ref=payment_ref,
+                    amount_paise=so.total_paise,
+                )
+            await self.session.flush()
+            return
+        _, accept_timeout = await self.tenancy.org_terms(order.organization_id)
         order.status = CustomerOrderStatus.PAID
         for so in store_orders:
+            self.money.record(
+                LedgerKind.COMMISSION,
+                organization_id=order.organization_id,
+                mall_id=order.mall_id,
+                customer_order_id=order.id,
+                amount_paise=so.commission_paise,
+                store_id=so.store_id,
+                store_order_id=so.id,
+            )
             so.accept_by = datetime.now(UTC) + timedelta(seconds=accept_timeout)
             await self._transition(so, S.PAID, ActorType.SYSTEM, None)
-        cart.lines.clear()
+            # Owner decision: each store's share leaves at once; a later refund reverses it.
+            await self.money.queue_transfer(
+                self._owner(so),
+                customer_order_id=order.id,
+                store_order_id=so.id,
+                payment_ref=payment_ref,
+                amount_paise=so.total_paise - so.commission_paise,
+            )
+        cart = await self.repo.cart_for_update(order.customer_id, order.mall_id)
+        if cart is not None:
+            cart.lines.clear()
         await self.session.flush()
-        view = await self._customer_view(customer_id, order.id)
-        view.mall_slug = mall.slug
-        return view, True
+
+    def _verified(self, order: CustomerOrder, info: PaymentInfo | None) -> bool:
+        """Only the provider's own record counts, and it must be this order's money."""
+        return (
+            info is not None
+            and info.state is PaymentState.SUCCEEDED
+            and info.amount_paise == order.total_paise
+            and (
+                info.reference == str(order.id)
+                or (bool(info.session_ref) and info.session_ref == order.payment_session_ref)
+            )
+        )
+
+    async def confirm_payment(
+        self, customer_id: uuid.UUID, order_id: uuid.UUID, payment_ref: str
+    ) -> CustomerOrderOut:
+        """The browser says it paid. Ask the provider; settle only on its word."""
+        order = await self.repo.customer_order_for_update(order_id)
+        if order is None or order.customer_id != customer_id:
+            raise NotFound("not_found", "Not found.")
+        if order.status is not CustomerOrderStatus.PAID:
+            try:
+                info = await self.payments.get_payment(payment_ref)
+            except ProviderError as exc:
+                raise Conflict(
+                    "provider_unavailable",
+                    "We could not confirm the payment yet. It will update on its own shortly.",
+                ) from exc
+            if info is not None and info.state is PaymentState.SUCCEEDED:
+                if not self._verified(order, info):
+                    raise BadRequest("payment_mismatch", "That payment is not for this order.")
+                await self._settle(order, info.payment_ref)
+            elif info is not None and info.state is PaymentState.FAILED:
+                raise PaymentFailed(detail="The payment did not go through. Please try again.")
+        return await self._customer_view(customer_id, order_id)
+
+    async def on_provider_payment(self, info: PaymentInfo) -> None:
+        """A signed provider event about a payment (webhook)."""
+        try:
+            order_id = uuid.UUID(info.reference)
+        except ValueError:
+            log.info("payment %s has no MallT reference", info.payment_ref)
+            return
+        order = await self.repo.customer_order_for_update(order_id)
+        if order is None:
+            return
+        if self._verified(order, info):
+            await self._settle(order, info.payment_ref)
+
+    async def sweep_unpaid(self, limit: int = 20) -> int:
+        """Give up orders whose payment window passed: ask the provider once more, then fail
+        them and return their stock. Safe to run anywhere (SKIP LOCKED)."""
+        orders = await self.repo.unpaid_overdue(limit)
+        for order in orders:
+            try:
+                info = await self.payments.find_payment(str(order.id))
+            except ProviderError:
+                log.warning("could not check payment for order %s; will retry", order.id)
+                continue
+            if self._verified(order, info):
+                assert info is not None  # noqa: S101 - _verified checked it
+                await self._settle(order, info.payment_ref)
+                continue
+            order.status = CustomerOrderStatus.PAYMENT_FAILED
+            for so in await self.repo.store_orders_of(order.id, lock=True):
+                if so.status is S.PENDING_PAYMENT:
+                    await self._transition(
+                        so, S.PAYMENT_FAILED, ActorType.SYSTEM, None, "Not paid in time"
+                    )
+        await self.session.flush()
+        return len(orders)
 
     @staticmethod
     def _order_line(store_id: uuid.UUID, position: int, r: PricedLine) -> StoreOrderLine:
@@ -377,7 +546,8 @@ class OrderService:
                         store_name=store.name,
                         status=so.status,
                         order_no=so.order_no,
-                        pickup_code=so.pickup_code,
+                        # Shown once paid: before that it proves nothing.
+                        pickup_code="" if so.status in UNPAID else so.pickup_code,
                         total_paise=so.total_paise,
                         tax_paise=so.tax_paise,
                         prep_minutes=so.prep_minutes,
@@ -395,10 +565,27 @@ class OrderService:
                     status=o.status,
                     total_paise=o.total_paise,
                     created_at=o.created_at,
+                    payment=self._payment_view(o),
                     stores=views,
                 )
             )
         return out
+
+    def _payment_view(self, order: CustomerOrder) -> OrderPaymentOut | None:
+        if order.status is not CustomerOrderStatus.PLACED or not order.payment_session_ref:
+            return None
+        params = None
+        if order.payment_provider == self.payments.name:
+            params = self.payments.client_params(
+                session_ref=order.payment_session_ref,
+                amount_paise=order.total_paise,
+                description=f"Order {str(order.id)[-8:]}",
+            )
+        return OrderPaymentOut(
+            provider=order.payment_provider or "",
+            zoho=ZohoCheckoutOut.model_validate(params) if params else None,
+            pay_by=order.pay_by,
+        )
 
     @staticmethod
     def _steps(events: list[OrderEvent]) -> list[OrderStepOut]:
@@ -594,19 +781,28 @@ class OrderService:
         return len(expired)
 
 
+async def sweep_once(app: Any) -> tuple[int, int, int]:
+    """Expire unaccepted orders, give up unpaid ones, then run due money tasks."""
+    async with app.state.session_factory() as session:
+        service = OrderService(session, app.state.kv, app.state.bus, app.state.payments)
+        expired = await service.sweep_expired()
+        unpaid = await service.sweep_unpaid()
+        await session.commit()
+        await run_after_commit(session)
+    return expired, unpaid, await run_money_tasks(app)
+
+
 async def sweep_loop(app: Any, interval_s: float = 15.0) -> None:
-    """Background: expire unaccepted orders. Row locks (SKIP LOCKED) make several API
-    containers running this at once safe."""
+    """Background sweeper. Row locks (SKIP LOCKED) make several API containers running this at
+    once safe."""
     while True:
         await asyncio.sleep(interval_s)
         try:
-            async with app.state.session_factory() as session:
-                service = OrderService(session, app.state.kv, app.state.bus, app.state.payments)
-                count = await service.sweep_expired()
-                await session.commit()
-                await run_after_commit(session)
-            if count:
-                log.info("expired %d unaccepted order(s)", count)
+            expired, unpaid, money = await sweep_once(app)
+            if expired or unpaid or money:
+                log.info(
+                    "sweep: %d expired, %d unpaid checked, %d money task(s)", expired, unpaid, money
+                )
         except asyncio.CancelledError:
             raise
         except Exception:
