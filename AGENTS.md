@@ -171,7 +171,8 @@ by the same targets (`uv run --no-project`); its releases are built per OS with 
   of their roles yourself (`GRANT_RULES` in `core/rbac.py`, plus holding every permission in the
   role). Owners can create owners; managers can't create managers or owners; nobody manages
   themselves; an organization always keeps one active owner.
-- **Commission** (`commission_bps`) is MallT's revenue, so only `platform.org.manage` may edit it.
+- **No commission.** MallT keeps no money (owner, 2026-11-23). The old `commission_*` columns are
+  retired (migration 0010) and must never be read, written or shown again.
 - **Anything that changes roles, status or passwords must call `AuthzService.invalidate(staff_id)`**
   (Redis caches a principal for 60 s). It clears the cache now *and again after commit*
   (`defer_after_commit`); use that helper for any cache you invalidate from inside a request. Tests that change those by raw SQL must call it too.

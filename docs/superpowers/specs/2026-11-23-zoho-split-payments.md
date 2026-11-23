@@ -30,7 +30,8 @@ balance should net to zero.
   store's transfer is reversed. The gateway fee, which Zoho does not return, is then recorded as
   `fee_owed` and held back from that store's next transfer(s). The sum of `fee_owed` entries per
   store is what it owes now.
-- `commission_bps` / `commission_paise` from M3 are no longer used for money (they are inert).
+- The M3 commission setting is removed from the API and screens. Its columns are retired
+  (migration 0010 makes them nullable; nothing reads or writes them) and a later migration drops them.
 - **Refunds stay per StoreOrder.** Reject / expire / cancel refunds `total_paise` of that store
   order. If the store's transfer already ran, it is **reversed first** (Zoho
   `POST /transferreversals`; this debits the store's Zoho balance and can fail when it is too
@@ -71,8 +72,8 @@ the task and in the ledger.
 
 ## Ledger
 
-`ledger_entries` is append-only: `charge`, `commission`, `transfer`, `transfer_reversal`,
-`refund`, each with amount in paise, provider reference and the store order it belongs to.
+`ledger_entries` is append-only: `charge`, `gateway_fee`, `fee_owed`, `transfer`,
+`transfer_reversal`, `refund`, each with amount in paise, provider reference and the store order it belongs to.
 
 ## Payout accounts (store onboarding)
 

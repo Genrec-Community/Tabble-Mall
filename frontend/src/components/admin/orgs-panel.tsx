@@ -19,7 +19,6 @@ const columns: Column<OrgOut>[] = [
   { header: "Organization", cell: (o) => <Link className="font-medium underline-offset-4 hover:underline" href={`/admin/orgs/${o.id}`}>{o.name}</Link> },
   { header: "Slug", cell: (o) => <span className="font-mono text-xs">{o.slug}</span> },
   { header: "Status", cell: (o) => <Badge variant={o.status === "active" ? "default" : "destructive"}>{o.status}</Badge> },
-  { header: "Commission", cell: (o) => `${o.commission_bps / 100}%` },
   { header: "Created", cell: (o) => new Date(o.created_at).toLocaleDateString() },
 ];
 

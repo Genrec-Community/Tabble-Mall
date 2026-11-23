@@ -682,7 +682,6 @@ class OrderableStore:
     name: str
     timezone: str
     accepting: bool
-    commission_bps: int | None
     gstin: str | None
 
 
@@ -734,7 +733,6 @@ class OrderingCatalog:
                 accepting=store_accepting(row.is_open, row.is_paused, row.hours, row.timezone, now)
                 if row
                 else True,
-                commission_bps=s.commission_bps,
                 gstin=row.gstin if row else None,
             )
         return OrderableMall(mall.id, mall.organization_id, mall.slug, out)

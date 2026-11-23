@@ -1866,10 +1866,6 @@
             "title": "Accept Timeout S",
             "type": "integer"
           },
-          "commission_bps": {
-            "title": "Commission Bps",
-            "type": "integer"
-          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -1897,7 +1893,6 @@
           "name",
           "slug",
           "status",
-          "commission_bps",
           "accept_timeout_s",
           "created_at"
         ],
@@ -1918,19 +1913,6 @@
               }
             ],
             "title": "Accept Timeout S"
-          },
-          "commission_bps": {
-            "anyOf": [
-              {
-                "maximum": 10000.0,
-                "minimum": 0.0,
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Commission Bps"
           },
           "name": {
             "anyOf": [
@@ -4763,17 +4745,6 @@
       },
       "StoreOut": {
         "properties": {
-          "commission_bps": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Commission Bps"
-          },
           "description": {
             "anyOf": [
               {
@@ -4819,27 +4790,13 @@
           "name",
           "slug",
           "status",
-          "description",
-          "commission_bps"
+          "description"
         ],
         "title": "StoreOut",
         "type": "object"
       },
       "StoreUpdate": {
         "properties": {
-          "commission_bps": {
-            "anyOf": [
-              {
-                "maximum": 10000.0,
-                "minimum": 0.0,
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Commission Bps"
-          },
           "description": {
             "anyOf": [
               {

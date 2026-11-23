@@ -1022,10 +1022,6 @@ export type OrgOut = {
      */
     accept_timeout_s: number;
     /**
-     * Commission Bps
-     */
-    commission_bps: number;
-    /**
      * Created At
      */
     created_at: string;
@@ -1052,10 +1048,6 @@ export type OrgUpdate = {
      * Accept Timeout S
      */
     accept_timeout_s?: number | null;
-    /**
-     * Commission Bps
-     */
-    commission_bps?: number | null;
     /**
      * Name
      */
@@ -2465,10 +2457,6 @@ export type StoreOrderStatus = 'pending_payment' | 'paid' | 'accepted' | 'prepar
  */
 export type StoreOut = {
     /**
-     * Commission Bps
-     */
-    commission_bps: number | null;
-    /**
      * Description
      */
     description: string | null;
@@ -2499,10 +2487,6 @@ export type StoreOut = {
  * StoreUpdate
  */
 export type StoreUpdate = {
-    /**
-     * Commission Bps
-     */
-    commission_bps?: number | null;
     /**
      * Description
      */

@@ -71,7 +71,8 @@ class CustomerOrder(IdMixin, TimestampMixin, Base):
     )
     idempotency_key: Mapped[str] = mapped_column(Text)
     total_paise: Mapped[int] = mapped_column(BigInteger)
-    commission_paise: Mapped[int] = mapped_column(BigInteger, default=0)
+    # Retired 2026-11-23 (MallT keeps no money). Never read or written; a later migration drops it.
+    commission_paise: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
     # The provider's checkout session and, once paid, its payment id.
     payment_provider: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -109,8 +110,9 @@ class StoreOrder(IdMixin, TimestampMixin, Base):
     subtotal_paise: Mapped[int] = mapped_column(BigInteger)  # GST-inclusive prices
     tax_paise: Mapped[int] = mapped_column(BigInteger)  # the GST contained in the total
     total_paise: Mapped[int] = mapped_column(BigInteger)
-    commission_bps: Mapped[int] = mapped_column(Integer)
-    commission_paise: Mapped[int] = mapped_column(BigInteger)
+    # Retired 2026-11-23 (MallT keeps no money). Never read or written; dropped later.
+    commission_bps: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    commission_paise: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     # The payment gateway's fee for this store's part, borne by the store (owner decision).
     gateway_fee_paise: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
     prep_minutes: Mapped[int] = mapped_column(Integer, default=10)

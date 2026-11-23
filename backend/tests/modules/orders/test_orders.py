@@ -59,7 +59,7 @@ async def test_checkout_splits_into_store_orders_and_pays_once(
     assert (await client.get(CART, headers=alice)).json()["stores"] == []
 
 
-async def test_commission_is_recorded_per_store_order(
+async def test_each_store_order_carries_its_own_gateway_fee(
     client: httpx.AsyncClient,
     alice: dict,
     menu: Menu,
@@ -69,8 +69,7 @@ async def test_commission_is_recorded_per_store_order(
     await fill_cart(client, alice, menu)
     await checkout(client, alice)
     rows = (await db_session.execute(select(StoreOrder))).scalars().all()
-    assert sorted(r.commission_paise for r in rows) == [150, 2000]  # 5% of 3,000 and 40,000
-    assert all(r.commission_bps == 500 for r in rows)
+    assert sorted(r.gateway_fee_paise for r in rows) == [15, 200]  # 0.5% of 3,000 and 40,000
 
 
 async def test_checkout_is_idempotent(

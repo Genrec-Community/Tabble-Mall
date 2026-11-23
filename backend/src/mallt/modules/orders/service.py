@@ -31,7 +31,7 @@ from mallt.modules.orders.models import (
     StoreOrder,
     StoreOrderLine,
 )
-from mallt.modules.orders.pricing import commission, gateway_fee, store_payout, tax_included
+from mallt.modules.orders.pricing import gateway_fee, store_payout, tax_included
 from mallt.modules.orders.repository import OrdersRepository
 from mallt.modules.orders.schemas import (
     CustomerOrderOut,
@@ -261,7 +261,6 @@ class OrderService:
                 " continue.",
                 extra={"store_ids": [str(s) for s in unpayable]},
             )
-        org_bps, accept_timeout = await self.tenancy.org_terms(mall.organization_id)
         holds: dict[uuid.UUID, int] = {}
         for p in priced:
             if p.product and p.product.counted:
@@ -291,12 +290,10 @@ class OrderService:
         for p in priced:
             by_store.setdefault(p.line.store_id, []).append(p)
         store_orders: list[StoreOrder] = []
-        total_commission = 0
         for store_id, rows in by_store.items():
             store = mall.stores[store_id]
             today = datetime.now(UTC).astimezone(ZoneInfo(store.timezone)).date()
             codes = await self.repo.open_pickup_codes(store_id)
-            bps = store.commission_bps if store.commission_bps is not None else org_bps
             subtotal = sum(r.total_paise for r in rows)
             lines = [self._order_line(store_id, i, r) for i, r in enumerate(rows)]
             so = StoreOrder(
@@ -313,8 +310,6 @@ class OrderService:
                 subtotal_paise=subtotal,
                 tax_paise=sum(ln.tax_paise for ln in lines),
                 total_paise=subtotal,
-                commission_bps=bps,
-                commission_paise=commission(subtotal, bps),
                 gateway_fee_paise=gateway_fee(subtotal, get_settings().gateway_fee_bps),
                 prep_minutes=max((r.product.prep_minutes for r in rows if r.product), default=10),
                 customer_name=contact.name,
@@ -322,9 +317,7 @@ class OrderService:
                 note=note,
             )
             so.lines = lines
-            total_commission += so.commission_paise
             store_orders.append(so)
-        order.commission_paise = total_commission
         self.session.add_all(store_orders)
         await self.session.flush()
         for so in store_orders:
@@ -397,7 +390,7 @@ class OrderService:
                 )
             await self.session.flush()
             return
-        _, accept_timeout = await self.tenancy.org_terms(order.organization_id)
+        accept_timeout = await self.tenancy.accept_timeout(order.organization_id)
         order.status = CustomerOrderStatus.PAID
         for so in store_orders:
             self.money.record(

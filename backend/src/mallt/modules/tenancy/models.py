@@ -15,8 +15,8 @@ class Organization(IdMixin, TimestampMixin, Base):
     status: Mapped[ActiveStatus] = mapped_column(
         text_enum(ActiveStatus, "org_status"), default=ActiveStatus.ACTIVE
     )
-    # Platform commission in basis points (500 = 5%). Stored now, used when payments land.
-    commission_bps: Mapped[int] = mapped_column(Integer, default=500, server_default="500")
+    # Retired 2026-11-23 (MallT keeps no money). Never read or written; a later migration drops it.
+    commission_bps: Mapped[int] = mapped_column(Integer, server_default="500")
     # Seconds a store has to accept a paid order before it expires and is refunded.
     accept_timeout_s: Mapped[int] = mapped_column(Integer, default=300, server_default="300")
 
@@ -46,5 +46,5 @@ class Store(IdMixin, TimestampMixin, Base):
         text_enum(ActiveStatus, "store_status"), default=ActiveStatus.ACTIVE
     )
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    # Per-store commission override in basis points; NULL means use the organization's.
+    # Retired 2026-11-23 (MallT keeps no money). Never read or written; a later migration drops it.
     commission_bps: Mapped[int | None] = mapped_column(Integer, nullable=True)
