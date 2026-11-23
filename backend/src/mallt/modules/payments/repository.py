@@ -1,13 +1,13 @@
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import select
+from sqlalchemy import func, select, text
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from mallt.core.ids import uuid7
-from mallt.modules.payments.enums import PayoutStatus, TaskStatus
-from mallt.modules.payments.models import PaymentTask, PayoutAccount, WebhookEvent
+from mallt.modules.payments.enums import LedgerKind, PayoutStatus, TaskStatus
+from mallt.modules.payments.models import LedgerEntry, PaymentTask, PayoutAccount, WebhookEvent
 
 
 class PaymentsRepository:
@@ -87,6 +87,21 @@ class PaymentsRepository:
             .limit(limit)
         )
         return list((await self.session.execute(stmt)).scalars())
+
+    # ---- fees a store still owes ----
+
+    async def lock_store_fees(self, store_id: uuid.UUID) -> None:
+        """Serialise fee bookkeeping per store until this transaction ends."""
+        await self.session.execute(
+            text("SELECT pg_advisory_xact_lock(hashtextextended(:k, 0))"),
+            {"k": f"payments:fees:{store_id}"},
+        )
+
+    async def fees_owed(self, store_id: uuid.UUID) -> int:
+        stmt = select(func.coalesce(func.sum(LedgerEntry.amount_paise), 0)).where(
+            LedgerEntry.store_id == store_id, LedgerEntry.kind == LedgerKind.FEE_OWED
+        )
+        return int((await self.session.execute(stmt)).scalar_one())
 
     # ---- webhooks ----
 

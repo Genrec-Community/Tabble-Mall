@@ -155,8 +155,8 @@ async def test_pay_then_confirm_splits_to_each_store(
     assert done["status"] == "paid" and done["payment"] is None
     assert all(s["status"] == "paid" and len(s["pickup_code"]) == 4 for s in done["stores"])
     assert (await client.get(CART, headers=alice)).json()["stores"] == []
-    # each store got its share minus 5% commission and its own 0.5% gateway fee, straight away
-    assert sorted(t[0] for t in gateway.transfers) == [5670, 11340]
+    # each store got its whole share minus its own 0.5% gateway fee, straight away
+    assert sorted(t[0] for t in gateway.transfers) == [5970, 11940]
     accounts = {
         a.store_id: a.account_ref
         for a in (await db_session.execute(select(PayoutAccount))).scalars()
@@ -173,7 +173,8 @@ async def test_pay_then_confirm_splits_to_each_store(
     ]
     assert (
         kinds.count("charge") == 1
-        and kinds.count("commission") == 2
+        and kinds.count("gateway_fee") == 2
+        and "commission" not in kinds  # MallT takes nothing
         and kinds.count("transfer") == 2
     )
 
@@ -228,9 +229,57 @@ async def test_reject_after_split_reverses_then_refunds_only_that_store(
         headers=world.owner,
     )
     assert r.status_code == 200 and r.json()["status"] == "refunded"
-    assert gateway.reversals == [(11340, gateway.reversals[0][1])]
+    assert gateway.reversals == [(11940, gateway.reversals[0][1])]
     assert gateway.refunds == [(12000, f"so:{burger['id']}")]
     assert len(gateway.transfers) == 2  # the chai store keeps its share
+
+
+async def test_fee_on_a_refunded_order_is_held_from_the_stores_next_payout(
+    client: httpx.AsyncClient,
+    alice: dict,
+    menu: Menu,
+    world: World,
+    gateway: FakePaymentProvider,
+    db_session: AsyncSession,
+) -> None:
+    await onboard(client, world)
+    first = await start_checkout(client, alice, menu)
+    paid = gateway.pay(session_of(gateway))
+    await client.post(
+        f"/api/v1/orders/{first['id']}/payment",
+        json={"payment_id": paid.payment_ref},
+        headers=alice,
+    )
+    burger = next(s for s in first["stores"] if s["store_slug"] == "burger-hub")
+    await client.post(
+        f"/api/v1/stores/{world.store.id}/orders/{burger['id']}/reject",
+        json={"reason": "closed"},
+        headers=world.owner,
+    )
+    assert gateway.refunds == [(12000, f"so:{burger['id']}")]  # the customer gets it all back
+    # next order: the burger store's 60 paise fee from the refunded order is held back
+    gateway.transfers.clear()
+    second = await start_checkout(client, alice, menu, key="k2")
+    session = [s for s, (_, ref) in gateway._sessions.items() if ref == second["id"]][0]
+    paid = gateway.pay(session)
+    await client.post(
+        f"/api/v1/orders/{second['id']}/payment",
+        json={"payment_id": paid.payment_ref},
+        headers=alice,
+    )
+    assert sorted(t[0] for t in gateway.transfers) == [5970, 11940 - 60]
+    owed = (
+        (
+            await db_session.execute(
+                select(LedgerEntry.amount_paise).where(
+                    LedgerEntry.kind == "fee_owed", LedgerEntry.store_id == world.store.id
+                )
+            )
+        )
+        .scalars()
+        .all()
+    )
+    assert sorted(owed) == [-60, 60] and sum(owed) == 0
 
 
 async def test_flaky_provider_is_retried_without_paying_twice(
@@ -439,7 +488,7 @@ async def test_webhook_settles_a_payment_once(
     task = (await db_session.execute(select(PaymentTask))).scalar_one()
     await db_session.refresh(task)
     assert task.status is TaskStatus.PENDING and task.account_ref == "ca_burger-hub"
-    assert task.amount_paise == 11340
+    assert task.amount_paise == 11940
 
 
 async def _fake_start(*, amount_paise: int, reference: str, description: str):  # type: ignore[no-untyped-def]

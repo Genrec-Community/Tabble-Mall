@@ -17,8 +17,9 @@ MallT is a multi-tenant mall ordering platform.
   3. They pay once.
   4. They collect each store's part at the counter by showing a 4-digit
      pickup code.
-- **Money:** MallT takes a commission (default 5%) through **Zoho Payments Split** (payments
-  reopened 2026-11-23; design in
+- **Money:** MallT **keeps and pays no money**: no commission, no fees. Customers pay once through
+  **Zoho Payments Split** and each store receives its whole share minus its own gateway fee
+  (payments reopened 2026-11-23; design in
   [`docs/superpowers/specs/2026-11-23-zoho-split-payments.md`](docs/superpowers/specs/2026-11-23-zoho-split-payments.md)).
 - **Fulfilment:** v1 is **pickup only**. There is no delivery.
 - **Printing:** each store prints a KOT and a bill through a desktop `print-agent/` on its counter
@@ -198,7 +199,8 @@ by the same targets (`uv run --no-project`); its releases are built per OS with 
 - Payments go through a `PaymentProvider` interface (`ZohoPaymentProvider` in production,
   `FakePaymentProvider` in dev/tests via `PAYMENTS_PROVIDER`). An order is paid only on the
   provider's word (server-side check or signed webhook), never the browser's. Each store's share
-  is transferred as soon as payment is confirmed; a refund reverses that store's transfer first.
+  (minus its own fee; MallT keeps nothing) is transferred as soon as payment is confirmed; a
+  refund reverses that store's transfer first and the fee stays with the store (`fee_owed`).
   Money movements go through the outbox (`payment_tasks`), never inline in a request; every
   movement is recorded in the append-only `ledger_entries`; webhooks are signature-checked and
   deduplicated by event id.

@@ -26,6 +26,6 @@ def test_each_store_bears_the_gateway_fee_on_its_own_share() -> None:
     assert [gateway_fee(s, 50) for s in shares] == [2_500, 1_500, 1_000]
     assert sum(gateway_fee(s, 50) for s in shares) == gateway_fee(sum(shares), 50)
     assert gateway_fee(12_345, 50) == 62  # 61.725 rounds half up
-    # store gets its share minus 5% commission minus its fee
-    assert store_payout(500_000, 25_000, 2_500) == 472_500
-    assert store_payout(100, 90, 50) == 0  # never negative
+    # the store gets its whole share minus its own fee: MallT keeps nothing
+    assert store_payout(500_000, 2_500) == 497_500
+    assert store_payout(10, 50) == 0  # never negative

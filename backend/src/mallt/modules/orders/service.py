@@ -166,6 +166,7 @@ class OrderService:
                 store_order_id=order.id,
                 payment_ref=await self._payment_ref(order),
                 amount_paise=order.total_paise,
+                fee_paise=order.gateway_fee_paise,
             )
             await self._transition(order, S.REFUNDED, ActorType.SYSTEM, None)
 
@@ -392,21 +393,13 @@ class OrderService:
                     store_order_id=so.id,
                     payment_ref=payment_ref,
                     amount_paise=so.total_paise,
+                    fee_paise=so.gateway_fee_paise,
                 )
             await self.session.flush()
             return
         _, accept_timeout = await self.tenancy.org_terms(order.organization_id)
         order.status = CustomerOrderStatus.PAID
         for so in store_orders:
-            self.money.record(
-                LedgerKind.COMMISSION,
-                organization_id=order.organization_id,
-                mall_id=order.mall_id,
-                customer_order_id=order.id,
-                amount_paise=so.commission_paise,
-                store_id=so.store_id,
-                store_order_id=so.id,
-            )
             self.money.record(
                 LedgerKind.GATEWAY_FEE,
                 organization_id=order.organization_id,
@@ -424,9 +417,8 @@ class OrderService:
                 customer_order_id=order.id,
                 store_order_id=so.id,
                 payment_ref=payment_ref,
-                amount_paise=store_payout(
-                    so.total_paise, so.commission_paise, so.gateway_fee_paise
-                ),
+                # MallT keeps nothing: the store gets its whole share minus its own fee.
+                amount_paise=store_payout(so.total_paise, so.gateway_fee_paise),
             )
         cart = await self.repo.cart_for_update(order.customer_id, order.mall_id)
         if cart is not None:

@@ -151,7 +151,22 @@ class PaymentsService:
         amount_paise: int,
     ) -> None:
         """Send a store its share. Runs after commit; never blocks the caller."""
+        # Fees the store still owes (from refunds) are held back from this transfer.
+        await self.repo.lock_store_fees(owner.store_id)
+        held = min(max(0, await self.repo.fees_owed(owner.store_id)), max(0, amount_paise))
+        if held:
+            self.record(
+                LedgerKind.FEE_OWED,
+                organization_id=owner.organization_id,
+                mall_id=owner.mall_id,
+                store_id=owner.store_id,
+                customer_order_id=customer_order_id,
+                store_order_id=store_order_id,
+                amount_paise=-held,
+            )
+            amount_paise -= held
         if amount_paise <= 0:
+            await self.session.flush()
             return
         account = (await self.repo.active_accounts([owner.store_id])).get(owner.store_id)
         account_ref = account.account_ref if account else None
@@ -177,6 +192,7 @@ class PaymentsService:
         store_order_id: uuid.UUID,
         payment_ref: str,
         amount_paise: int,
+        fee_paise: int = 0,
     ) -> None:
         """Refund one store order. A transfer that never ran is cancelled; one that ran (or may
         have) is reversed first. Other stores' parts of the same payment are untouched."""
@@ -199,6 +215,19 @@ class PaymentsService:
         if amount_paise > 0:
             self._task(
                 TaskKind.REFUND, owner, customer_order_id, store_order_id, payment_ref, amount_paise
+            )
+        if fee_paise > 0:
+            # The customer gets everything back and MallT pays nothing, so the gateway fee on
+            # this payment stays with the store: it is held back from its next transfer.
+            await self.repo.lock_store_fees(owner.store_id)
+            self.record(
+                LedgerKind.FEE_OWED,
+                organization_id=owner.organization_id,
+                mall_id=owner.mall_id,
+                store_id=owner.store_id,
+                customer_order_id=customer_order_id,
+                store_order_id=store_order_id,
+                amount_paise=fee_paise,
             )
         await self.session.flush()
 

@@ -15,6 +15,6 @@ def gateway_fee(total_paise: int, fee_bps: int) -> int:
     return (total_paise * fee_bps + 5_000) // 10_000
 
 
-def store_payout(total_paise: int, commission_paise: int, gateway_fee_paise: int) -> int:
-    """What the store receives: its share minus MallT's commission and its gateway fee."""
-    return max(0, total_paise - commission_paise - gateway_fee_paise)
+def store_payout(total_paise: int, gateway_fee_paise: int) -> int:
+    """What the store receives: its whole share minus its own gateway fee. MallT keeps nothing."""
+    return max(0, total_paise - gateway_fee_paise)

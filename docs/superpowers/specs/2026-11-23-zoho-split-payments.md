@@ -7,23 +7,30 @@ before it takes orders).
 
 ## Money model
 
+**MallT keeps no money and pays no money** (owner decision, 2026-11-23). It takes no commission and
+bears no fee, refunds included. Zoho Split still needs one platform account: the customer's single
+payment lands there, and MallT immediately forwards all of it to the stores. That account's
+balance should net to zero.
+
 - The customer pays the **whole cart once** (one Zoho payment session per `CustomerOrder`).
 - Each store is a Zoho **connected account** (its *payout account* in MallT).
-- **As soon as the payment is confirmed** (owner decision, 2026-11-23), MallT transfers each
-  store's share `total_paise − commission_paise − gateway_fee_paise` to that store's connected
-  account (Zoho `POST /transfers`, fixed amount, one per store order). MallT keeps the commission.
+- **As soon as the payment is confirmed** (owner decision), MallT transfers each store
+  `total_paise − gateway_fee_paise` (Zoho `POST /transfers`, fixed amount, one per store order).
   Transfers run from the money outbox (below) seconds after the order is marked paid, rather than
   through the session's `transfer_details`, so every movement has an id MallT can reverse and
   reconcile.
-- Commission base: the store order's GST-inclusive total (unchanged from M3).
-- **Gateway fee is borne by the stores, pro-rated** (owner decision, 2026-11-23): each store
-  pays `GATEWAY_FEE_BPS` (default 50 = 0.50%) of its **own** share, rounded half up, stored as
-  `store_orders.gateway_fee_paise` and recorded in the ledger as `gateway_fee`. Example: a
-  ₹10,000 cart split ₹5,000 / ₹3,000 / ₹2,000 costs those stores ₹25 / ₹15 / ₹10. So the store
-  receives `total_paise − commission_paise − gateway_fee_paise`. Zoho's own per-transfer platform
-  fee, if any, is deducted by Zoho from the transfer (Zoho behaviour).
-- *Open:* on a refund the whole transfer is reversed, so the store gets its fee back and MallT
-  absorbs whatever Zoho does not return. Change this if stores should keep bearing it.
+- **The gateway fee is borne by the stores, pro-rata** (owner decision): each store pays
+  `GATEWAY_FEE_BPS` (default 50 = 0.50%) of its **own** share, rounded half up. It is stored as
+  `store_orders.gateway_fee_paise` and recorded in the ledger as `gateway_fee`. That amount stays
+  in the platform account to cover Zoho's fee on the payment.
+  - Example: a ₹10,000 cart split ₹5,000 / ₹3,000 / ₹2,000 costs those stores ₹25, ₹15 and ₹10.
+  - Zoho's own per-transfer platform fee, if any, is deducted by Zoho from the transfer (Zoho
+    behaviour), so the store bears that too.
+- **Fees on refunds stay with the store.** The customer gets the full amount back, and the
+  store's transfer is reversed. The gateway fee, which Zoho does not return, is then recorded as
+  `fee_owed` and held back from that store's next transfer(s). The sum of `fee_owed` entries per
+  store is what it owes now.
+- `commission_bps` / `commission_paise` from M3 are no longer used for money (they are inert).
 - **Refunds stay per StoreOrder.** Reject / expire / cancel refunds `total_paise` of that store
   order. If the store's transfer already ran, it is **reversed first** (Zoho
   `POST /transferreversals`; this debits the store's Zoho balance and can fail when it is too

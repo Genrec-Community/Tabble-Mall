@@ -107,8 +107,8 @@ def upgrade() -> None:
             "kind",
             sa.Enum(
                 "charge",
-                "commission",
                 "gateway_fee",
+                "fee_owed",
                 "transfer",
                 "transfer_reversal",
                 "refund",
