@@ -23,6 +23,7 @@ class TaskStatus(StrEnum):
 class LedgerKind(StrEnum):
     CHARGE = "charge"
     COMMISSION = "commission"
+    GATEWAY_FEE = "gateway_fee"  # borne by the store, deducted from its transfer
     TRANSFER = "transfer"
     TRANSFER_REVERSAL = "transfer_reversal"
     REFUND = "refund"

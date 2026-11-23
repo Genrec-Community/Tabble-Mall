@@ -155,8 +155,8 @@ async def test_pay_then_confirm_splits_to_each_store(
     assert done["status"] == "paid" and done["payment"] is None
     assert all(s["status"] == "paid" and len(s["pickup_code"]) == 4 for s in done["stores"])
     assert (await client.get(CART, headers=alice)).json()["stores"] == []
-    # each store got its share minus 5% commission, straight away
-    assert sorted(t[0] for t in gateway.transfers) == [5700, 11400]
+    # each store got its share minus 5% commission and its own 0.5% gateway fee, straight away
+    assert sorted(t[0] for t in gateway.transfers) == [5670, 11340]
     accounts = {
         a.store_id: a.account_ref
         for a in (await db_session.execute(select(PayoutAccount))).scalars()
@@ -228,7 +228,7 @@ async def test_reject_after_split_reverses_then_refunds_only_that_store(
         headers=world.owner,
     )
     assert r.status_code == 200 and r.json()["status"] == "refunded"
-    assert gateway.reversals == [(11400, gateway.reversals[0][1])]
+    assert gateway.reversals == [(11340, gateway.reversals[0][1])]
     assert gateway.refunds == [(12000, f"so:{burger['id']}")]
     assert len(gateway.transfers) == 2  # the chai store keeps its share
 
@@ -439,7 +439,7 @@ async def test_webhook_settles_a_payment_once(
     task = (await db_session.execute(select(PaymentTask))).scalar_one()
     await db_session.refresh(task)
     assert task.status is TaskStatus.PENDING and task.account_ref == "ca_burger-hub"
-    assert task.amount_paise == 11400
+    assert task.amount_paise == 11340
 
 
 async def _fake_start(*, amount_paise: int, reference: str, description: str):  # type: ignore[no-untyped-def]

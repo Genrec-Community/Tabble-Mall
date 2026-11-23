@@ -108,6 +108,7 @@ def upgrade() -> None:
             sa.Enum(
                 "charge",
                 "commission",
+                "gateway_fee",
                 "transfer",
                 "transfer_reversal",
                 "refund",
@@ -274,6 +275,10 @@ def upgrade() -> None:
     op.create_index(
         op.f("ix_payment_tasks_store_order_id"), "payment_tasks", ["store_order_id"], unique=False
     )
+    op.add_column(
+        "store_orders",
+        sa.Column("gateway_fee_paise", sa.BigInteger(), server_default="0", nullable=False),
+    )
     op.add_column("customer_orders", sa.Column("payment_provider", sa.Text(), nullable=True))
     op.add_column("customer_orders", sa.Column("payment_session_ref", sa.Text(), nullable=True))
     op.add_column("customer_orders", sa.Column("payment_ref", sa.Text(), nullable=True))
@@ -295,6 +300,7 @@ def downgrade() -> None:
     op.drop_column("customer_orders", "payment_ref")
     op.drop_column("customer_orders", "payment_session_ref")
     op.drop_column("customer_orders", "payment_provider")
+    op.drop_column("store_orders", "gateway_fee_paise")
     op.drop_index(op.f("ix_payment_tasks_store_order_id"), table_name="payment_tasks")
     op.drop_index(op.f("ix_payment_tasks_store_id"), table_name="payment_tasks")
     op.drop_index(op.f("ix_payment_tasks_provider_ref"), table_name="payment_tasks")

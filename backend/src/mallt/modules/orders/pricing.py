@@ -8,3 +8,13 @@ __all__ = ["commission", "tax_included"]
 def commission(total_paise: int, commission_bps: int) -> int:
     """MallT's cut of an amount, rounded half up."""
     return (total_paise * commission_bps + 5_000) // 10_000
+
+
+def gateway_fee(total_paise: int, fee_bps: int) -> int:
+    """The gateway fee a store bears on its own share, rounded half up."""
+    return (total_paise * fee_bps + 5_000) // 10_000
+
+
+def store_payout(total_paise: int, commission_paise: int, gateway_fee_paise: int) -> int:
+    """What the store receives: its share minus MallT's commission and its gateway fee."""
+    return max(0, total_paise - commission_paise - gateway_fee_paise)

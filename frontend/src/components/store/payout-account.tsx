@@ -64,7 +64,7 @@ export function PayoutAccount() {
       <div className="space-y-1">
         <h1 className="text-xl font-semibold">Payouts</h1>
         <p className="text-sm text-muted-foreground">
-          Customers pay MallT once for their whole cart. Your share (your items minus MallT&apos;s commission) is sent to this
+          Customers pay MallT once for their whole cart. Your share (your items minus MallT&apos;s commission and a 0.50% payment gateway fee on your part) is sent to this
           bank account through Zoho Payments as soon as each order is paid. Your store can take orders once the account is active.
         </p>
       </div>

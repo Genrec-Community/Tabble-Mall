@@ -11,6 +11,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from mallt.core.bus import Bus
+from mallt.core.config import get_settings
 from mallt.core.db import defer_after_commit, run_after_commit
 from mallt.core.enums import ActorType
 from mallt.core.errors import AppError, BadRequest, Conflict, NotFound
@@ -30,7 +31,7 @@ from mallt.modules.orders.models import (
     StoreOrder,
     StoreOrderLine,
 )
-from mallt.modules.orders.pricing import commission, tax_included
+from mallt.modules.orders.pricing import commission, gateway_fee, store_payout, tax_included
 from mallt.modules.orders.repository import OrdersRepository
 from mallt.modules.orders.schemas import (
     CustomerOrderOut,
@@ -313,6 +314,7 @@ class OrderService:
                 total_paise=subtotal,
                 commission_bps=bps,
                 commission_paise=commission(subtotal, bps),
+                gateway_fee_paise=gateway_fee(subtotal, get_settings().gateway_fee_bps),
                 prep_minutes=max((r.product.prep_minutes for r in rows if r.product), default=10),
                 customer_name=contact.name,
                 customer_phone=contact.phone_masked,
@@ -405,6 +407,15 @@ class OrderService:
                 store_id=so.store_id,
                 store_order_id=so.id,
             )
+            self.money.record(
+                LedgerKind.GATEWAY_FEE,
+                organization_id=order.organization_id,
+                mall_id=order.mall_id,
+                customer_order_id=order.id,
+                amount_paise=so.gateway_fee_paise,
+                store_id=so.store_id,
+                store_order_id=so.id,
+            )
             so.accept_by = datetime.now(UTC) + timedelta(seconds=accept_timeout)
             await self._transition(so, S.PAID, ActorType.SYSTEM, None)
             # Owner decision: each store's share leaves at once; a later refund reverses it.
@@ -413,7 +424,9 @@ class OrderService:
                 customer_order_id=order.id,
                 store_order_id=so.id,
                 payment_ref=payment_ref,
-                amount_paise=so.total_paise - so.commission_paise,
+                amount_paise=store_payout(
+                    so.total_paise, so.commission_paise, so.gateway_fee_paise
+                ),
             )
         cart = await self.repo.cart_for_update(order.customer_id, order.mall_id)
         if cart is not None:

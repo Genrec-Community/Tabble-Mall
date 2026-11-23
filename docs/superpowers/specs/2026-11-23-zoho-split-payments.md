@@ -10,14 +10,20 @@ before it takes orders).
 - The customer pays the **whole cart once** (one Zoho payment session per `CustomerOrder`).
 - Each store is a Zoho **connected account** (its *payout account* in MallT).
 - **As soon as the payment is confirmed** (owner decision, 2026-11-23), MallT transfers each
-  store's share `store_order.total_paise − store_order.commission_paise` to that store's connected
+  store's share `total_paise − commission_paise − gateway_fee_paise` to that store's connected
   account (Zoho `POST /transfers`, fixed amount, one per store order). MallT keeps the commission.
   Transfers run from the money outbox (below) seconds after the order is marked paid, rather than
   through the session's `transfer_details`, so every movement has an id MallT can reverse and
   reconcile.
 - Commission base: the store order's GST-inclusive total (unchanged from M3).
-- Zoho's gateway fee on the customer payment is borne by MallT (from its commission). Zoho's
-  per-transfer platform fee is deducted by Zoho from the transfer (Zoho behaviour).
+- **Gateway fee is borne by the stores, pro-rated** (owner decision, 2026-11-23): each store
+  pays `GATEWAY_FEE_BPS` (default 50 = 0.50%) of its **own** share, rounded half up, stored as
+  `store_orders.gateway_fee_paise` and recorded in the ledger as `gateway_fee`. Example: a
+  ₹10,000 cart split ₹5,000 / ₹3,000 / ₹2,000 costs those stores ₹25 / ₹15 / ₹10. So the store
+  receives `total_paise − commission_paise − gateway_fee_paise`. Zoho's own per-transfer platform
+  fee, if any, is deducted by Zoho from the transfer (Zoho behaviour).
+- *Open:* on a refund the whole transfer is reversed, so the store gets its fee back and MallT
+  absorbs whatever Zoho does not return. Change this if stores should keep bearing it.
 - **Refunds stay per StoreOrder.** Reject / expire / cancel refunds `total_paise` of that store
   order. If the store's transfer already ran, it is **reversed first** (Zoho
   `POST /transferreversals`; this debits the store's Zoho balance and can fail when it is too

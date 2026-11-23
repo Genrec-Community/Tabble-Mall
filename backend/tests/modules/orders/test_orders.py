@@ -309,8 +309,9 @@ async def test_reject_refunds_and_records_the_reason(
     assert r.status_code == 200 and r.json()["status"] == "refunded"
     assert r.json()["reason"] == "kitchen closed"
     assert payments.refunds[0][0] == 12000
-    # The store's share (12000 - 5% commission) left at payment and was taken back first.
-    assert payments.transfers[0][0] == 11400 and payments.reversals[0][0] == 11400
+    # The store's share (12000 - 5% commission - 0.5% gateway fee) left at payment and was
+    # taken back first.
+    assert payments.transfers[0][0] == 11340 and payments.reversals[0][0] == 11340
     ledger = (
         await db_session.execute(
             select(LedgerEntry.kind, LedgerEntry.amount_paise).order_by(LedgerEntry.id)
@@ -319,8 +320,9 @@ async def test_reject_refunds_and_records_the_reason(
     assert [tuple(r) for r in ledger] == [
         ("charge", 12000),
         ("commission", 600),
-        ("transfer", 11400),
-        ("transfer_reversal", -11400),
+        ("gateway_fee", 60),
+        ("transfer", 11340),
+        ("transfer_reversal", -11340),
         ("refund", -12000),
     ]
     assert (

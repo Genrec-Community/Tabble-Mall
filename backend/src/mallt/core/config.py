@@ -47,6 +47,8 @@ class Settings(BaseSettings):
 
     # Payments. "fake" pays instantly (dev/tests); "zoho" is Zoho Payments with Split.
     payments_provider: Literal["fake", "zoho"] = "fake"
+    # Gateway fee each store bears on its own share of an order, in basis points (50 = 0.50%).
+    gateway_fee_bps: int = 50
     zoho_account_id: str = ""
     zoho_client_id: str = ""
     zoho_client_secret: str = ""

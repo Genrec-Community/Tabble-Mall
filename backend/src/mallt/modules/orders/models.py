@@ -111,6 +111,8 @@ class StoreOrder(IdMixin, TimestampMixin, Base):
     total_paise: Mapped[int] = mapped_column(BigInteger)
     commission_bps: Mapped[int] = mapped_column(Integer)
     commission_paise: Mapped[int] = mapped_column(BigInteger)
+    # The payment gateway's fee for this store's part, borne by the store (owner decision).
+    gateway_fee_paise: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
     prep_minutes: Mapped[int] = mapped_column(Integer, default=10)
     customer_name: Mapped[str | None] = mapped_column(Text, nullable=True)
     customer_phone: Mapped[str | None] = mapped_column(Text, nullable=True)  # masked
