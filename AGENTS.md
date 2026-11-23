@@ -17,8 +17,9 @@ MallT is a multi-tenant mall ordering platform.
   3. They pay once.
   4. They collect each store's part at the counter by showing a 4-digit
      pickup code.
-- **Money:** MallT takes a commission (default 5%) through Razorpay Route.
-- **Payments are ON HOLD.** Do not build them until told to.
+- **Money:** MallT takes a commission (default 5%) through **Zoho Payments Split** (payments
+  reopened 2026-11-23; design in
+  [`docs/superpowers/specs/2026-11-23-zoho-split-payments.md`](docs/superpowers/specs/2026-11-23-zoho-split-payments.md)).
 - **Fulfilment:** v1 is **pickup only**. There is no delivery.
 - **Printing:** each store prints a KOT and a bill through a desktop `print-agent/` on its counter
   PC (spec §14). Printing never blocks ordering.
@@ -194,10 +195,13 @@ by the same targets (`uv run --no-project`); its releases are built per OS with 
   committed when payment succeeds and released when payment fails or expires.
   `MANUAL` stock is a toggle.
 - `fulfilment_type` exists, but only `PICKUP` is valid in v1.
-- Payments go through a `PaymentProvider` interface. Use only
-  `FakePaymentProvider` until payments are reopened. When payments are built:
-  verify webhook signatures, process each webhook idempotently, and record
-  every movement in an append-only ledger.
+- Payments go through a `PaymentProvider` interface (`ZohoPaymentProvider` in production,
+  `FakePaymentProvider` in dev/tests via `PAYMENTS_PROVIDER`). An order is paid only on the
+  provider's word (server-side check or signed webhook), never the browser's. Each store's share
+  is transferred as soon as payment is confirmed; a refund reverses that store's transfer first.
+  Money movements go through the outbox (`payment_tasks`), never inline in a request; every
+  movement is recorded in the append-only `ledger_entries`; webhooks are signature-checked and
+  deduplicated by event id.
 - Images:
   1. The browser uploads straight to the bucket using a presigned PUT URL
      with a server-generated, tenant-scoped key.
@@ -251,7 +255,7 @@ by the same targets (`uv run --no-project`); its releases are built per OS with 
   - Unit tests for services.
   - Integration tests that hit the real HTTP app against a real Postgres 17
     container. No SQLite and no mocked database.
-  - Mock only external services: Fast2SMS, Google, Razorpay, S3.
+  - Mock only external services: Fast2SMS, Google, Zoho Payments, S3.
 - Must-have tests:
   - permission matrix
   - cross-tenant isolation
@@ -287,7 +291,7 @@ by the same targets (`uv run --no-project`); its releases are built per OS with 
 
 ## 11. Things to never do
 
-- Build payments, delivery or a native app before they are reopened.
+- Build delivery or a native app before they are reopened.
 - Put permissions in JWTs, or skip the service-layer authorization check.
 - Use floats for money.
 - Let the API stream image bytes, or render store-supplied HTML or CSS.

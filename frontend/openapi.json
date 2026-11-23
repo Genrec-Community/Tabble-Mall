@@ -785,6 +785,16 @@
             ],
             "title": "Mall Slug"
           },
+          "payment": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OrderPaymentOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "status": {
             "$ref": "#/components/schemas/CustomerOrderStatus"
           },
@@ -1750,6 +1760,41 @@
         "title": "OrderLineOut",
         "type": "object"
       },
+      "OrderPaymentOut": {
+        "properties": {
+          "pay_by": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pay By"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "zoho": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ZohoCheckoutOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "provider"
+        ],
+        "title": "OrderPaymentOut",
+        "type": "object"
+      },
       "OrderStepOut": {
         "properties": {
           "at": {
@@ -2092,6 +2137,249 @@
         ],
         "title": "PasswordChange",
         "type": "object"
+      },
+      "PaymentConfirmIn": {
+        "additionalProperties": false,
+        "properties": {
+          "payment_id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Payment Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "payment_id"
+        ],
+        "title": "PaymentConfirmIn",
+        "type": "object"
+      },
+      "PaymentTaskOut": {
+        "properties": {
+          "amount_paise": {
+            "title": "Amount Paise",
+            "type": "integer"
+          },
+          "attempts": {
+            "title": "Attempts",
+            "type": "integer"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "customer_order_id": {
+            "format": "uuid",
+            "title": "Customer Order Id",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/TaskKind"
+          },
+          "last_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error"
+          },
+          "status": {
+            "$ref": "#/components/schemas/TaskStatus"
+          },
+          "store_id": {
+            "format": "uuid",
+            "title": "Store Id",
+            "type": "string"
+          },
+          "store_order_id": {
+            "format": "uuid",
+            "title": "Store Order Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "store_id",
+          "customer_order_id",
+          "store_order_id",
+          "kind",
+          "status",
+          "amount_paise",
+          "attempts",
+          "last_error",
+          "created_at"
+        ],
+        "title": "PaymentTaskOut",
+        "type": "object"
+      },
+      "PaymentsOverviewOut": {
+        "properties": {
+          "accounts": {
+            "items": {
+              "$ref": "#/components/schemas/PayoutAccountOut"
+            },
+            "title": "Accounts",
+            "type": "array"
+          },
+          "failed_tasks": {
+            "items": {
+              "$ref": "#/components/schemas/PaymentTaskOut"
+            },
+            "title": "Failed Tasks",
+            "type": "array"
+          }
+        },
+        "required": [
+          "accounts",
+          "failed_tasks"
+        ],
+        "title": "PaymentsOverviewOut",
+        "type": "object"
+      },
+      "PayoutAccountCreate": {
+        "additionalProperties": false,
+        "description": "A store's bank details for its Zoho connected account. Sent once to Zoho; MallT keeps only\nthe masked parts.",
+        "properties": {
+          "account_name": {
+            "maxLength": 100,
+            "minLength": 2,
+            "title": "Account Name",
+            "type": "string"
+          },
+          "account_number": {
+            "pattern": "^\\d{9,18}$",
+            "title": "Account Number",
+            "type": "string"
+          },
+          "business_description": {
+            "maxLength": 1000,
+            "minLength": 10,
+            "title": "Business Description",
+            "type": "string"
+          },
+          "email": {
+            "maxLength": 254,
+            "pattern": "^[^@\\s]+@[^@\\s]+\\.\\w+$",
+            "title": "Email",
+            "type": "string"
+          },
+          "ifsc": {
+            "pattern": "^[A-Za-z]{4}0[A-Za-z0-9]{6}$",
+            "title": "Ifsc",
+            "type": "string"
+          },
+          "mcc": {
+            "default": "5814",
+            "description": "Merchant category code; 5814 = fast food restaurants",
+            "pattern": "^\\d{4}$",
+            "title": "Mcc",
+            "type": "string"
+          },
+          "pan": {
+            "pattern": "^[A-Za-z]{5}[0-9]{4}[A-Za-z]$",
+            "title": "Pan",
+            "type": "string"
+          }
+        },
+        "required": [
+          "account_name",
+          "email",
+          "pan",
+          "business_description",
+          "ifsc",
+          "account_number"
+        ],
+        "title": "PayoutAccountCreate",
+        "type": "object"
+      },
+      "PayoutAccountOut": {
+        "properties": {
+          "account_name": {
+            "title": "Account Name",
+            "type": "string"
+          },
+          "bank_masked": {
+            "title": "Bank Masked",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "ifsc": {
+            "title": "Ifsc",
+            "type": "string"
+          },
+          "mcc": {
+            "title": "Mcc",
+            "type": "string"
+          },
+          "pan_masked": {
+            "title": "Pan Masked",
+            "type": "string"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "review_status": {
+            "title": "Review Status",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PayoutStatus"
+          },
+          "store_id": {
+            "format": "uuid",
+            "title": "Store Id",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "store_id",
+          "provider",
+          "account_name",
+          "email",
+          "pan_masked",
+          "bank_masked",
+          "ifsc",
+          "mcc",
+          "status",
+          "review_status",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "PayoutAccountOut",
+        "type": "object"
+      },
+      "PayoutStatus": {
+        "enum": [
+          "pending",
+          "active",
+          "disabled"
+        ],
+        "title": "PayoutStatus",
+        "type": "string"
       },
       "PickupIn": {
         "properties": {
@@ -4581,6 +4869,25 @@
         "title": "StoreUpdate",
         "type": "object"
       },
+      "TaskKind": {
+        "enum": [
+          "transfer",
+          "reversal",
+          "refund"
+        ],
+        "title": "TaskKind",
+        "type": "string"
+      },
+      "TaskStatus": {
+        "enum": [
+          "pending",
+          "done",
+          "failed",
+          "cancelled"
+        ],
+        "title": "TaskStatus",
+        "type": "string"
+      },
       "TempPasswordOut": {
         "properties": {
           "temp_password": {
@@ -4846,6 +5153,55 @@
         "title": "Window",
         "type": "object"
       },
+      "ZohoCheckoutOut": {
+        "description": "What the browser passes to Zoho's checkout widget (zpayments.js). No secrets: the API key\nis Zoho's public widget key.",
+        "properties": {
+          "account_id": {
+            "title": "Account Id",
+            "type": "string"
+          },
+          "amount": {
+            "title": "Amount",
+            "type": "string"
+          },
+          "api_key": {
+            "title": "Api Key",
+            "type": "string"
+          },
+          "currency_code": {
+            "title": "Currency Code",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "domain": {
+            "title": "Domain",
+            "type": "string"
+          },
+          "is_test_mode": {
+            "title": "Is Test Mode",
+            "type": "boolean"
+          },
+          "payments_session_id": {
+            "title": "Payments Session Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "account_id",
+          "api_key",
+          "domain",
+          "is_test_mode",
+          "payments_session_id",
+          "amount",
+          "currency_code",
+          "description"
+        ],
+        "title": "ZohoCheckoutOut",
+        "type": "object"
+      },
       "mallt__modules__catalog__schemas__PublicStoreOut": {
         "properties": {
           "accepting_orders": {
@@ -5040,6 +5396,27 @@
         "summary": "List All Audit",
         "tags": [
           "audit"
+        ]
+      }
+    },
+    "/api/v1/admin/payments": {
+      "get": {
+        "operationId": "payments_payments_overview",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentsOverviewOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Payments Overview",
+        "tags": [
+          "payments"
         ]
       }
     },
@@ -6408,6 +6785,60 @@
           }
         },
         "summary": "Get My Order",
+        "tags": [
+          "orders"
+        ]
+      }
+    },
+    "/api/v1/orders/{order_id}/payment": {
+      "post": {
+        "description": "After the provider's checkout says it paid: the server checks with the provider.",
+        "operationId": "orders_confirm_my_payment",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "order_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Order Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentConfirmIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerOrderOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Confirm My Payment",
         "tags": [
           "orders"
         ]
@@ -8599,6 +9030,143 @@
         "summary": "Reject Order",
         "tags": [
           "store-orders"
+        ]
+      }
+    },
+    "/api/v1/stores/{store_id}/payout-account": {
+      "get": {
+        "operationId": "payments_get_payout_account",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "store_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Store Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayoutAccountOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Payout Account",
+        "tags": [
+          "payments"
+        ]
+      },
+      "put": {
+        "operationId": "payments_submit_payout_account",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "store_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Store Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PayoutAccountCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayoutAccountOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Submit Payout Account",
+        "tags": [
+          "payments"
+        ]
+      }
+    },
+    "/api/v1/stores/{store_id}/payout-account/refresh": {
+      "post": {
+        "operationId": "payments_refresh_payout_account",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "store_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Store Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayoutAccountOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Refresh Payout Account",
+        "tags": [
+          "payments"
         ]
       }
     },

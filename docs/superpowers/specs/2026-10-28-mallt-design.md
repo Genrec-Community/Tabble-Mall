@@ -328,6 +328,10 @@ PENDING_PAYMENT → PAYMENT_FAILED / ABANDONED (stock released)
 
 ## 8. Payments: Razorpay Route (ON HOLD; concept only)
 
+> **Superseded 2026-11-23:** payments were reopened on **Zoho Payments Split**. See
+> [`2026-11-23-zoho-split-payments.md`](2026-11-23-zoho-split-payments.md). The rules below
+> (paise, signed idempotent webhooks, ledger, onboarding before orders) still apply.
+
 > **Development of payments is paused by the owner.** Nothing here gets built
 > until the owner reopens it. The concept is recorded so other modules leave
 > room for it.
@@ -488,7 +492,7 @@ tested, and UI polish is a separate later pass.
 | **M1** | **IAM** | Everything in §5 |
 | M2 | Food catalog & theming | §6 (plan Part A) |
 | M3 | Cart & orders + **Printing** | §7 with `FakePaymentProvider`, real-time dashboard, pickup code (Part B); print agent, KOT, bill designer (Part C, §14) |
-| M4 | Payments | §8. **On hold until the owner reopens it** |
+| M4 | Payments | Zoho Payments Split (reopened 2026-11-23; see the Zoho spec) |
 | M5 | Production | AWS infra (RDS, ElastiCache, S3/CloudFront, EC2/ALB), deploy pipeline, backups, monitoring |
 
 ---

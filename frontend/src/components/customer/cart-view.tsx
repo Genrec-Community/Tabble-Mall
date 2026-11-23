@@ -11,6 +11,7 @@ import { cartClearCart, cartUpdateLine, ordersCheckout, type CartLineOut, type C
 import { ApiError, ensureOk, unwrap } from "@/lib/api-error";
 import { useCustomerSession } from "@/lib/auth/customer-session";
 import { formatPaise } from "@/lib/money";
+import { usePayOrder } from "@/lib/payments/use-pay-order";
 
 const PROBLEMS = {
   unavailable: "No longer available",
@@ -30,6 +31,7 @@ export function CartView({ mallSlug }: { mallSlug: string }) {
     if (status === "anon") router.replace(`/account/login?next=/m/${mallSlug}/cart`);
   }, [status, router, mallSlug]);
 
+  const pay = usePayOrder({ name: me?.name });
   const setCart = (next: CartOut) => queryClient.setQueryData(cartQueryKey(mallSlug), next);
 
   const update = useMutation({
@@ -53,8 +55,10 @@ export function CartView({ mallSlug }: { mallSlug: string }) {
           body: {},
         }),
       ),
-    onSuccess: (order) => {
+    onSuccess: async (order) => {
       idempotencyKey.current = crypto.randomUUID();
+      // Online payment: open the checkout now. If it is closed, the order page offers it again.
+      if (order.payment?.zoho) await pay.mutateAsync(order).catch(() => undefined);
       void queryClient.invalidateQueries({ queryKey: cartQueryKey(mallSlug) });
       router.push(`/account/orders/${order.id}`);
     },
@@ -98,7 +102,7 @@ export function CartView({ mallSlug }: { mallSlug: string }) {
       <div className="space-y-2">
         <p className="flex justify-between text-lg font-medium"><span>Total</span><span>{formatPaise(data.total_paise)}</span></p>
         <p className="text-xs text-muted-foreground">
-          Prices include GST. You collect each store&apos;s items at its counter with a 4-digit code. Payment is simulated until payments go live.
+          Prices include GST. You collect each store&apos;s items at its counter with a 4-digit code. You pay once for the whole cart.
         </p>
         {needsPhone && (
           <p role="alert" className="text-sm text-destructive">
@@ -107,8 +111,8 @@ export function CartView({ mallSlug }: { mallSlug: string }) {
         )}
         {!data.can_checkout && <p role="alert" className="text-sm text-destructive">Remove the unavailable items to continue.</p>}
         <div className="flex gap-2">
-          <Button onClick={() => checkout.mutate()} disabled={!data.can_checkout || needsPhone || checkout.isPending}>
-            Place order · {formatPaise(data.total_paise)}
+          <Button onClick={() => checkout.mutate()} disabled={!data.can_checkout || needsPhone || checkout.isPending || pay.isPending}>
+            Place order and pay · {formatPaise(data.total_paise)}
           </Button>
           <Button variant="outline" onClick={() => clear.mutate()} disabled={clear.isPending}>Clear cart</Button>
         </div>

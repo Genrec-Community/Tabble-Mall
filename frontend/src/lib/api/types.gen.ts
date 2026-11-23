@@ -437,6 +437,7 @@ export type CustomerOrderOut = {
      * Mall Slug
      */
     mall_slug?: string | null;
+    payment?: OrderPaymentOut | null;
     status: CustomerOrderStatus;
     /**
      * Stores
@@ -957,6 +958,21 @@ export type OrderLineOut = {
 };
 
 /**
+ * OrderPaymentOut
+ */
+export type OrderPaymentOut = {
+    /**
+     * Pay By
+     */
+    pay_by?: string | null;
+    /**
+     * Provider
+     */
+    provider: string;
+    zoho?: ZohoCheckoutOut | null;
+};
+
+/**
  * OrderStepOut
  */
 export type OrderStepOut = {
@@ -1153,6 +1169,165 @@ export type PasswordChange = {
      */
     new_password: string;
 };
+
+/**
+ * PaymentConfirmIn
+ */
+export type PaymentConfirmIn = {
+    /**
+     * Payment Id
+     */
+    payment_id: string;
+};
+
+/**
+ * PaymentTaskOut
+ */
+export type PaymentTaskOut = {
+    /**
+     * Amount Paise
+     */
+    amount_paise: number;
+    /**
+     * Attempts
+     */
+    attempts: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Customer Order Id
+     */
+    customer_order_id: string;
+    /**
+     * Id
+     */
+    id: string;
+    kind: TaskKind;
+    /**
+     * Last Error
+     */
+    last_error: string | null;
+    status: TaskStatus;
+    /**
+     * Store Id
+     */
+    store_id: string;
+    /**
+     * Store Order Id
+     */
+    store_order_id: string;
+};
+
+/**
+ * PaymentsOverviewOut
+ */
+export type PaymentsOverviewOut = {
+    /**
+     * Accounts
+     */
+    accounts: Array<PayoutAccountOut>;
+    /**
+     * Failed Tasks
+     */
+    failed_tasks: Array<PaymentTaskOut>;
+};
+
+/**
+ * PayoutAccountCreate
+ *
+ * A store's bank details for its Zoho connected account. Sent once to Zoho; MallT keeps only
+ * the masked parts.
+ */
+export type PayoutAccountCreate = {
+    /**
+     * Account Name
+     */
+    account_name: string;
+    /**
+     * Account Number
+     */
+    account_number: string;
+    /**
+     * Business Description
+     */
+    business_description: string;
+    /**
+     * Email
+     */
+    email: string;
+    /**
+     * Ifsc
+     */
+    ifsc: string;
+    /**
+     * Mcc
+     *
+     * Merchant category code; 5814 = fast food restaurants
+     */
+    mcc?: string;
+    /**
+     * Pan
+     */
+    pan: string;
+};
+
+/**
+ * PayoutAccountOut
+ */
+export type PayoutAccountOut = {
+    /**
+     * Account Name
+     */
+    account_name: string;
+    /**
+     * Bank Masked
+     */
+    bank_masked: string;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Email
+     */
+    email: string;
+    /**
+     * Ifsc
+     */
+    ifsc: string;
+    /**
+     * Mcc
+     */
+    mcc: string;
+    /**
+     * Pan Masked
+     */
+    pan_masked: string;
+    /**
+     * Provider
+     */
+    provider: string;
+    /**
+     * Review Status
+     */
+    review_status: string;
+    status: PayoutStatus;
+    /**
+     * Store Id
+     */
+    store_id: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+};
+
+/**
+ * PayoutStatus
+ */
+export type PayoutStatus = 'pending' | 'active' | 'disabled';
 
 /**
  * PickupIn
@@ -2339,6 +2514,16 @@ export type StoreUpdate = {
 };
 
 /**
+ * TaskKind
+ */
+export type TaskKind = 'transfer' | 'reversal' | 'refund';
+
+/**
+ * TaskStatus
+ */
+export type TaskStatus = 'pending' | 'done' | 'failed' | 'cancelled';
+
+/**
  * TempPasswordOut
  */
 export type TempPasswordOut = {
@@ -2505,6 +2690,47 @@ export type Window = {
 };
 
 /**
+ * ZohoCheckoutOut
+ *
+ * What the browser passes to Zoho's checkout widget (zpayments.js). No secrets: the API key
+ * is Zoho's public widget key.
+ */
+export type ZohoCheckoutOut = {
+    /**
+     * Account Id
+     */
+    account_id: string;
+    /**
+     * Amount
+     */
+    amount: string;
+    /**
+     * Api Key
+     */
+    api_key: string;
+    /**
+     * Currency Code
+     */
+    currency_code: string;
+    /**
+     * Description
+     */
+    description: string;
+    /**
+     * Domain
+     */
+    domain: string;
+    /**
+     * Is Test Mode
+     */
+    is_test_mode: boolean;
+    /**
+     * Payments Session Id
+     */
+    payments_session_id: string;
+};
+
+/**
  * PublicStoreOut
  */
 export type MalltModulesCatalogSchemasPublicStoreOut = {
@@ -2598,6 +2824,22 @@ export type AuditListAllAuditResponses = {
 };
 
 export type AuditListAllAuditResponse = AuditListAllAuditResponses[keyof AuditListAllAuditResponses];
+
+export type PaymentsPaymentsOverviewData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/payments';
+};
+
+export type PaymentsPaymentsOverviewResponses = {
+    /**
+     * Successful Response
+     */
+    200: PaymentsOverviewOut;
+};
+
+export type PaymentsPaymentsOverviewResponse = PaymentsPaymentsOverviewResponses[keyof PaymentsPaymentsOverviewResponses];
 
 export type AuthCustomerGoogleLoginData = {
     body: GoogleLogin;
@@ -3501,6 +3743,36 @@ export type OrdersGetMyOrderResponses = {
 };
 
 export type OrdersGetMyOrderResponse = OrdersGetMyOrderResponses[keyof OrdersGetMyOrderResponses];
+
+export type OrdersConfirmMyPaymentData = {
+    body: PaymentConfirmIn;
+    path: {
+        /**
+         * Order Id
+         */
+        order_id: string;
+    };
+    query?: never;
+    url: '/api/v1/orders/{order_id}/payment';
+};
+
+export type OrdersConfirmMyPaymentErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type OrdersConfirmMyPaymentError = OrdersConfirmMyPaymentErrors[keyof OrdersConfirmMyPaymentErrors];
+
+export type OrdersConfirmMyPaymentResponses = {
+    /**
+     * Successful Response
+     */
+    200: CustomerOrderOut;
+};
+
+export type OrdersConfirmMyPaymentResponse = OrdersConfirmMyPaymentResponses[keyof OrdersConfirmMyPaymentResponses];
 
 export type OrgsListOrgsData = {
     body?: never;
@@ -4822,6 +5094,96 @@ export type StoreOrdersRejectOrderResponses = {
 };
 
 export type StoreOrdersRejectOrderResponse = StoreOrdersRejectOrderResponses[keyof StoreOrdersRejectOrderResponses];
+
+export type PaymentsGetPayoutAccountData = {
+    body?: never;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/payout-account';
+};
+
+export type PaymentsGetPayoutAccountErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PaymentsGetPayoutAccountError = PaymentsGetPayoutAccountErrors[keyof PaymentsGetPayoutAccountErrors];
+
+export type PaymentsGetPayoutAccountResponses = {
+    /**
+     * Successful Response
+     */
+    200: PayoutAccountOut;
+};
+
+export type PaymentsGetPayoutAccountResponse = PaymentsGetPayoutAccountResponses[keyof PaymentsGetPayoutAccountResponses];
+
+export type PaymentsSubmitPayoutAccountData = {
+    body: PayoutAccountCreate;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/payout-account';
+};
+
+export type PaymentsSubmitPayoutAccountErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PaymentsSubmitPayoutAccountError = PaymentsSubmitPayoutAccountErrors[keyof PaymentsSubmitPayoutAccountErrors];
+
+export type PaymentsSubmitPayoutAccountResponses = {
+    /**
+     * Successful Response
+     */
+    200: PayoutAccountOut;
+};
+
+export type PaymentsSubmitPayoutAccountResponse = PaymentsSubmitPayoutAccountResponses[keyof PaymentsSubmitPayoutAccountResponses];
+
+export type PaymentsRefreshPayoutAccountData = {
+    body?: never;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/payout-account/refresh';
+};
+
+export type PaymentsRefreshPayoutAccountErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PaymentsRefreshPayoutAccountError = PaymentsRefreshPayoutAccountErrors[keyof PaymentsRefreshPayoutAccountErrors];
+
+export type PaymentsRefreshPayoutAccountResponses = {
+    /**
+     * Successful Response
+     */
+    200: PayoutAccountOut;
+};
+
+export type PaymentsRefreshPayoutAccountResponse = PaymentsRefreshPayoutAccountResponses[keyof PaymentsRefreshPayoutAccountResponses];
 
 export type PrintingListAgentsData = {
     body?: never;

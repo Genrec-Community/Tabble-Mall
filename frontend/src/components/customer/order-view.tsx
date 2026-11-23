@@ -13,11 +13,13 @@ import { useCustomerSession } from "@/lib/auth/customer-session";
 import { useLiveOrders } from "@/lib/live";
 import { formatPaise } from "@/lib/money";
 import { CUSTOMER_STATUS, OPEN, SHOW_CODE } from "@/lib/order-status";
+import { usePayOrder } from "@/lib/payments/use-pay-order";
 
 export function OrderView({ orderId }: { orderId: string }) {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { status } = useCustomerSession();
+  const { status, me } = useCustomerSession();
+  const pay = usePayOrder({ name: me?.name });
   useEffect(() => {
     if (status === "anon") router.replace(`/account/login?next=/account/orders/${orderId}`);
   }, [status, router, orderId]);
@@ -48,6 +50,21 @@ export function OrderView({ orderId }: { orderId: string }) {
     <main className="mx-auto max-w-2xl space-y-4 p-4">
       <Link href="/account/orders" className="text-sm text-muted-foreground underline-offset-4 hover:underline">← My orders</Link>
       <h1 className="text-xl font-semibold">Your order · {formatPaise(data.total_paise)}</h1>
+      {data.status === "placed" && data.payment?.zoho && (
+        <section className="space-y-2 rounded-lg border p-4" aria-label="Payment">
+          <p className="font-medium">This order is waiting for payment.</p>
+          <p className="text-sm text-muted-foreground">
+            The stores only see it once it is paid.
+            {data.payment.pay_by && ` Pay before ${new Date(data.payment.pay_by).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}.`}
+          </p>
+          <Button onClick={() => pay.mutate(data)} disabled={pay.isPending}>Pay {formatPaise(data.total_paise)}</Button>
+        </section>
+      )}
+      {data.status === "payment_failed" && (
+        <p role="alert" className="rounded-lg border p-4 text-sm">
+          This order was not paid in time, so it was not sent to the stores. If you were charged, the money is refunded automatically.
+        </p>
+      )}
       {data.stores.map((s) => (
         <StoreOrderCard key={s.id} order={s} cancelling={cancel.isPending} onCancel={() => cancel.mutate(s.id)} />
       ))}

@@ -19,6 +19,7 @@ export function StoreTabs() {
     { href: `${base}/printers`, label: "Printers", show: !!scope && can("store.printer.manage", scope) },
     { href: `${base}/printing`, label: "Bill & KOT design", show: !!scope && can("store.printer.manage", scope) },
     { href: `${base}/settings`, label: "Settings", show: !!scope && can("store.product.read", scope) },
+    { href: `${base}/payouts`, label: "Payouts", show: !!scope && can("store.kyc.submit", scope) },
     { href: `${base}/staff`, label: "Staff", show: !!scope && can("store.staff.manage", scope) },
   ].filter((t) => t.show);
 
