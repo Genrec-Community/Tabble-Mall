@@ -458,6 +458,12 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/eb/a3/87fe9b7203ec2e56ea6a57c75e6d632eaf9487c7f7978cdad1d801bee0af/google_auth-2.62.0-py3-none-any.whl", hash = "sha256:4ff4319aeb4ad128409759d397a9fcafad126d0031d241cc0dd6b9a00b43e3f3", size = 267911, upload-time = "2026-10-12T19:20:46.355Z" },
 ]
 
+[package.optional-dependencies]
+urllib3 = [
+    { name = "packaging" },
+    { name = "urllib3" },
+]
+
 [[package]]
 name = "greenlet"
 version = "3.5.6"
@@ -839,7 +845,7 @@ dependencies = [
     { name = "asyncpg" },
     { name = "boto3" },
     { name = "fastapi" },
-    { name = "google-auth" },
+    { name = "google-auth", extra = ["urllib3"] },
     { name = "httpx" },
     { name = "pillow" },
     { name = "pydantic-settings" },
@@ -866,7 +872,7 @@ requires-dist = [
     { name = "asyncpg" },
     { name = "boto3" },
     { name = "fastapi" },
-    { name = "google-auth" },
+    { name = "google-auth", extras = ["urllib3"] },
     { name = "httpx" },
     { name = "pillow", specifier = ">=13.0.0" },
     { name = "pydantic-settings" },

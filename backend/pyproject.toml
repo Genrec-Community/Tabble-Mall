@@ -17,7 +17,7 @@ dependencies = [
     "pyotp",
     "httpx",
     "boto3",
-    "google-auth",
+    "google-auth[urllib3]",  # the urllib3 transport needs this extra (packaging) at import time
     "pillow>=13.0.0",
 ]
 

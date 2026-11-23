@@ -29,3 +29,4 @@ frontend/e2e/.state.json
 frontend/test-results/
 frontend/playwright-report/
 dump.rdb
+demo-logins.txt

@@ -1,0 +1,39 @@
+# Run the whole of MallT on one computer (used by start.bat / start.sh).
+#   docker compose -f docker-compose.yml -f local/docker-compose.local.yml up --build
+# Adds a local Postgres 17 (data kept in the "mallt-local-db" volume), points the API at it, runs the
+# migrations on start and mounts the demo seeder. Payments use the fake provider unless .env says
+# PAYMENTS_PROVIDER=zoho with real keys.
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment: { POSTGRES_USER: mallt, POSTGRES_PASSWORD: mallt, POSTGRES_DB: mallt }
+    volumes: ["mallt-local-db:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mallt -d mallt"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  api:
+    environment:
+      ENV: dev
+      DATABASE_URL: postgresql+asyncpg://mallt:mallt@postgres:5432/mallt
+      SMS_BACKEND: console  # login codes are printed in the API log (see show-otp.bat)
+    command:
+      - sh
+      - -c
+      - >-
+        alembic upgrade head &&
+        exec uvicorn mallt.main:create_app --factory --host 0.0.0.0 --port 8000
+        --proxy-headers --forwarded-allow-ips=*
+    volumes: ["./local:/app/local:ro"]
+    depends_on:
+      postgres: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health', timeout=2)"]
+      interval: 3s
+      timeout: 3s
+      retries: 60
+
+volumes:
+  mallt-local-db:
