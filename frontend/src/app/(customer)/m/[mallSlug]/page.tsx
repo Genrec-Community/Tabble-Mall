@@ -17,7 +17,7 @@ export default async function MallPage({ params }: PageProps<"/m/[mallSlug]">) {
   const foodTypes = [...new Set(stores.flatMap((s) => s.food_types))];
   return (
     <MallView mall={mall} stores={stores}>
-      {mall.stores.length > 0 && <MallItems mallSlug={mallSlug} initial={items} foodTypes={foodTypes} />}
+      {mall.stores.length > 0 && <MallItems mallSlug={mallSlug} initial={items} foodTypes={foodTypes} stores={stores} />}
     </MallView>
   );
 }

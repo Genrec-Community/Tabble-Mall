@@ -1,0 +1,13 @@
+# Overrides for the single-EC2 deployment (infra/aws/deploy.sh). The API reads /opt/tabble/.env,
+# which the instance writes from SSM Parameter Store at boot; nginx serves on port 80 behind
+# CloudFront, which terminates TLS.
+services:
+  nginx:
+    ports: !override ["80:80"]
+    restart: unless-stopped
+  web:
+    restart: unless-stopped
+  api:
+    restart: unless-stopped
+    environment:
+      MIGRATE_ON_START: "true"
