@@ -15,7 +15,7 @@ You need Windows 10 or 11 and an internet connection for the first run. On macOS
 
 | File | What it does |
 |---|---|
-| `start.bat` | Starts MallT. The demo mall is added on the first run. |
+| `start.bat` | Starts MallT. The demo mall is added on the first run, and brought up to date when a newer demo arrives. |
 | `show-otp.bat` | Shows customer sign-in codes. Locally no SMS is sent. |
 | `stop.bat` | Only needed if MallT was closed abruptly and won't start again. |
 | `stop.bat reset` | Deletes all local data. The next start begins fresh with the demo mall. |
@@ -34,8 +34,13 @@ which takes a few minutes the first time. Offline, it just starts the version yo
 
 Every staff password is `MallT-demo-2026`.
 
-1. **Customer:** open http://localhost:8080/m/demo-mall and add items from both Burger Hub and
-   Chai Point. Sign in with any 10-digit mobile number. The code comes from `show-otp.bat`.
+The demo mall has nine fictional restaurants with real dish photos (credits in
+`local/demo-media/CREDITS.md`). Burger Hub and Chai Kadai wait for a person to accept orders; the
+other seven run their kitchens on their own, so an order there goes from accepted to ready in
+about a minute and you can watch the live updates and the "ready" alert.
+
+1. **Customer:** open http://localhost:8080/m/demo-mall, pick a restaurant (or search for a dish)
+   and add items from both Burger Hub and Chai Kadai. Sign in with any 10-digit mobile number. The code comes from `show-otp.bat`.
    Pay, and you get one order with a pickup code for each store.
 2. **Store:** in another browser or a private window, sign in at http://localhost:8080/login
    as `burger.owner`. The order appears live. Accept it, then Start preparing, then Mark ready.

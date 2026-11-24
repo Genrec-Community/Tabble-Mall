@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft } from "lucide-react";
 import { LUX_PRIMARY, Skeleton, withVariant } from "@/components/customer/lux";
 import { ConnectionNotice } from "@/components/customer/order-alerts";
 import { Button } from "@/components/ui/button";
@@ -71,13 +70,7 @@ export function OrderView({ orderId }: { orderId: string }) {
 
   return (
     <main className="mx-auto w-full max-w-2xl space-y-4 px-4 pt-4 pb-16">
-      <div className="flex items-center justify-between">
-        <Link
-          href="/account/orders"
-          className="inline-flex min-h-11 items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ChevronLeft className="size-4" aria-hidden="true" /> My orders
-        </Link>
+      <div className="flex items-center justify-end">
         {data.mall_slug && (
           <Link
             href={`/m/${data.mall_slug}`}

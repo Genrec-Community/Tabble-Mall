@@ -1,0 +1,53 @@
+# Demo photo credits
+
+The dish photos in `dishes/` are used only by the local demo (`local/seed_demo.py`). Each one comes from
+Wikimedia Commons under the licence shown, resized to at most 640 px. Restaurants in the demo are fictional.
+
+- `butter-chicken.jpg`: [Chicken makhani.jpg](https://commons.wikimedia.org/wiki/File:Chicken_makhani.jpg), by stu_spivack, CC BY-SA 2.0
+- `chicken-65.jpg`: [Chicken 65 (Dish).jpg](https://commons.wikimedia.org/wiki/File:Chicken_65_(Dish).jpg), by Amiyashrivastava, CC BY-SA 3.0
+- `chicken-biryani.jpg`: [Shrimp Biriyani.JPG](https://commons.wikimedia.org/wiki/File:Shrimp_Biriyani.JPG), by Jyothis, CC BY-SA 3.0
+- `chicken-burger.jpg`: [Fried chicken Burger in Milan, Italy.jpg](https://commons.wikimedia.org/wiki/File:Fried_chicken_Burger_in_Milan,_Italy.jpg), by Pava, CC BY-SA 3.0 it
+- `chicken-tikka.jpg`: [Chicken tikka in Araku Valley, Andhra Pradesh 01.jpg](https://commons.wikimedia.org/wiki/File:Chicken_tikka_in_Araku_Valley,_Andhra_Pradesh_01.jpg), by Satdeep Gill, CC BY-SA 4.0
+- `chilli-chicken.jpg`: [Chicken Chilli 1.jpg](https://commons.wikimedia.org/wiki/File:Chicken_Chilli_1.jpg), by Gaurav Dhwaj Khadka, CC BY-SA 4.0
+- `chocolate-shake.jpg`: [Chocolate milkshake ... 😋.jpg](https://commons.wikimedia.org/wiki/File:Chocolate_milkshake_..._%F0%9F%98%8B.jpg), by Bernard DUPONT, CC BY-SA 4.0
+- `chole-bhature.jpg`: [Chole Bhature 6.jpg](https://commons.wikimedia.org/wiki/File:Chole_Bhature_6.jpg), by Gannu03, CC BY-SA 4.0
+- `cold-coffee.jpg`: [Iced White Mocha in a Glass Jug.jpg](https://commons.wikimedia.org/wiki/File:Iced_White_Mocha_in_a_Glass_Jug.jpg), by Michael Scialdone, CC BY 2.0
+- `dal-makhani.jpg`: [Dal Makhani.jpg](https://commons.wikimedia.org/wiki/File:Dal_Makhani.jpg), by Charles Haynes, CC BY-SA 2.0
+- `egg-biryani.jpg`: [Egg biriyani kerala style.jpg](https://commons.wikimedia.org/wiki/File:Egg_biriyani_kerala_style.jpg), by Afsalmuttikkal, CC BY-SA 4.0
+- `filter-coffee.jpg`: [Indian filter coffee in Dabarah.jpg](https://commons.wikimedia.org/wiki/File:Indian_filter_coffee_in_Dabarah.jpg), by unknown, CC BY-SA 3.0
+- `fried-rice.jpg`: [Fried rice with chicken (17234644521).jpg](https://commons.wikimedia.org/wiki/File:Fried_rice_with_chicken_(17234644521).jpg), by Vee Satayamas from Bangkok, Thailand, CC BY 2.0
+- `fries.jpg`: [DoughnDolce Beef Sandwich.jpg](https://commons.wikimedia.org/wiki/File:DoughnDolce_Beef_Sandwich.jpg), by Vincent60030, CC BY-SA 4.0
+- `fruit-bowl.jpg`: [Fruit Salad Or Fruit Bowl.jpg](https://commons.wikimedia.org/wiki/File:Fruit_Salad_Or_Fruit_Bowl.jpg), by Manjeshwari poet mysore, CC BY-SA 4.0
+- `garlic-bread.jpg`: [Garlic Cheese Bombs.png](https://commons.wikimedia.org/wiki/File:Garlic_Cheese_Bombs.png), by Piersey, CC BY 2.0
+- `gobi-manchurian.jpg`: [Gobi manchurian.jpg](https://commons.wikimedia.org/wiki/File:Gobi_manchurian.jpg), by scaredy_kat, CC BY 2.5
+- `gulab-jamun.jpg`: [Two Gulab Jamun in a plate 01.jpg](https://commons.wikimedia.org/wiki/File:Two_Gulab_Jamun_in_a_plate_01.jpg), by Suyash.dwivedi, CC BY-SA 4.0
+- `hakka-noodles.jpg`: [Tasty hakka noodles image.jpg](https://commons.wikimedia.org/wiki/File:Tasty_hakka_noodles_image.jpg), by SGUae, CC BY 4.0
+- `iced-tea.jpg`: [Glass of iced tea - Evan Swigart.jpg](https://commons.wikimedia.org/wiki/File:Glass_of_iced_tea_-_Evan_Swigart.jpg), by Evan Swigart from Chicago, USA, CC BY 2.0
+- `idli-vada.jpg`: [South Indian Breakast Idli Vada Sambar Chutney.JPG](https://commons.wikimedia.org/wiki/File:South_Indian_Breakast_Idli_Vada_Sambar_Chutney.JPG), by Saind147, CC BY-SA 4.0
+- `kulfi.jpg`: [Kulfi 3.jpg](https://commons.wikimedia.org/wiki/File:Kulfi_3.jpg), by Gaurav Dhwaj Khadka, CC BY-SA 4.0
+- `mango-shake.jpg`: [Mango milkshake.jpg](https://commons.wikimedia.org/wiki/File:Mango_milkshake.jpg), by Swathi sri srinivasa raghavan, CC0
+- `margherita.jpg`: [Margherita Originale.JPG](https://commons.wikimedia.org/wiki/File:Margherita_Originale.JPG), by Mario56, CC BY-SA 3.0
+- `masala-chai.jpg`: [Masala Chai.JPG](https://commons.wikimedia.org/wiki/File:Masala_Chai.JPG), by Miansari66, Public domain
+- `masala-dosa.jpg`: [Masala dosa 01.jpg](https://commons.wikimedia.org/wiki/File:Masala_dosa_01.jpg), by Marajozkee, CC BY-SA 4.0
+- `momos.jpg`: [Buff Momos 1.jpg](https://commons.wikimedia.org/wiki/File:Buff_Momos_1.jpg), by Gaurav Dhwaj Khadka, CC BY-SA 4.0
+- `mutton-biryani.jpg`: [A home made plate of mutton biryani served with chicken kassa cooked in the bengali style.jpg](https://commons.wikimedia.org/wiki/File:A_home_made_plate_of_mutton_biryani_served_with_chicken_kassa_cooked_in_the_bengali_style.jpg), by Subhrajyoti07, CC BY-SA 4.0
+- `naan.jpg`: [Butter Naan 2.jpg](https://commons.wikimedia.org/wiki/File:Butter_Naan_2.jpg), by Ganesh Mohan T, CC BY-SA 4.0
+- `nuggets.jpg`: [Impossible chicken nuggets 2.jpg](https://commons.wikimedia.org/wiki/File:Impossible_chicken_nuggets_2.jpg), by Mx. Granger, CC0
+- `onion-rings.jpg`: [Flickr pancakejess 677476794--Onion rings.jpg](https://commons.wikimedia.org/wiki/File:Flickr_pancakejess_677476794--Onion_rings.jpg), by Jess Sawrey from Los Angeles, California, USA, CC BY 2.0
+- `pakora.jpg`: [Onion Pakora or peaji.JPG](https://commons.wikimedia.org/wiki/File:Onion_Pakora_or_peaji.JPG), by Kay 2015, CC BY-SA 4.0
+- `paneer-butter-masala.jpg`: [Paneer butter masala 2.jpg](https://commons.wikimedia.org/wiki/File:Paneer_butter_masala_2.jpg), by Gannu03, CC BY-SA 4.0
+- `pasta.jpg`: [Penne Arrabbiata.jpg](https://commons.wikimedia.org/wiki/File:Penne_Arrabbiata.jpg), by Petar Milošević, CC BY-SA 4.0
+- `pepperoni.jpg`: [Pizza Tradición Napolitana.jpg](https://commons.wikimedia.org/wiki/File:Pizza_Tradici%C3%B3n_Napolitana.jpg), by Rjcastillo, CC BY-SA 4.0
+- `pongal.jpg`: [Ven Pongal with cashew.jpg](https://commons.wikimedia.org/wiki/File:Ven_Pongal_with_cashew.jpg), by Sudhan Ram, CC BY-SA 4.0
+- `rava-dosa.jpg`: [Rava onion masala dosa at Udupi Upahar, Wilson Garden, Bangalore (2025-09-19).jpg](https://commons.wikimedia.org/wiki/File:Rava_onion_masala_dosa_at_Udupi_Upahar,_Wilson_Garden,_Bangalore_(2025-09-19).jpg), by Contrapunctus-1, CC BY-SA 4.0
+- `salad.jpg`: [Fresh salad with arugula, cabbage and tomato in a glass bowl.jpg](https://commons.wikimedia.org/wiki/File:Fresh_salad_with_arugula,_cabbage_and_tomato_in_a_glass_bowl.jpg), by Horacio Cambeiro, CC BY-SA 3.0
+- `samosa.jpg`: [Samosa with sweet chutney.jpg](https://commons.wikimedia.org/wiki/File:Samosa_with_sweet_chutney.jpg), by Swathi sri srinivasa raghavan, CC0
+- `smash-burger.jpg`: [Cheeseburger.jpg](https://commons.wikimedia.org/wiki/File:Cheeseburger.jpg), by Renee Comet (photographer), Public domain
+- `spring-rolls.jpg`: [Golden Vegetable Spring Rolls Served with Dipping Sauce.jpg](https://commons.wikimedia.org/wiki/File:Golden_Vegetable_Spring_Rolls_Served_with_Dipping_Sauce.jpg), by Srujanabotcha, CC BY-SA 4.0
+- `sundae.jpg`: [BROWNIE SUNDAE.jpg](https://commons.wikimedia.org/wiki/File:BROWNIE_SUNDAE.jpg), by Rishabhm9, CC BY-SA 4.0
+- `uttapam.jpg`: [Back side of Mix lentils Uttapam P 20190410 144927.jpg](https://commons.wikimedia.org/wiki/File:Back_side_of_Mix_lentils_Uttapam_P_20190410_144927.jpg), by Sumita Roy Dutta, CC BY-SA 4.0
+- `vada-pav.jpg`: [Aran Vada Pav Mumbai.jpg](https://commons.wikimedia.org/wiki/File:Aran_Vada_Pav_Mumbai.jpg), by Jpatokal, CC BY-SA 4.0
+- `veg-biryani.jpg`: [Vegetable Biryani IMG 001.jpg](https://commons.wikimedia.org/wiki/File:Vegetable_Biryani_IMG_001.jpg), by Phadke09, CC BY-SA 4.0
+- `veg-burger.jpg`: [Veggie burger (1).jpg](https://commons.wikimedia.org/wiki/File:Veggie_burger_(1).jpg), by Dan McKay from Winnipeg, Canada, CC BY 2.0
+- `veg-pizza.jpg`: [Eq it-na pizza-margherita sep2005 sml.jpg](https://commons.wikimedia.org/wiki/File:Eq_it-na_pizza-margherita_sep2005_sml.jpg), by Valerio Capello at English Wikipedia, CC BY-SA 3.0
+- `waffle.jpg`: [Belgian chocolate waffles (2026) 04.jpg](https://commons.wikimedia.org/wiki/File:Belgian_chocolate_waffles_(2026)_04.jpg), by Gpkp, CC BY-SA 4.0
