@@ -240,6 +240,23 @@ def force_stop_postgres(bin_dir: Path) -> None:
                     os.kill(int(first), signal.SIGKILL)
                 except OSError:
                     pass
+    if WIN and port_busy(PG_PORT):
+        # On Windows the server's child processes share its listening socket, so one can keep
+        # the port after the main process is gone. End every postgres.exe of this MallT copy.
+        bins = str(LOCAL / "tools").replace("'", "''")
+        pg_run(
+            [
+                "powershell",
+                "-NoProfile",
+                "-Command",
+                "Get-Process postgres -ErrorAction SilentlyContinue | Where-Object"
+                f" {{ $_.Path -like '{bins}*' }} | Stop-Process -Force",
+            ],
+            timeout=60,
+        )
+        for pid, what in _port_owners([PG_PORT]).items():
+            if str(ROOT).lower() in what.lower():
+                pg_run(["taskkill", "/F", "/T", "/PID", str(pid)], timeout=30)
     if not wait_port_free(PG_PORT, 20):
         fail(
             f"the database from an earlier run is stuck and holds port {PG_PORT}. Restart the"
