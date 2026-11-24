@@ -7,6 +7,7 @@ from mallt.modules.catalog import models as catalog_models
 from mallt.modules.iam import models as iam_models
 from mallt.modules.orders import models as orders_models
 from mallt.modules.payments import models as payments_models
+from mallt.modules.platform import models as platform_models
 from mallt.modules.printing import models as printing_models
 from mallt.modules.tenancy import models as tenancy_models
 
@@ -18,6 +19,7 @@ __all__ = [
     "kv_models",
     "orders_models",
     "payments_models",
+    "platform_models",
     "printing_models",
     "tenancy_models",
 ]

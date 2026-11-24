@@ -18,3 +18,8 @@ export async function refreshMenuPage(mallSlug: string, storeSlug: string): Prom
   updateTag(`menu:${mallSlug}:${storeSlug}`);
   updateTag(`mall:${mallSlug}`);
 }
+
+/** Drop the cached feature switches (call after the owner flips one) so pages follow at once. */
+export async function refreshFeatures(): Promise<void> {
+  updateTag("features");
+}

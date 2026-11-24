@@ -1190,6 +1190,348 @@
         "title": "Diet",
         "type": "string"
       },
+      "DirectoryMallOut": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ActiveStatus"
+          },
+          "stores": {
+            "items": {
+              "$ref": "#/components/schemas/DirectoryStoreOut"
+            },
+            "title": "Stores",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "status",
+          "stores"
+        ],
+        "title": "DirectoryMallOut",
+        "type": "object"
+      },
+      "DirectoryOrgOut": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "malls": {
+            "items": {
+              "$ref": "#/components/schemas/DirectoryMallOut"
+            },
+            "title": "Malls",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ActiveStatus"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "status",
+          "malls"
+        ],
+        "title": "DirectoryOrgOut",
+        "type": "object"
+      },
+      "DirectoryOut": {
+        "properties": {
+          "orgs": {
+            "items": {
+              "$ref": "#/components/schemas/DirectoryOrgOut"
+            },
+            "title": "Orgs",
+            "type": "array"
+          }
+        },
+        "required": [
+          "orgs"
+        ],
+        "title": "DirectoryOut",
+        "type": "object"
+      },
+      "DirectoryStoreOut": {
+        "properties": {
+          "featured": {
+            "title": "Featured",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ActiveStatus"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "status",
+          "featured"
+        ],
+        "title": "DirectoryStoreOut",
+        "type": "object"
+      },
+      "FeatureOut": {
+        "properties": {
+          "default": {
+            "title": "Default",
+            "type": "boolean"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "group": {
+            "title": "Group",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "description",
+          "group",
+          "default",
+          "enabled"
+        ],
+        "title": "FeatureOut",
+        "type": "object"
+      },
+      "FeatureUpdate": {
+        "properties": {
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "enabled"
+        ],
+        "title": "FeatureUpdate",
+        "type": "object"
+      },
+      "FeaturedSpotCreate": {
+        "properties": {
+          "amount_paise": {
+            "default": 0,
+            "maximum": 1000000000.0,
+            "minimum": 0.0,
+            "title": "Amount Paise",
+            "type": "integer"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "starts_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts At"
+          },
+          "store_id": {
+            "format": "uuid",
+            "title": "Store Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "store_id"
+        ],
+        "title": "FeaturedSpotCreate",
+        "type": "object"
+      },
+      "FeaturedSpotOut": {
+        "properties": {
+          "amount_paise": {
+            "title": "Amount Paise",
+            "type": "integer"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "live": {
+            "title": "Live",
+            "type": "boolean"
+          },
+          "mall_id": {
+            "format": "uuid",
+            "title": "Mall Id",
+            "type": "string"
+          },
+          "mall_name": {
+            "title": "Mall Name",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "organization_id": {
+            "format": "uuid",
+            "title": "Organization Id",
+            "type": "string"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "starts_at": {
+            "format": "date-time",
+            "title": "Starts At",
+            "type": "string"
+          },
+          "store_id": {
+            "format": "uuid",
+            "title": "Store Id",
+            "type": "string"
+          },
+          "store_name": {
+            "title": "Store Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "organization_id",
+          "mall_id",
+          "store_id",
+          "store_name",
+          "mall_name",
+          "starts_at",
+          "ends_at",
+          "amount_paise",
+          "note",
+          "revoked_at",
+          "live"
+        ],
+        "title": "FeaturedSpotOut",
+        "type": "object"
+      },
+      "FeaturesOut": {
+        "description": "Public: which features are switched on right now.",
+        "properties": {
+          "flags": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "title": "Flags",
+            "type": "object"
+          }
+        },
+        "required": [
+          "flags"
+        ],
+        "title": "FeaturesOut",
+        "type": "object"
+      },
       "GoogleLogin": {
         "properties": {
           "id_token": {
@@ -5744,6 +6086,240 @@
         ]
       }
     },
+    "/api/v1/admin/directory": {
+      "get": {
+        "operationId": "owner_directory",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DirectoryOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Directory",
+        "tags": [
+          "owner"
+        ]
+      }
+    },
+    "/api/v1/admin/featured": {
+      "get": {
+        "operationId": "owner_list_featured",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "mall_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Mall Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/FeaturedSpotOut"
+                  },
+                  "title": "Response Owner List Featured",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Featured",
+        "tags": [
+          "owner"
+        ]
+      },
+      "post": {
+        "operationId": "owner_grant_featured",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeaturedSpotCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeaturedSpotOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Grant Featured",
+        "tags": [
+          "owner"
+        ]
+      }
+    },
+    "/api/v1/admin/featured/{spot_id}/revoke": {
+      "post": {
+        "operationId": "owner_revoke_featured",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "spot_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Spot Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeaturedSpotOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Revoke Featured",
+        "tags": [
+          "owner"
+        ]
+      }
+    },
+    "/api/v1/admin/features": {
+      "get": {
+        "operationId": "owner_list_features",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/FeatureOut"
+                  },
+                  "title": "Response Owner List Features",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Features",
+        "tags": [
+          "owner"
+        ]
+      }
+    },
+    "/api/v1/admin/features/{key}": {
+      "put": {
+        "operationId": "owner_set_feature",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "title": "Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeatureUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeatureOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Feature",
+        "tags": [
+          "owner"
+        ]
+      }
+    },
     "/api/v1/admin/payments": {
       "get": {
         "operationId": "payments_payments_overview",
@@ -6289,6 +6865,27 @@
         "summary": "Staff Totp Setup",
         "tags": [
           "auth"
+        ]
+      }
+    },
+    "/api/v1/features": {
+      "get": {
+        "operationId": "features_get_features",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeaturesOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Features",
+        "tags": [
+          "features"
         ]
       }
     },

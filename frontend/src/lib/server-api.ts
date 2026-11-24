@@ -1,5 +1,6 @@
 /** Calls the API from Next.js server components (inside Docker, over the internal network). */
 import {
+  featuresGetFeatures,
   publicGetPublicMall,
   publicPopular,
   publicPublicItems,
@@ -62,4 +63,12 @@ export async function loadPopular(slug: string): Promise<PopularOut> {
   const result = await publicPopular({ path: { mall_slug: slug }, query: { limit: 12 }, ...serverOptions([`mall:${slug}`]) });
   if (!result.response?.ok) return { items: [] };
   return unwrap(result);
+}
+
+/** The owner's feature switches, cached like the mall page and purged by `refreshFeatures()`.
+ *  If the API cannot be reached, every feature counts as off. */
+export async function loadFeatures(): Promise<Record<string, boolean>> {
+  const result = await featuresGetFeatures(serverOptions(["features"]));
+  if (!result.response?.ok) return {};
+  return unwrap(result).flags;
 }

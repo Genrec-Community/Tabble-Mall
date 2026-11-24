@@ -388,6 +388,16 @@ class TenancyService:
         """Seconds the organization's stores have to accept a paid order."""
         return (await self._org(org_id)).accept_timeout_s
 
+    async def everything(
+        self, principal: Principal
+    ) -> tuple[list[Organization], list[Mall], list[Store]]:
+        """Every tenant, for the platform owner's dashboard (platform staff only)."""
+        self.authz.require(principal, P.PLATFORM_ORG_MANAGE, Scope.platform())
+        return await self.repo.everything()
+
+    async def malls_by_ids(self, mall_ids: list[uuid.UUID]) -> dict[uuid.UUID, Mall]:
+        return await self.repo.malls_by_ids(mall_ids)
+
     async def stores_by_ids(self, store_ids: list[uuid.UUID]) -> dict[uuid.UUID, Store]:
         return await self.repo.stores_by_ids(store_ids)
 

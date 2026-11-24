@@ -634,6 +634,219 @@ export type DetectedPrinterOut = {
 export type Diet = 'veg' | 'nonveg' | 'egg';
 
 /**
+ * DirectoryMallOut
+ */
+export type DirectoryMallOut = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Slug
+     */
+    slug: string;
+    status: ActiveStatus;
+    /**
+     * Stores
+     */
+    stores: Array<DirectoryStoreOut>;
+};
+
+/**
+ * DirectoryOrgOut
+ */
+export type DirectoryOrgOut = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Malls
+     */
+    malls: Array<DirectoryMallOut>;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Slug
+     */
+    slug: string;
+    status: ActiveStatus;
+};
+
+/**
+ * DirectoryOut
+ */
+export type DirectoryOut = {
+    /**
+     * Orgs
+     */
+    orgs: Array<DirectoryOrgOut>;
+};
+
+/**
+ * DirectoryStoreOut
+ */
+export type DirectoryStoreOut = {
+    /**
+     * Featured
+     */
+    featured: boolean;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Slug
+     */
+    slug: string;
+    status: ActiveStatus;
+};
+
+/**
+ * FeatureOut
+ */
+export type FeatureOut = {
+    /**
+     * Default
+     */
+    default: boolean;
+    /**
+     * Description
+     */
+    description: string;
+    /**
+     * Enabled
+     */
+    enabled: boolean;
+    /**
+     * Group
+     */
+    group: string;
+    /**
+     * Key
+     */
+    key: string;
+    /**
+     * Label
+     */
+    label: string;
+};
+
+/**
+ * FeatureUpdate
+ */
+export type FeatureUpdate = {
+    /**
+     * Enabled
+     */
+    enabled: boolean;
+};
+
+/**
+ * FeaturedSpotCreate
+ */
+export type FeaturedSpotCreate = {
+    /**
+     * Amount Paise
+     */
+    amount_paise?: number;
+    /**
+     * Ends At
+     */
+    ends_at?: string | null;
+    /**
+     * Note
+     */
+    note?: string | null;
+    /**
+     * Starts At
+     */
+    starts_at?: string | null;
+    /**
+     * Store Id
+     */
+    store_id: string;
+};
+
+/**
+ * FeaturedSpotOut
+ */
+export type FeaturedSpotOut = {
+    /**
+     * Amount Paise
+     */
+    amount_paise: number;
+    /**
+     * Ends At
+     */
+    ends_at: string | null;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Live
+     */
+    live: boolean;
+    /**
+     * Mall Id
+     */
+    mall_id: string;
+    /**
+     * Mall Name
+     */
+    mall_name: string;
+    /**
+     * Note
+     */
+    note: string | null;
+    /**
+     * Organization Id
+     */
+    organization_id: string;
+    /**
+     * Revoked At
+     */
+    revoked_at: string | null;
+    /**
+     * Starts At
+     */
+    starts_at: string;
+    /**
+     * Store Id
+     */
+    store_id: string;
+    /**
+     * Store Name
+     */
+    store_name: string;
+};
+
+/**
+ * FeaturesOut
+ *
+ * Public: which features are switched on right now.
+ */
+export type FeaturesOut = {
+    /**
+     * Flags
+     */
+    flags: {
+        [key: string]: boolean;
+    };
+};
+
+/**
  * GoogleLogin
  */
 export type GoogleLogin = {
@@ -3014,6 +3227,157 @@ export type AuditListAllAuditResponses = {
 
 export type AuditListAllAuditResponse = AuditListAllAuditResponses[keyof AuditListAllAuditResponses];
 
+export type OwnerDirectoryData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/directory';
+};
+
+export type OwnerDirectoryResponses = {
+    /**
+     * Successful Response
+     */
+    200: DirectoryOut;
+};
+
+export type OwnerDirectoryResponse = OwnerDirectoryResponses[keyof OwnerDirectoryResponses];
+
+export type OwnerListFeaturedData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Mall Id
+         */
+        mall_id?: string | null;
+    };
+    url: '/api/v1/admin/featured';
+};
+
+export type OwnerListFeaturedErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type OwnerListFeaturedError = OwnerListFeaturedErrors[keyof OwnerListFeaturedErrors];
+
+export type OwnerListFeaturedResponses = {
+    /**
+     * Response Owner List Featured
+     *
+     * Successful Response
+     */
+    200: Array<FeaturedSpotOut>;
+};
+
+export type OwnerListFeaturedResponse = OwnerListFeaturedResponses[keyof OwnerListFeaturedResponses];
+
+export type OwnerGrantFeaturedData = {
+    body: FeaturedSpotCreate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/featured';
+};
+
+export type OwnerGrantFeaturedErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type OwnerGrantFeaturedError = OwnerGrantFeaturedErrors[keyof OwnerGrantFeaturedErrors];
+
+export type OwnerGrantFeaturedResponses = {
+    /**
+     * Successful Response
+     */
+    201: FeaturedSpotOut;
+};
+
+export type OwnerGrantFeaturedResponse = OwnerGrantFeaturedResponses[keyof OwnerGrantFeaturedResponses];
+
+export type OwnerRevokeFeaturedData = {
+    body?: never;
+    path: {
+        /**
+         * Spot Id
+         */
+        spot_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/featured/{spot_id}/revoke';
+};
+
+export type OwnerRevokeFeaturedErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type OwnerRevokeFeaturedError = OwnerRevokeFeaturedErrors[keyof OwnerRevokeFeaturedErrors];
+
+export type OwnerRevokeFeaturedResponses = {
+    /**
+     * Successful Response
+     */
+    200: FeaturedSpotOut;
+};
+
+export type OwnerRevokeFeaturedResponse = OwnerRevokeFeaturedResponses[keyof OwnerRevokeFeaturedResponses];
+
+export type OwnerListFeaturesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/features';
+};
+
+export type OwnerListFeaturesResponses = {
+    /**
+     * Response Owner List Features
+     *
+     * Successful Response
+     */
+    200: Array<FeatureOut>;
+};
+
+export type OwnerListFeaturesResponse = OwnerListFeaturesResponses[keyof OwnerListFeaturesResponses];
+
+export type OwnerSetFeatureData = {
+    body: FeatureUpdate;
+    path: {
+        /**
+         * Key
+         */
+        key: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/features/{key}';
+};
+
+export type OwnerSetFeatureErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type OwnerSetFeatureError = OwnerSetFeatureErrors[keyof OwnerSetFeatureErrors];
+
+export type OwnerSetFeatureResponses = {
+    /**
+     * Successful Response
+     */
+    200: FeatureOut;
+};
+
+export type OwnerSetFeatureResponse = OwnerSetFeatureResponses[keyof OwnerSetFeatureResponses];
+
 export type PaymentsPaymentsOverviewData = {
     body?: never;
     path?: never;
@@ -3405,6 +3769,22 @@ export type AuthStaffTotpSetupResponses = {
 };
 
 export type AuthStaffTotpSetupResponse = AuthStaffTotpSetupResponses[keyof AuthStaffTotpSetupResponses];
+
+export type FeaturesGetFeaturesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/features';
+};
+
+export type FeaturesGetFeaturesResponses = {
+    /**
+     * Successful Response
+     */
+    200: FeaturesOut;
+};
+
+export type FeaturesGetFeaturesResponse = FeaturesGetFeaturesResponses[keyof FeaturesGetFeaturesResponses];
 
 export type HealthGetHealthData = {
     body?: never;

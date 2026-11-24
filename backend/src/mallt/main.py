@@ -31,6 +31,8 @@ from mallt.modules.orders.ws import serve_orders
 from mallt.modules.payments.provider import FakePaymentProvider, PaymentProvider
 from mallt.modules.payments.router import router as payments_router
 from mallt.modules.payments.zoho import ZohoPaymentProvider
+from mallt.modules.platform.router import admin_router as owner_router
+from mallt.modules.platform.router import public_router as features_router
 from mallt.modules.printing.router import router as printing_router
 from mallt.modules.printing.ws import serve_agent
 from mallt.modules.staff.router import router as staff_mgmt_router
@@ -115,6 +117,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(orders_store_router)
     app.include_router(audit_router)
     app.include_router(payments_router)
+    app.include_router(features_router)
+    app.include_router(owner_router)
 
     @app.websocket("/ws/print-agent")
     async def print_agent_socket(websocket: WebSocket) -> None:

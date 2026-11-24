@@ -81,3 +81,20 @@ class TenancyRepository:
             return {}
         stmt = select(Store).where(Store.id.in_(store_ids))
         return {s.id: s for s in (await self.session.execute(stmt)).scalars()}
+
+    async def everything(self) -> tuple[list[Organization], list[Mall], list[Store]]:
+        """Every organization, mall and store, for the platform owner's dashboard."""
+        orgs = select(Organization).order_by(Organization.name, Organization.id)
+        malls = select(Mall).order_by(Mall.name, Mall.id)
+        stores = select(Store).order_by(Store.name, Store.id)
+        return (
+            list((await self.session.execute(orgs)).scalars()),
+            list((await self.session.execute(malls)).scalars()),
+            list((await self.session.execute(stores)).scalars()),
+        )
+
+    async def malls_by_ids(self, mall_ids: list[uuid.UUID]) -> dict[uuid.UUID, Mall]:
+        if not mall_ids:
+            return {}
+        stmt = select(Mall).where(Mall.id.in_(mall_ids))
+        return {m.id: m for m in (await self.session.execute(stmt)).scalars()}
