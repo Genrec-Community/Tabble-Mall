@@ -202,7 +202,8 @@ by the same targets (`uv run --no-project`); its releases are built per OS with 
   provider's word (server-side check or signed webhook), never the browser's. Each store's share
   (minus its own fee; MallT keeps nothing) is transferred as soon as payment is confirmed; a
   refund reverses that store's transfer first and returns only what the store got (the gateway
-  fee is not refunded).
+  fee is not refunded). A refund never runs while that reversal is failed. A failed money task is
+  shown at `/admin/payments` and retried from there, never by editing rows by hand.
   Money movements go through the outbox (`payment_tasks`), never inline in a request; every
   movement is recorded in the append-only `ledger_entries`; webhooks are signature-checked and
   deduplicated by event id.

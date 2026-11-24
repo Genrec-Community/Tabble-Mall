@@ -68,6 +68,13 @@ the worker checks Zoho (transfers by payment + account + description; refunds vi
 `amount_refunded`) so money never moves twice. Tasks that exhaust retries become `failed` and
 are listed for the Platform Admin.
 
+- Tasks of one customer order run in order. A store's **refund waits while taking back that
+  store's transfer has failed**, so a refund is never paid out of the platform account.
+- `/admin/payments` (`GET /admin/payout-accounts`, `platform.kyc.approve`) shows failed tasks,
+  tasks being retried (with the store, order number and Zoho's error) and every payout account.
+  `POST /admin/payments/tasks/{id}/retry` puts a failed task back in the queue (audited). The
+  worker still checks Zoho first, so a retry never moves money twice.
+
 `StoreOrder.REFUNDED` means the refund is **queued irrevocably**; its completion is tracked on
 the task and in the ledger.
 
@@ -85,6 +92,15 @@ the task and in the ledger.
 - `POST /stores/{id}/payout-account/refresh` re-reads status from Zoho (`under_writing_status`,
   `transfer_status`). The account is `active` only when Zoho enables transfers.
 - `GET /admin/payout-accounts` (`platform.kyc.approve`) lists every account and failed money task.
+- `GET /stores/{id}/payouts` (`store.kyc.submit`, cursor-paginated) is the store's money view
+  (`/store/{id}/payouts`): one row per order with what the customer paid, the 0.50% gateway fee,
+  what the store gets, the transfer status and any refund, plus totals (sales, paid out, on the
+  way, failed, taken back, refunded to customers). Other tenants get 404.
+- The Zoho checkout is prefilled with the paying customer's own phone and name (shown back only
+  to that customer).
+- `backend/scripts/zoho_sandbox_check.py` (`check`, `pay`, `split`) runs MallT's real Zoho code
+  against the sandbox: token, connected accounts, a real checkout, then transfer, find-by-reference,
+  reversal and refund, printing PASS/FAIL per step. It refuses to run unless `ZOHO_SANDBOX=true`.
 - With the Zoho provider, checkout refuses carts containing a store without an active payout
   account (`store_not_payable`).
 
