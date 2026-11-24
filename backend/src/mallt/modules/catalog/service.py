@@ -509,7 +509,10 @@ class CatalogService:
     # ---- public (customer) ----
 
     async def public_cards(self, mall_slug: str) -> list[PublicStoreCardOut]:
-        _, stores = await self.tenancy.public_directory(mall_slug)
+        mall, stores = await self.tenancy.public_directory(mall_slug)
+        featured = {
+            sid: rank for rank, sid in enumerate(await self.features.featured_store_ids(mall.id))
+        }
         settings = await self.repo.settings_for_stores([s.id for s in stores])
         menus = await self.repo.menu_teasers([s.id for s in stores])
         now = datetime.now(UTC)
@@ -545,6 +548,8 @@ class CatalogService:
                     pickup_point=row.pickup_point if row else None,
                     prep_minutes=min(ready) if ready and accepting else None,
                     top_dishes=[p.name for p in products[:3]],
+                    featured=store.id in featured,
+                    featured_rank=featured.get(store.id),
                 )
             )
         return cards

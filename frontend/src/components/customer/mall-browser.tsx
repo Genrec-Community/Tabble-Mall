@@ -11,6 +11,7 @@ import { FOOD_TYPE_LABELS, cuisines } from "@/components/customer/food-types";
 import { DishImage, FoodMark, SectionHeading, Skeleton } from "@/components/customer/lux";
 import { OrderAgain } from "@/components/customer/order-again";
 import { RestaurantCard } from "@/components/customer/restaurant-card";
+import { StoreLogo } from "@/components/customer/store-logo";
 import { useQuickAdd } from "@/components/customer/use-quick-add";
 import { publicPublicItems, type PopularItemOut, type PublicItemOut, type PublicProductOut, type PublicStoreCardOut } from "@/lib/api";
 import { unwrap } from "@/lib/api-error";
@@ -62,10 +63,12 @@ export function matchStores(stores: PublicStoreCardOut[], query: string, foodTyp
 export type SortKey = "recommended" | "fastest" | "name";
 
 /** Open restaurants first; then the chosen order. "Recommended" keeps the mall's own order. */
-export function sortStores(stores: PublicStoreCardOut[], sort: SortKey): PublicStoreCardOut[] {
+export function sortStores(stores: PublicStoreCardOut[], sort: SortKey, featuredFirst = false): PublicStoreCardOut[] {
   const index = new Map(stores.map((s, i) => [s.slug, i]));
+  const rank = (s: PublicStoreCardOut) => (s.featured ? (s.featured_rank ?? 0) : Number.MAX_SAFE_INTEGER);
   return [...stores].sort((a, b) => {
     if (a.accepting_orders !== b.accepting_orders) return a.accepting_orders ? -1 : 1;
+    if (featuredFirst && sort === "recommended" && rank(a) !== rank(b)) return rank(a) - rank(b);
     if (sort === "fastest") return (a.prep_minutes ?? 999) - (b.prep_minutes ?? 999);
     if (sort === "name") return a.name.localeCompare(b.name);
     return (index.get(a.slug) ?? 0) - (index.get(b.slug) ?? 0);
@@ -82,10 +85,13 @@ export function MallBrowser({
   mallSlug,
   stores,
   popular = [],
+  featured = NO_FEATURED,
 }: {
   mallSlug: string;
   stores: PublicStoreCardOut[];
   popular?: PopularItemOut[];
+  /** Where paid featured spots show, as the owner switched them (rail row, top of the list). */
+  featured?: FeaturedPlacement;
 }) {
   const params = useSearchParams();
   const input = useRef<HTMLInputElement>(null);
@@ -135,8 +141,12 @@ export function MallBrowser({
     if (fastOnly) list = list.filter((s) => s.prep_minutes != null && s.prep_minutes <= FAST_MINUTES);
     if (openOnly) list = list.filter((s) => s.accepting_orders);
     if (favOnly) list = list.filter((s) => favourites.includes(s.slug));
-    return sortStores(list, sort);
-  }, [stores, q, foodType, fastOnly, openOnly, favOnly, favourites, sort]);
+    return sortStores(list, sort, featured.first);
+  }, [stores, q, foodType, fastOnly, openOnly, favOnly, favourites, sort, featured.first]);
+  const featuredStores = useMemo(
+    () => stores.filter((s) => s.featured && s.accepting_orders).sort((a, b) => (a.featured_rank ?? 0) - (b.featured_rank ?? 0)),
+    [stores],
+  );
 
   const dishes = useQuery({
     queryKey: ["mall-items", mallSlug, q, vegOnly, foodType],
@@ -335,6 +345,8 @@ export function MallBrowser({
         </section>
       )}
 
+      {!filtered && featured.rail && featuredStores.length > 0 && <FeaturedRail mallSlug={mallSlug} stores={featuredStores} />}
+
       {restaurants.length > 0 && (
         <section aria-label="Restaurants" className="space-y-4">
           <div className="flex items-center justify-between gap-3">
@@ -356,7 +368,7 @@ export function MallBrowser({
           <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {restaurants.map((s, i) => (
               <li key={s.slug} className="motion-safe:animate-[rise-in_300ms_cubic-bezier(0.2,0,0.3,1)_both]" style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}>
-                <RestaurantCard mallSlug={mallSlug} store={s} priority={i < 2} />
+                <RestaurantCard mallSlug={mallSlug} store={s} priority={i < 2} featuredTag={featured.first && !!s.featured} />
               </li>
             ))}
           </ul>
@@ -375,6 +387,35 @@ export function MallBrowser({
         <DishSheet mallSlug={mallSlug} product={open.product} hint={open.store_name} canOrder={open.accepting_orders} onClose={() => setOpen(null)} />
       )}
     </div>
+  );
+}
+
+export type FeaturedPlacement = { rail: boolean; first: boolean };
+const NO_FEATURED: FeaturedPlacement = { rail: false, first: false };
+
+/** Paid featured spots, kept deliberately quiet (like Meesho's sponsored row): one slim row of
+ * small logo chips with a muted label, so it never pushes the restaurant list out of view. */
+function FeaturedRail({ mallSlug, stores }: { mallSlug: string; stores: PublicStoreCardOut[] }) {
+  return (
+    <section aria-label="Featured restaurants" className="space-y-2">
+      <p className="text-[0.6875rem] font-medium tracking-[0.14em] text-muted-foreground uppercase">Featured</p>
+      <ul className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4">
+        {stores.slice(0, 6).map((s) => (
+          <li key={s.slug} className="shrink-0">
+            <Link
+              href={`/m/${mallSlug}/s/${s.slug}`}
+              className="flex max-w-56 items-center gap-2 rounded-full border border-white/10 bg-card py-1 pr-3.5 pl-1 transition active:scale-[0.98]"
+            >
+              <StoreLogo name={s.name} logoUrl={s.logo_url} size="size-8" />
+              <span className="min-w-0">
+                <span className="block truncate text-[0.8125rem] leading-tight font-semibold">{s.name}</span>
+                {s.food_types.length > 0 && <span className="block truncate text-[0.6875rem] text-muted-foreground">{cuisines(s.food_types)}</span>}
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 

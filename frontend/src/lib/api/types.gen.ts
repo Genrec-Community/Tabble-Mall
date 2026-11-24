@@ -2341,6 +2341,14 @@ export type PublicStoreCardOut = {
      */
     description: string | null;
     /**
+     * Featured
+     */
+    featured?: boolean;
+    /**
+     * Featured Rank
+     */
+    featured_rank?: number | null;
+    /**
      * Food Types
      */
     food_types: Array<string>;

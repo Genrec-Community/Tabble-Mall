@@ -176,3 +176,22 @@ async def test_switching_featured_spots_off_hides_every_spot(
         "/api/v1/admin/features/featured_spots", json={"enabled": False}, headers=world.root
     )
     assert await FeatureService(db_session).featured_store_ids(world.mall.id) == []
+
+
+async def test_mall_store_cards_carry_the_featured_flag(
+    client: httpx.AsyncClient, world: World
+) -> None:
+    cards_url = "/api/v1/public/malls/phoenix-pune/stores"
+    cards = {c["slug"]: c for c in (await client.get(cards_url)).json()}
+    assert cards["burger-hub"]["featured"] is False
+    await client.post(
+        "/api/v1/admin/featured", json={"store_id": str(world.other.id)}, headers=world.root
+    )
+    cards = {c["slug"]: c for c in (await client.get(cards_url)).json()}
+    assert cards["chai-point"]["featured"] is True and cards["chai-point"]["featured_rank"] == 0
+    assert cards["burger-hub"]["featured"] is False
+    await client.put(
+        "/api/v1/admin/features/featured_spots", json={"enabled": False}, headers=world.root
+    )
+    cards = {c["slug"]: c for c in (await client.get(cards_url)).json()}
+    assert cards["chai-point"]["featured"] is False

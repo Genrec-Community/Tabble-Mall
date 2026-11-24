@@ -20,10 +20,13 @@ export function RestaurantCard({
   mallSlug,
   store,
   priority = false,
+  featuredTag = false,
 }: {
   mallSlug: string;
   store: PublicStoreCardOut;
   priority?: boolean;
+  /** A small, muted "Featured" label for a store that paid to be listed first. */
+  featuredTag?: boolean;
 }) {
   const open = store.accepting_orders;
   const { isFavourite, toggle } = useFavourites();
@@ -67,7 +70,10 @@ export function RestaurantCard({
         </span>
         <span className="relative z-10 -mt-8 flex items-end gap-3 px-4">
           <StoreLogo name={store.name} logoUrl={store.logo_url} size="size-14" />
-          <span className="font-display min-w-0 pb-1 text-lg leading-tight font-semibold">{store.name}</span>
+          <span className="min-w-0 pb-1">
+            <span className="font-display block text-lg leading-tight font-semibold">{store.name}</span>
+            {featuredTag && <span className="block text-[0.625rem] font-medium tracking-[0.14em] text-muted-foreground uppercase">Featured</span>}
+          </span>
         </span>
         <span className="flex flex-1 flex-col gap-1 px-4 pt-2 pb-4">
           {store.food_types.length > 0 && (

@@ -289,6 +289,9 @@ class PublicStoreCardOut(BaseModel):
     # The quickest dish to make right now (minutes), None when nothing can be ordered.
     prep_minutes: int | None
     top_dishes: list[str]  # the first few dishes on the menu, for the card's teaser line
+    # A paid featured spot is running (the owner's switches decide where it shows). 0 = first.
+    featured: bool = False
+    featured_rank: int | None = None
 
 
 class PublicOptionOut(BaseModel):

@@ -4271,6 +4271,22 @@
             ],
             "title": "Description"
           },
+          "featured": {
+            "default": false,
+            "title": "Featured",
+            "type": "boolean"
+          },
+          "featured_rank": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Featured Rank"
+          },
           "food_types": {
             "items": {
               "type": "string"

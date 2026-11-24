@@ -62,11 +62,11 @@ const MALL = {
   })),
 };
 
-function show(stores = STORES, mall = MALL, popular: PopularItemOut[] = []) {
+function show(stores = STORES, mall = MALL, popular: PopularItemOut[] = [], featured?: { rail: boolean; first: boolean }) {
   render(
     <QueryClientProvider client={new QueryClient()}>
       <CustomerSessionContext.Provider value={anon}>
-        <MallView mall={mall} stores={stores} popular={popular} />
+        <MallView mall={mall} stores={stores} popular={popular} featured={featured} />
       </CustomerSessionContext.Provider>
     </QueryClientProvider>,
   );
@@ -198,6 +198,26 @@ describe("MallView", () => {
     expect(screen.queryByRole("region", { name: "Popular in the mall" })).toBeNull();
   });
 
+  it("shows paid featured spots only where the owner switched them on, and quietly", () => {
+    const stores = [STORES[0], { ...STORES[1], accepting_orders: true, featured: true, featured_rank: 0 }];
+    show(stores, MALL, [], { rail: false, first: false });
+    expect(screen.queryByRole("region", { name: "Featured restaurants" })).toBeNull();
+    expect(screen.queryByText("Featured")).toBeNull();
+  });
+
+  it("puts a slim featured row above the list and featured stores first when switched on", () => {
+    const stores = [STORES[0], { ...STORES[1], accepting_orders: true, featured: true, featured_rank: 0 }];
+    show(stores, MALL, [], { rail: true, first: true });
+    const rail = screen.getByRole("region", { name: "Featured restaurants" });
+    expect(rail.querySelectorAll("li")).toHaveLength(1);
+    expect(rail.textContent).toContain("Chai Point");
+    const list = screen.getByRole("region", { name: "Restaurants" });
+    const names = [...list.querySelectorAll("li")].map((li) => li.textContent ?? "");
+    expect(names[0]).toContain("Chai Point");
+    expect(names[0]).toContain("Featured");
+    expect(names[1]).not.toContain("Featured");
+  });
+
   it("says so when no stores are open yet", () => {
     show([], { name: "New Mall", slug: "new-mall", city: "", stores: [] });
     expect(screen.getByText(/no stores are open/i)).toBeTruthy();
@@ -233,5 +253,17 @@ describe("sortStores", () => {
     expect(sortStores(list, "recommended").map((s) => s.slug)).toEqual(["b", "a", "d", "c"]);
     expect(sortStores(list, "fastest").map((s) => s.slug)).toEqual(["d", "b", "a", "c"]);
     expect(sortStores(list, "name").map((s) => s.slug)).toEqual(["a", "b", "d", "c"]);
+  });
+
+  it("lifts featured stores to the top of the recommended order only when asked", () => {
+    const list = [
+      card({ slug: "b", name: "Bravo" }),
+      card({ slug: "a", name: "Alpha", featured: true, featured_rank: 1 }),
+      card({ slug: "d", name: "Delta", featured: true, featured_rank: 0 }),
+      card({ slug: "c", name: "Closed", featured: true, featured_rank: 2, accepting_orders: false }),
+    ];
+    expect(sortStores(list, "recommended").map((s) => s.slug)).toEqual(["b", "a", "d", "c"]);
+    expect(sortStores(list, "recommended", true).map((s) => s.slug)).toEqual(["d", "a", "b", "c"]);
+    expect(sortStores(list, "name", true).map((s) => s.slug)).toEqual(["a", "b", "d", "c"]);
   });
 });

@@ -1,5 +1,5 @@
 import type { PopularItemOut, PublicMallOut, PublicStoreCardOut } from "@/lib/api";
-import { MallBrowser } from "@/components/customer/mall-browser";
+import { MallBrowser, type FeaturedPlacement } from "@/components/customer/mall-browser";
 
 export { FOOD_TYPE_LABELS } from "@/components/customer/food-types";
 
@@ -33,10 +33,12 @@ export function MallView({
   mall,
   stores,
   popular = [],
+  featured,
 }: {
   mall: PublicMallOut;
   stores: PublicStoreCardOut[];
   popular?: PopularItemOut[];
+  featured?: FeaturedPlacement;
 }) {
   const list = storeCards(mall, stores);
   const open = list.filter((s) => s.accepting_orders).length;
@@ -60,7 +62,7 @@ export function MallView({
           No stores are open here yet. Please check back soon.
         </p>
       ) : (
-        <MallBrowser mallSlug={mall.slug} stores={list} popular={popular} />
+        <MallBrowser mallSlug={mall.slug} stores={list} popular={popular} featured={featured} />
       )}
     </main>
   );
