@@ -393,3 +393,35 @@ async def test_public_menu_unknown_or_suspended_is_404(
     assert (
         await client.get("/api/v1/public/malls/phoenix-pune/stores/rival/menu")
     ).status_code == 404
+
+
+async def test_public_store_cards_show_prep_time_top_dishes_and_pickup_point(
+    client: httpx.AsyncClient, world: World
+) -> None:
+    await create_product(client, world, name="Cheese Burger", prep_minutes=12)
+    await create_product(client, world, name="Fries", prep_minutes=6, position=1)
+    r = await client.patch(
+        url(world, "/settings"), json={"pickup_point": " Counter 4, Level 2 "}, headers=world.owner
+    )
+    assert r.status_code == 200 and r.json()["pickup_point"] == "Counter 4, Level 2"
+
+    cards = {
+        x["slug"]: x for x in (await client.get("/api/v1/public/malls/phoenix-pune/stores")).json()
+    }
+    burger = cards["burger-hub"]
+    assert burger["prep_minutes"] == 6
+    assert burger["top_dishes"] == ["Cheese Burger", "Fries"]
+    assert burger["pickup_point"] == "Counter 4, Level 2"
+    assert cards["chai-point"]["prep_minutes"] is None and cards["chai-point"]["top_dishes"] == []
+    menu = (await client.get("/api/v1/public/malls/phoenix-pune/stores/burger-hub/menu")).json()
+    assert menu["store"]["pickup_point"] == "Counter 4, Level 2"
+
+    # Staff can clear it, and only a store's own staff can set it.
+    cleared = await client.patch(
+        url(world, "/settings"), json={"pickup_point": ""}, headers=world.owner
+    )
+    assert cleared.json()["pickup_point"] is None
+    outsider = await client.patch(
+        url(world, "/settings"), json={"pickup_point": "x"}, headers=world.outsider
+    )
+    assert outsider.status_code == 404

@@ -535,6 +535,7 @@ class OrderService:
         store_orders = [so for o in orders for so in o.store_orders]
         stores = await self.tenancy.stores_by_ids(list({so.store_id for so in store_orders}))
         events = await self.repo.events_for([so.id for so in store_orders])
+        malls = await self.tenancy.mall_slugs(list({o.mall_id for o in orders}))
         payer: tuple[str | None, str | None] = (None, None)
         if any(o.status is CustomerOrderStatus.PLACED and o.payment_session_ref for o in orders):
             customer_id = orders[0].customer_id  # a customer only ever reads their own orders
@@ -573,6 +574,7 @@ class OrderService:
                     created_at=o.created_at,
                     payment=self._payment_view(o, payer),
                     stores=views,
+                    mall_slug=malls.get(o.mall_id),
                 )
             )
         return out

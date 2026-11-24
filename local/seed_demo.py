@@ -35,7 +35,7 @@ ADMIN = "admin"
 ORG_OWNER = "demo.owner"
 ORG_SLUG = "demo-foods"
 MALL_SLUG = "demo-mall"
-DEMO_VERSION = 2  # bump whenever demo_menu.py or the photos change
+DEMO_VERSION = 3  # bump whenever demo_menu.py or the photos change
 
 LOCAL = Path(__file__).resolve().parent
 ROOT = LOCAL.parent
@@ -235,6 +235,7 @@ def sync_store(
     settings: dict[str, Any] = {
         "food_types": spec["food_types"],
         "logo_key": place_logo(store, spec["name"], spec["accent"]),
+        "pickup_point": spec.get("pickup_point"),
     }
     banner = place_photo(store, spec["banner"])
     if banner:

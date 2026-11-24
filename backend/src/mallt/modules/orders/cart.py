@@ -22,6 +22,7 @@ from mallt.modules.orders.schemas import (
     CartOut,
     CartStoreOut,
     LineProblem,
+    ReorderOut,
 )
 
 MAX_LINE_QUANTITY = 20
@@ -149,6 +150,49 @@ class CartService:
             stores=stores,
             total_paise=sum(s.subtotal_paise for s in stores),
             can_checkout=bool(stores) and all(x.problem is None for s in stores for x in s.lines),
+        )
+
+    async def reorder(
+        self, customer_id: uuid.UUID, mall_slug: str, order_id: uuid.UUID
+    ) -> ReorderOut:
+        """Puts a past order's dishes back in the cart, with the same sizes, add-ons and notes.
+        Add-ons are matched by name (an order keeps a snapshot, not ids). Whatever can't be
+        ordered now is skipped and named, never an error for the whole order."""
+        mall = await self.mall(mall_slug)
+        order = await self.repo.customer_order(customer_id, order_id)
+        if order is None or order.mall_id != mall.id:
+            raise NotFound("not_found", "Not found.")
+        lines = [ln for so in order.store_orders for ln in so.lines]
+        products = await self.catalog.products(
+            mall.id, mall.stores, [ln.product_id for ln in lines if ln.product_id]
+        )
+        added, skipped = 0, []
+        for ln in lines:
+            product = products.get(ln.product_id) if ln.product_id else None
+            names = [str(o.get("name")) for o in ln.options]
+            by_name = {
+                o.name: o.id
+                for g in (product.groups.values() if product else [])
+                for o in g.options.values()
+            }
+            if product is None or ln.variant_id is None or any(n not in by_name for n in names):
+                skipped.append(ln.name)
+                continue
+            data = CartLineIn(
+                product_id=product.id,
+                variant_id=ln.variant_id,
+                option_ids=[by_name[n] for n in names],
+                quantity=min(ln.quantity, MAX_LINE_QUANTITY),
+                note=ln.note,
+            )
+            try:
+                await self.add_line(customer_id, mall_slug, data)
+            except (BadRequest, Conflict, NotFound):
+                skipped.append(ln.name)
+            else:
+                added += 1
+        return ReorderOut(
+            cart=await self.view(customer_id, mall_slug), added=added, skipped=skipped
         )
 
     async def add_line(self, customer_id: uuid.UUID, mall_slug: str, data: CartLineIn) -> CartOut:

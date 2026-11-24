@@ -3,11 +3,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { LUX_PRIMARY, Skeleton, withVariant } from "@/components/customer/lux";
 import { ConnectionNotice } from "@/components/customer/order-alerts";
+import { CountdownRing, FullScreenButton, NotifyOptIn, PickupCodeScreen } from "@/components/customer/order-tracking";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -84,6 +85,7 @@ export function OrderView({ orderId }: { orderId: string }) {
         Your order · {formatPaise(data.total_paise)}
       </h1>
       <ConnectionNotice status={live} />
+      {data.stores.some((s) => ["paid", "accepted", "preparing"].includes(s.status)) && <NotifyOptIn />}
       {data.status === "placed" && data.payment?.zoho && (
         <section
           className="lux-card space-y-2 rounded-3xl p-4"
@@ -151,6 +153,7 @@ function StoreOrderCard({
   onCancel: () => void;
 }) {
   const ready = order.status === "ready";
+  const [big, setBig] = useState(false);
   const at = PROGRESS.indexOf(order.status as (typeof PROGRESS)[number]);
   return (
     <section
@@ -174,6 +177,7 @@ function StoreOrderCard({
           {CUSTOMER_STATUS[order.status]}
         </Badge>
       </div>
+      {at >= 0 && <CountdownRing order={order} />}
       {at >= 0 && (
         <ol aria-label="Progress" className="grid grid-cols-5 gap-1">
           {PROGRESS.map((p, i) => (
@@ -220,8 +224,10 @@ function StoreOrderCard({
               ? `Show this at the ${order.store_name} counter now.`
               : `Show this at the ${order.store_name} counter. Ready in about ${order.prep_minutes} min.`}
           </p>
+          <FullScreenButton onClick={() => setBig(true)} />
         </div>
       )}
+      {big && <PickupCodeScreen order={order} onClose={() => setBig(false)} />}
       {order.reason && (
         <p className="text-sm text-muted-foreground">Reason: {order.reason}</p>
       )}

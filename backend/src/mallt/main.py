@@ -24,6 +24,7 @@ from mallt.modules.iam.router import staff_router
 from mallt.modules.iam.sms import make_sms_sender
 from mallt.modules.orders.cart_router import router as cart_router
 from mallt.modules.orders.router import customer_router as orders_customer_router
+from mallt.modules.orders.router import public_router as orders_public_router
 from mallt.modules.orders.router import store_router as orders_store_router
 from mallt.modules.orders.service import sweep_loop
 from mallt.modules.orders.ws import serve_orders
@@ -110,6 +111,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(cart_router)
     app.include_router(printing_router)
     app.include_router(orders_customer_router)
+    app.include_router(orders_public_router)
     app.include_router(orders_store_router)
     app.include_router(audit_router)
     app.include_router(payments_router)

@@ -70,6 +70,12 @@ class TenancyRepository:
         )
         return mall, list((await self.session.execute(stores)).scalars())
 
+    async def mall_slugs(self, mall_ids: list[uuid.UUID]) -> dict[uuid.UUID, str]:
+        if not mall_ids:
+            return {}
+        stmt = select(Mall.id, Mall.slug).where(Mall.id.in_(mall_ids))
+        return {row.id: row.slug for row in (await self.session.execute(stmt)).all()}
+
     async def stores_by_ids(self, store_ids: list[uuid.UUID]) -> dict[uuid.UUID, Store]:
         if not store_ids:
             return {}

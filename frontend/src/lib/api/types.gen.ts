@@ -1356,6 +1356,39 @@ export type PickupIn = {
 };
 
 /**
+ * PopularItemOut
+ */
+export type PopularItemOut = {
+    /**
+     * Accepting Orders
+     */
+    accepting_orders: boolean;
+    /**
+     * Orders
+     */
+    orders: number;
+    product: PublicProductOut;
+    /**
+     * Store Name
+     */
+    store_name: string;
+    /**
+     * Store Slug
+     */
+    store_slug: string;
+};
+
+/**
+ * PopularOut
+ */
+export type PopularOut = {
+    /**
+     * Items
+     */
+    items: Array<PopularItemOut>;
+};
+
+/**
  * PrintJobOut
  */
 export type PrintJobOut = {
@@ -1893,9 +1926,21 @@ export type PublicStoreCardOut = {
      */
     name: string;
     /**
+     * Pickup Point
+     */
+    pickup_point: string | null;
+    /**
+     * Prep Minutes
+     */
+    prep_minutes: number | null;
+    /**
      * Slug
      */
     slug: string;
+    /**
+     * Top Dishes
+     */
+    top_dishes: Array<string>;
 };
 
 /**
@@ -1928,6 +1973,31 @@ export type ReasonIn = {
      * Reason
      */
     reason: string;
+};
+
+/**
+ * ReorderIn
+ */
+export type ReorderIn = {
+    /**
+     * Order Id
+     */
+    order_id: string;
+};
+
+/**
+ * ReorderOut
+ */
+export type ReorderOut = {
+    /**
+     * Added
+     */
+    added: number;
+    cart: CartOut;
+    /**
+     * Skipped
+     */
+    skipped: Array<string>;
 };
 
 /**
@@ -2094,6 +2164,10 @@ export type SettingsOut = {
      */
     logo_url?: string | null;
     /**
+     * Pickup Point
+     */
+    pickup_point?: string | null;
+    /**
      * Store Id
      */
     store_id: string;
@@ -2152,6 +2226,10 @@ export type SettingsUpdate = {
      * Logo Key
      */
     logo_key?: string | null;
+    /**
+     * Pickup Point
+     */
+    pickup_point?: string | null;
     theme?: Theme | null;
     /**
      * Timezone
@@ -2869,6 +2947,10 @@ export type MalltModulesCatalogSchemasPublicStoreOut = {
      * Name
      */
     name: string;
+    /**
+     * Pickup Point
+     */
+    pickup_point: string | null;
     /**
      * Slug
      */
@@ -3751,6 +3833,36 @@ export type CartUpdateLineResponses = {
 
 export type CartUpdateLineResponse = CartUpdateLineResponses[keyof CartUpdateLineResponses];
 
+export type CartReorderData = {
+    body: ReorderIn;
+    path: {
+        /**
+         * Mall Slug
+         */
+        mall_slug: string;
+    };
+    query?: never;
+    url: '/api/v1/malls/{mall_slug}/cart/reorder';
+};
+
+export type CartReorderErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CartReorderError = CartReorderErrors[keyof CartReorderErrors];
+
+export type CartReorderResponses = {
+    /**
+     * Successful Response
+     */
+    200: ReorderOut;
+};
+
+export type CartReorderResponse = CartReorderResponses[keyof CartReorderResponses];
+
 export type OrdersCheckoutData = {
     body: CheckoutIn;
     headers?: {
@@ -4350,6 +4462,41 @@ export type PublicPublicItemsResponses = {
 };
 
 export type PublicPublicItemsResponse = PublicPublicItemsResponses[keyof PublicPublicItemsResponses];
+
+export type PublicPopularData = {
+    body?: never;
+    path: {
+        /**
+         * Mall Slug
+         */
+        mall_slug: string;
+    };
+    query?: {
+        /**
+         * Limit
+         */
+        limit?: number;
+    };
+    url: '/api/v1/public/malls/{mall_slug}/popular';
+};
+
+export type PublicPopularErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PublicPopularError = PublicPopularErrors[keyof PublicPopularErrors];
+
+export type PublicPopularResponses = {
+    /**
+     * Successful Response
+     */
+    200: PopularOut;
+};
+
+export type PublicPopularResponse = PublicPopularResponses[keyof PublicPopularResponses];
 
 export type PublicPublicStoresData = {
     body?: never;

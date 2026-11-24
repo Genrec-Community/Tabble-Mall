@@ -9,7 +9,9 @@ from mallt.core.db import SessionDep
 from mallt.core.errors import BadRequest
 from mallt.core.pagination import Page
 from mallt.core.rbac import P
+from mallt.modules.catalog.schemas import PopularOut
 from mallt.modules.iam.deps import CustomerId, KvDep, Staff
+from mallt.modules.orders.discovery import DiscoveryService
 from mallt.modules.orders.enums import StoreOrderStatus as S
 from mallt.modules.orders.schemas import (
     CheckoutIn,
@@ -36,6 +38,7 @@ Limit = Annotated[int, Query(ge=1, le=100)]
 View = Annotated[str, Query(pattern="^(active|history|all)$")]
 
 customer_router = APIRouter(prefix="/api/v1", tags=["orders"])
+public_router = APIRouter(prefix="/api/v1/public", tags=["public"])
 store_router = APIRouter(prefix="/api/v1", tags=["store-orders"])
 
 
@@ -185,3 +188,22 @@ async def reprint_order(
     store_id: uuid.UUID, order_id: uuid.UUID, body: ReprintIn, principal: Staff, svc: Svc
 ) -> ReprintOut:
     return ReprintOut(queued=await svc.reprint(principal, store_id, order_id, body.what))
+
+
+# ---- public: discovery ----
+
+
+def _discovery(session: SessionDep, kv: KvDep, request: Request) -> DiscoveryService:
+    return DiscoveryService(session, kv, request.app.state.storage)
+
+
+@public_router.get("/malls/{mall_slug}/popular")
+async def popular(
+    mall_slug: str,
+    response: Response,
+    svc: Annotated[DiscoveryService, Depends(_discovery, scope="function")],
+    limit: Annotated[int, Query(ge=1, le=24)] = 12,
+) -> PopularOut:
+    """The mall's most ordered dishes lately, topped up so a new mall still shows some."""
+    response.headers["Cache-Control"] = "public, max-age=60"
+    return await svc.popular(mall_slug, limit)

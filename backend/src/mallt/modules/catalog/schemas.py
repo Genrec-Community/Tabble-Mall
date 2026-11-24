@@ -202,6 +202,10 @@ class SettingsUpdate(BaseModel):
     banner_key: str | None = Field(default=None, max_length=300)
     gstin: Annotated[str, StringConstraints(strip_whitespace=True, to_upper=True)] | None = None
     fssai: Annotated[str, StringConstraints(strip_whitespace=True, max_length=20)] | None = None
+    # Where customers collect, e.g. "Counter 4, Level 2". An empty string clears it.
+    pickup_point: Annotated[str, StringConstraints(strip_whitespace=True, max_length=60)] | None = (
+        None
+    )
     auto_print: bool | None = None
     kot_when: str | None = None
     bill_when: str | None = None
@@ -259,6 +263,7 @@ class SettingsOut(_Out):
     banner_url: str | None = None
     gstin: str | None
     fssai: str | None
+    pickup_point: str | None = None
     auto_print: bool
     kot_when: str
     bill_when: str
@@ -276,6 +281,10 @@ class PublicStoreCardOut(BaseModel):
     logo_url: str | None
     banner_url: str | None
     accepting_orders: bool
+    pickup_point: str | None
+    # The quickest dish to make right now (minutes), None when nothing can be ordered.
+    prep_minutes: int | None
+    top_dishes: list[str]  # the first few dishes on the menu, for the card's teaser line
 
 
 class PublicOptionOut(BaseModel):
@@ -330,6 +339,7 @@ class PublicStoreOut(BaseModel):
     theme: Theme
     accepting_orders: bool
     hours: list[HoursWindow]
+    pickup_point: str | None
 
 
 class PublicMenuOut(BaseModel):
@@ -353,3 +363,11 @@ class PublicItemOut(BaseModel):
 class PublicItemsOut(BaseModel):
     items: list[PublicItemOut]
     next_cursor: uuid.UUID | None = None
+
+
+class PopularItemOut(PublicItemOut):
+    orders: int  # how many were paid for in this mall lately
+
+
+class PopularOut(BaseModel):
+    items: list[PopularItemOut]

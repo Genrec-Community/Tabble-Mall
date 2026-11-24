@@ -1,7 +1,7 @@
 import uuid
 from datetime import UTC, date, datetime
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -14,6 +14,7 @@ from mallt.modules.orders.models import (
     OrderCounter,
     OrderEvent,
     StoreOrder,
+    StoreOrderLine,
 )
 from mallt.modules.orders.state import OPEN_STATES
 
@@ -108,6 +109,33 @@ class OrdersRepository:
             .execution_options(populate_existing=True)
         )
         return (await self.session.execute(stmt)).scalar_one_or_none()
+
+    async def popular_products(
+        self, mall_id: uuid.UUID, since: datetime, limit: int
+    ) -> list[tuple[uuid.UUID, int]]:
+        """Products by how many were paid for in a mall since ``since``, most first."""
+        paid = [
+            StoreOrderStatus.PAID,
+            StoreOrderStatus.ACCEPTED,
+            StoreOrderStatus.PREPARING,
+            StoreOrderStatus.READY,
+            StoreOrderStatus.PICKED_UP,
+        ]
+        total = func.sum(StoreOrderLine.quantity)
+        stmt = (
+            select(StoreOrderLine.product_id, total)
+            .join(StoreOrder, StoreOrder.id == StoreOrderLine.store_order_id)
+            .where(
+                StoreOrder.mall_id == mall_id,
+                StoreOrder.status.in_(paid),
+                StoreOrder.created_at >= since,
+                StoreOrderLine.product_id.is_not(None),
+            )
+            .group_by(StoreOrderLine.product_id)
+            .order_by(total.desc(), StoreOrderLine.product_id)
+            .limit(limit)
+        )
+        return [(pid, int(n)) for pid, n in (await self.session.execute(stmt)).all() if pid]
 
     async def customer_order_for_update(self, order_id: uuid.UUID) -> CustomerOrder | None:
         stmt = (

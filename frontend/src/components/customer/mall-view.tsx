@@ -1,7 +1,7 @@
-import type { PublicMallOut, PublicStoreCardOut } from "@/lib/api";
+import type { PopularItemOut, PublicMallOut, PublicStoreCardOut } from "@/lib/api";
 import { MallBrowser } from "@/components/customer/mall-browser";
 
-export { FOOD_TYPE_LABELS } from "@/components/customer/restaurant-card";
+export { FOOD_TYPE_LABELS } from "@/components/customer/food-types";
 
 /** Every store of the mall in the mall's order, with its public card (a store without one yet
  * still shows, as open). */
@@ -20,6 +20,9 @@ export function storeCards(
         logo_url: null,
         banner_url: null,
         accepting_orders: true,
+        pickup_point: null,
+        prep_minutes: null,
+        top_dishes: [],
       },
   );
 }
@@ -29,14 +32,16 @@ export function storeCards(
 export function MallView({
   mall,
   stores,
+  popular = [],
 }: {
   mall: PublicMallOut;
   stores: PublicStoreCardOut[];
+  popular?: PopularItemOut[];
 }) {
   const list = storeCards(mall, stores);
   const open = list.filter((s) => s.accepting_orders).length;
   return (
-    <main className="mx-auto w-full max-w-6xl space-y-5 px-4 pt-5 pb-32">
+    <main className="mx-auto w-full max-w-6xl space-y-5 px-4 pt-5 pb-4">
       <header>
         <p className="text-xs font-semibold tracking-[0.2em] text-lux-orange uppercase">
           Order from every restaurant · pay once
@@ -55,7 +60,7 @@ export function MallView({
           No stores are open here yet. Please check back soon.
         </p>
       ) : (
-        <MallBrowser mallSlug={mall.slug} stores={list} />
+        <MallBrowser mallSlug={mall.slug} stores={list} popular={popular} />
       )}
     </main>
   );

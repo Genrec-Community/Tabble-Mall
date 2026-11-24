@@ -38,6 +38,7 @@ class StoreSettings(IdMixin, TimestampMixin, _StoreOwned, Base):
     banner_key: Mapped[str | None] = mapped_column(Text, nullable=True)
     gstin: Mapped[str | None] = mapped_column(Text, nullable=True)
     fssai: Mapped[str | None] = mapped_column(Text, nullable=True)
+    pickup_point: Mapped[str | None] = mapped_column(Text, nullable=True)  # "Counter 4, Level 2"
     # Printing preferences (the print agent itself lives in the printing module).
     auto_print: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
     kot_when: Mapped[str] = mapped_column(Text, default="accepted", server_default="accepted")

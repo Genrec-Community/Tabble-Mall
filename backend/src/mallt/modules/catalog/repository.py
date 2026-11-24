@@ -96,6 +96,27 @@ class CatalogRepository:
             stmt = stmt.where(Product.is_archived.is_(False))
         return list((await self.session.execute(stmt)).scalars())
 
+    async def menu_teasers(self, store_ids: list[uuid.UUID]) -> dict[uuid.UUID, list[Product]]:
+        """Each store's live dishes in menu order (category, then dish), without their options."""
+        if not store_ids:
+            return {}
+        stmt = (
+            select(Product)
+            .outerjoin(MenuCategory, MenuCategory.id == Product.category_id)
+            .where(Product.store_id.in_(store_ids), Product.is_archived.is_(False))
+            .order_by(
+                Product.store_id,
+                MenuCategory.position.nulls_last(),
+                Product.position,
+                Product.id,
+            )
+            .limit(2000)
+        )
+        out: dict[uuid.UUID, list[Product]] = {}
+        for product in (await self.session.execute(stmt)).scalars():
+            out.setdefault(product.store_id, []).append(product)
+        return out
+
     async def get_product(self, store_id: uuid.UUID, product_id: uuid.UUID) -> Product | None:
         stmt = (
             select(Product)

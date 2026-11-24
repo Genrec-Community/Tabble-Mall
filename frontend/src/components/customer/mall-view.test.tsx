@@ -1,9 +1,9 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { matchStores } from "@/components/customer/mall-browser";
+import { matchStores, sortStores } from "@/components/customer/mall-browser";
 import { MallView } from "@/components/customer/mall-view";
-import type { PublicStoreCardOut } from "@/lib/api";
+import type { PopularItemOut, PublicStoreCardOut } from "@/lib/api";
 import {
   CustomerSessionContext,
   type CustomerSession,
@@ -12,6 +12,7 @@ import {
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
   usePathname: () => "/m/phoenix-pune",
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 const items = vi.hoisted(() => vi.fn());
@@ -31,6 +32,9 @@ const card = (
   logo_url: null,
   banner_url: null,
   accepting_orders: true,
+  pickup_point: null,
+  prep_minutes: null,
+  top_dishes: [],
   ...over,
 });
 const STORES = [
@@ -58,11 +62,11 @@ const MALL = {
   })),
 };
 
-function show(stores = STORES, mall = MALL) {
+function show(stores = STORES, mall = MALL, popular: PopularItemOut[] = []) {
   render(
     <QueryClientProvider client={new QueryClient()}>
       <CustomerSessionContext.Provider value={anon}>
-        <MallView mall={mall} stores={stores} />
+        <MallView mall={mall} stores={stores} popular={popular} />
       </CustomerSessionContext.Provider>
     </QueryClientProvider>,
   );
@@ -154,6 +158,46 @@ describe("MallView", () => {
     );
   });
 
+  it("filters to quick-ready restaurants and shows popular dishes as links, never add buttons", () => {
+    const burger = {
+      store_slug: "burger-hub",
+      store_name: "Burger Hub",
+      accepting_orders: true,
+      orders: 9,
+      product: {
+        id: "p1",
+        name: "Cheese Burger",
+        description: null,
+        diet: "veg",
+        allergens: null,
+        prep_minutes: 10,
+        image_url: null,
+        available: true,
+        unavailable_reason: null,
+        option_groups: [],
+        variants: [{ id: "v", name: "Regular", price_paise: 12000, available: true }],
+      },
+    } as PopularItemOut;
+    show(
+      [
+        card({ slug: "burger-hub", name: "Burger Hub", prep_minutes: 10, top_dishes: ["Cheese Burger"] }),
+        card({ slug: "slow-pot", name: "Slow Pot", prep_minutes: 40 }),
+      ],
+      MALL,
+      [burger],
+    );
+    const popular = screen.getByRole("region", { name: "Popular in the mall" });
+    expect(popular.querySelector("a")?.getAttribute("href")).toBe("/m/phoenix-pune/s/burger-hub");
+    expect(screen.queryByRole("button", { name: /Add Cheese Burger/ })).toBeNull();
+    expect(screen.getByText("Ready in ~10 min")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "Under 15 min" }));
+    expect(screen.queryByRole("link", { name: /Slow Pot/ })).toBeNull();
+    expect(screen.getByRole("link", { name: /Burger Hub/ })).toBeTruthy();
+    // Filtering hides the rails, so the page is just the matching restaurants.
+    expect(screen.queryByRole("region", { name: "Popular in the mall" })).toBeNull();
+  });
+
   it("says so when no stores are open yet", () => {
     show([], { name: "New Mall", slug: "new-mall", city: "", stores: [] });
     expect(screen.getByText(/no stores are open/i)).toBeTruthy();
@@ -175,5 +219,19 @@ describe("matchStores", () => {
     expect(matchStores(STORES, "", "fast_food").map((s) => s.slug)).toEqual([
       "burger-hub",
     ]);
+  });
+});
+
+describe("sortStores", () => {
+  it("puts open restaurants first, then sorts by ready time or name", () => {
+    const list = [
+      card({ slug: "b", name: "Bravo", prep_minutes: 20 }),
+      card({ slug: "a", name: "Alpha", prep_minutes: 30 }),
+      card({ slug: "c", name: "Closed", prep_minutes: 5, accepting_orders: false }),
+      card({ slug: "d", name: "Delta", prep_minutes: 10 }),
+    ];
+    expect(sortStores(list, "recommended").map((s) => s.slug)).toEqual(["b", "a", "d", "c"]);
+    expect(sortStores(list, "fastest").map((s) => s.slug)).toEqual(["d", "b", "a", "c"]);
+    expect(sortStores(list, "name").map((s) => s.slug)).toEqual(["a", "b", "d", "c"]);
   });
 });

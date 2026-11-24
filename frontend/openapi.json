@@ -2429,6 +2429,54 @@
         "title": "PickupIn",
         "type": "object"
       },
+      "PopularItemOut": {
+        "properties": {
+          "accepting_orders": {
+            "title": "Accepting Orders",
+            "type": "boolean"
+          },
+          "orders": {
+            "title": "Orders",
+            "type": "integer"
+          },
+          "product": {
+            "$ref": "#/components/schemas/PublicProductOut"
+          },
+          "store_name": {
+            "title": "Store Name",
+            "type": "string"
+          },
+          "store_slug": {
+            "title": "Store Slug",
+            "type": "string"
+          }
+        },
+        "required": [
+          "store_slug",
+          "store_name",
+          "accepting_orders",
+          "product",
+          "orders"
+        ],
+        "title": "PopularItemOut",
+        "type": "object"
+      },
+      "PopularOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PopularItemOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "PopularOut",
+        "type": "object"
+      },
       "PrintJobOut": {
         "properties": {
           "acked_at": {
@@ -3593,9 +3641,38 @@
             "title": "Name",
             "type": "string"
           },
+          "pickup_point": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pickup Point"
+          },
+          "prep_minutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prep Minutes"
+          },
           "slug": {
             "title": "Slug",
             "type": "string"
+          },
+          "top_dishes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Top Dishes",
+            "type": "array"
           }
         },
         "required": [
@@ -3605,7 +3682,10 @@
           "food_types",
           "logo_url",
           "banner_url",
-          "accepting_orders"
+          "accepting_orders",
+          "pickup_point",
+          "prep_minutes",
+          "top_dishes"
         ],
         "title": "PublicStoreCardOut",
         "type": "object"
@@ -3652,6 +3732,45 @@
           "reason"
         ],
         "title": "ReasonIn",
+        "type": "object"
+      },
+      "ReorderIn": {
+        "properties": {
+          "order_id": {
+            "format": "uuid",
+            "title": "Order Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "order_id"
+        ],
+        "title": "ReorderIn",
+        "type": "object"
+      },
+      "ReorderOut": {
+        "properties": {
+          "added": {
+            "title": "Added",
+            "type": "integer"
+          },
+          "cart": {
+            "$ref": "#/components/schemas/CartOut"
+          },
+          "skipped": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Skipped",
+            "type": "array"
+          }
+        },
+        "required": [
+          "cart",
+          "added",
+          "skipped"
+        ],
+        "title": "ReorderOut",
         "type": "object"
       },
       "ReprintIn": {
@@ -3939,6 +4058,17 @@
             ],
             "title": "Logo Url"
           },
+          "pickup_point": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pickup Point"
+          },
           "store_id": {
             "format": "uuid",
             "title": "Store Id",
@@ -4104,6 +4234,18 @@
               }
             ],
             "title": "Logo Key"
+          },
+          "pickup_point": {
+            "anyOf": [
+              {
+                "maxLength": 60,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pickup Point"
           },
           "theme": {
             "anyOf": [
@@ -5450,6 +5592,17 @@
             "title": "Name",
             "type": "string"
           },
+          "pickup_point": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pickup Point"
+          },
           "slug": {
             "title": "Slug",
             "type": "string"
@@ -5467,7 +5620,8 @@
           "banner_url",
           "theme",
           "accepting_orders",
-          "hours"
+          "hours",
+          "pickup_point"
         ],
         "title": "PublicStoreOut",
         "type": "object"
@@ -6807,6 +6961,59 @@
         ]
       }
     },
+    "/api/v1/malls/{mall_slug}/cart/reorder": {
+      "post": {
+        "description": "Put a past order back in this mall's cart.",
+        "operationId": "cart_reorder",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mall_slug",
+            "required": true,
+            "schema": {
+              "title": "Mall Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReorderOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reorder",
+        "tags": [
+          "cart"
+        ]
+      }
+    },
     "/api/v1/malls/{mall_slug}/checkout": {
       "post": {
         "operationId": "orders_checkout",
@@ -7860,6 +8067,61 @@
           }
         },
         "summary": "Public Items",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/api/v1/public/malls/{mall_slug}/popular": {
+      "get": {
+        "description": "The mall's most ordered dishes lately, topped up so a new mall still shows some.",
+        "operationId": "public_popular",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mall_slug",
+            "required": true,
+            "schema": {
+              "title": "Mall Slug",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 12,
+              "maximum": 24,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PopularOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Popular",
         "tags": [
           "public"
         ]

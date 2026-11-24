@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { MallView } from "@/components/customer/mall-view";
-import { loadMall, loadStoreCards } from "@/lib/server-api";
+import { loadMall, loadPopular, loadStoreCards } from "@/lib/server-api";
 
 export async function generateMetadata({
   params,
@@ -14,10 +14,11 @@ export async function generateMetadata({
 /** The mall's front door: every restaurant, with one search over restaurants and dishes. */
 export default async function MallPage({ params }: PageProps<"/m/[mallSlug]">) {
   const { mallSlug } = await params;
-  const [mall, stores] = await Promise.all([
+  const [mall, stores, popular] = await Promise.all([
     loadMall(mallSlug),
     loadStoreCards(mallSlug),
+    loadPopular(mallSlug),
   ]);
   if (!mall) notFound();
-  return <MallView mall={mall} stores={stores} />;
+  return <MallView mall={mall} stores={stores} popular={popular.items} />;
 }

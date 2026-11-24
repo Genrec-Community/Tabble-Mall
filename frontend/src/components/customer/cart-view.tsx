@@ -1,12 +1,13 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { cartQueryKey, useCart } from "@/components/customer/customer-header";
-import { Plus, ShoppingBag } from "lucide-react";
+import { Clock, Lock, MapPin, Plus, ShoppingBag } from "lucide-react";
+import { GoesWellWith } from "@/components/customer/goes-well-with";
 import {
   FoodMark,
   LUX_PRIMARY,
@@ -20,6 +21,7 @@ import {
   cartClearCart,
   cartUpdateLine,
   ordersCheckout,
+  publicPublicStores,
   type CartLineOut,
   type CartOut,
 } from "@/lib/api";
@@ -48,6 +50,13 @@ export function CartView({ mallSlug }: { mallSlug: string }) {
   }, [status, router, mallSlug]);
 
   const pay = usePayOrder({ name: me?.name });
+  // Where to collect each restaurant's part (the cart itself doesn't carry it).
+  const counters = useQuery({
+    queryKey: ["store-cards", mallSlug],
+    queryFn: async () => unwrap(await publicPublicStores({ path: { mall_slug: mallSlug } })),
+    staleTime: 5 * 60_000,
+  });
+  const counterOf = new Map((counters.data ?? []).map((s) => [s.slug, s.pickup_point] as const));
   const setCart = (next: CartOut) =>
     queryClient.setQueryData(cartQueryKey(mallSlug), next);
 
@@ -109,14 +118,17 @@ export function CartView({ mallSlug }: { mallSlug: string }) {
   if (!data || data.stores.length === 0) {
     return (
       <main className="mx-auto flex w-full max-w-md flex-col items-center gap-3 px-4 py-20 text-center">
-        <ShoppingBag className="size-10 text-lux-orange" aria-hidden="true" />
+        <span className="lux-plate flex size-24 items-center justify-center rounded-full">
+          <ShoppingBag className="size-10 text-lux-orange" aria-hidden="true" />
+        </span>
         <h1 className="font-display text-2xl font-semibold">Your cart</h1>
-        <p className="text-muted-foreground">Your cart is empty.</p>
+        <p className="font-semibold">Your cart is empty</p>
+        <p className="text-muted-foreground">Your cart is waiting for something tasty.</p>
         <Link
           href={`/m/${mallSlug}`}
-          className="mt-2 rounded-full border border-[#ffa500]/40 px-5 py-2.5 text-sm font-semibold text-lux-orange"
+          className={cn(LUX_PRIMARY, "mt-2 inline-flex min-h-12 items-center px-6 text-sm")}
         >
-          Browse the stores
+          Browse restaurants
         </Link>
       </main>
     );
@@ -128,8 +140,24 @@ export function CartView({ mallSlug }: { mallSlug: string }) {
   );
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 pt-4 pb-44 lg:pb-16">
+    <main className="mx-auto w-full max-w-5xl px-4 pt-4 pb-8 lg:pb-16">
       <header className="mb-5">
+        <ol aria-label="Steps" className="mb-3 flex items-center gap-2 text-xs font-semibold">
+          {["Cart", "Pay", "Collect"].map((step, i) => (
+            <li key={step} className="flex items-center gap-2">
+              {i > 0 && <span aria-hidden="true" className="h-px w-6 bg-white/20" />}
+              <span
+                aria-current={i === 0 ? "step" : undefined}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-full px-2.5 py-1",
+                  i === 0 ? "bg-gold text-on-gold" : "bg-white/5 text-muted-foreground",
+                )}
+              >
+                <span aria-hidden="true">{i + 1}</span> {step}
+              </span>
+            </li>
+          ))}
+        </ol>
         <h1 className="font-display text-3xl font-semibold">Your cart</h1>
         <p className="text-sm text-muted-foreground">
           {count} {count === 1 ? "item" : "items"} from {data.stores.length}{" "}
@@ -138,8 +166,8 @@ export function CartView({ mallSlug }: { mallSlug: string }) {
           code.
         </p>
       </header>
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
-        <div className="space-y-5">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
+        <div className="min-w-0 space-y-5">
           {data.stores.map((store) => (
             <section
               key={store.store_slug}
@@ -155,10 +183,14 @@ export function CartView({ mallSlug }: { mallSlug: string }) {
                     {store.store_name}
                   </Link>
                 </h2>
-                <span className="text-xs text-lux-orange">
-                  Ready in about {store.prep_minutes} min
+                <span className="flex shrink-0 items-center gap-1 text-xs text-lux-orange">
+                  <Clock className="size-3.5" aria-hidden="true" /> ~{store.prep_minutes} min
                 </span>
               </div>
+              <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                <MapPin className="size-3.5 text-lux-orange" aria-hidden="true" />
+                Collect at {counterOf.get(store.store_slug) ?? "the restaurant's counter"}
+              </p>
               {!store.accepting_orders && (
                 <p className="text-xs text-destructive">
                   {PROBLEMS.store_closed}
@@ -191,6 +223,7 @@ export function CartView({ mallSlug }: { mallSlug: string }) {
             <Plus className="size-4" aria-hidden="true" /> Add from another
             restaurant
           </Link>
+          <GoesWellWith mallSlug={mallSlug} cart={data} />
         </div>
         <aside className="space-y-4 lg:sticky lg:top-20">
           <section
@@ -207,14 +240,24 @@ export function CartView({ mallSlug }: { mallSlug: string }) {
                   <span>{formatPaise(s.subtotal_paise)}</span>
                 </p>
               ))}
-            <p className="flex justify-between text-lg font-semibold">
-              <span>Total</span>
+            <p className="flex justify-between text-muted-foreground">
+              <span>Item total</span>
+              <span>{formatPaise(data.total_paise)}</span>
+            </p>
+            <p className="flex justify-between text-muted-foreground">
+              <span>Platform fee</span>
+              <span>
+                <span className="font-semibold text-status-ready">₹0 · Free</span>
+              </span>
+            </p>
+            <p className="flex justify-between border-t border-white/10 pt-2 text-lg font-semibold">
+              <span>To pay</span>
               <span className="text-lux-orange">
                 {formatPaise(data.total_paise)}
               </span>
             </p>
             <p className="text-xs text-muted-foreground">
-              Prices include GST. Pickup only: no delivery.
+              Prices include GST. MallT charges no fee. Pickup only: no delivery.
             </p>
           </section>
           {needsPhone && (
@@ -247,7 +290,7 @@ export function CartView({ mallSlug }: { mallSlug: string }) {
             Clear cart
           </Button>
           {/* One pay button: in the summary column on a wide screen, pinned to the bottom on a phone. */}
-          <div className="fixed inset-x-0 bottom-0 z-30 border-t border-[#ffa500]/20 bg-black/90 px-4 pt-3 pb-safe backdrop-blur-md lg:static lg:border-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
+          <div className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-40 border-t border-[#ffa500]/20 bg-black/90 px-4 py-3 backdrop-blur-md lg:static lg:border-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
             <Button
               onClick={() => checkout.mutate()}
               disabled={
@@ -265,6 +308,9 @@ export function CartView({ mallSlug }: { mallSlug: string }) {
                 ? "Placing your order…"
                 : `Place order and pay · ${formatPaise(data.total_paise)}`}
             </Button>
+            <p className="mt-1.5 flex items-center justify-center gap-1 text-[0.6875rem] text-muted-foreground">
+              <Lock className="size-3" aria-hidden="true" /> Secure payment. Your codes appear as soon as it&apos;s paid.
+            </p>
           </div>
         </aside>
       </div>

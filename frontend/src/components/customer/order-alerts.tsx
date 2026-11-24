@@ -39,6 +39,18 @@ export function OrderAlerts() {
       if (!next) return;
       setAlert(next);
       if (next.urgent && typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate?.([120, 60, 120]);
+      // Away from the page (locked phone, another app): a system notification, if they allowed it.
+      if (next.urgent && document.hidden && typeof Notification !== "undefined" && Notification.permission === "granted") {
+        try {
+          const n = new Notification("MallT", { body: next.message, tag: next.id });
+          n.onclick = () => {
+            window.focus();
+            if (next.href) window.location.assign(next.href);
+          };
+        } catch {
+          /* Some phones only allow notifications from a service worker: the in-page alert still shows. */
+        }
+      }
     })();
   });
 

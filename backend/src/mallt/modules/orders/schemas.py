@@ -62,6 +62,16 @@ class CartOut(BaseModel):
     can_checkout: bool
 
 
+class ReorderIn(BaseModel):
+    order_id: uuid.UUID
+
+
+class ReorderOut(BaseModel):
+    cart: CartOut
+    added: int  # lines put back in the cart
+    skipped: list[str]  # dishes that can't be ordered now (gone, sold out, store closed)
+
+
 class CheckoutIn(BaseModel):
     note: Note | None = None
 

@@ -1,4 +1,5 @@
 import { Suspense, type ReactNode } from "react";
+import { CustomerDock } from "@/components/customer/customer-dock";
 import { CustomerHeader } from "@/components/customer/customer-header";
 import { LuxTheme } from "@/components/customer/lux";
 import { OrderAlerts } from "@/components/customer/order-alerts";
@@ -11,6 +12,7 @@ export default function AccountLayout({ children }: { children: ReactNode }) {
         <LuxTheme />
         <CustomerHeader />
         <Suspense>{children}</Suspense>
+        <CustomerDock />
         <OrderAlerts />
       </div>
     </CustomerSessionProvider>

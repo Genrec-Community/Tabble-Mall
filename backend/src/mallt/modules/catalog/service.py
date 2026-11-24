@@ -31,6 +31,8 @@ from mallt.modules.catalog.schemas import (
     ImagePresignIn,
     ImagePresignOut,
     OptionGroupIn,
+    PopularItemOut,
+    PopularOut,
     ProductIn,
     PublicCategoryOut,
     PublicItemOut,
@@ -56,6 +58,7 @@ _PROFILE_FIELDS = {
     "food_types",
     "gstin",
     "fssai",
+    "pickup_point",
     "auto_print",
     "kot_when",
     "bill_when",
@@ -170,6 +173,8 @@ class CatalogService:
                 value = theme_from(value).model_dump()
             if field == "hours" and value is not None:
                 value = [dict(w) for w in value]
+            if field == "pickup_point":
+                value = value or None  # "" clears it
             setattr(row, field, value)
         if changes:
             await self.repo.session.flush()
@@ -490,10 +495,23 @@ class CatalogService:
     async def public_cards(self, mall_slug: str) -> list[PublicStoreCardOut]:
         _, stores = await self.tenancy.public_directory(mall_slug)
         settings = await self.repo.settings_for_stores([s.id for s in stores])
+        menus = await self.repo.menu_teasers([s.id for s in stores])
         now = datetime.now(UTC)
         cards = []
         for store in stores:
             row = settings.get(store.id)
+            accepting = (
+                store_accepting(row.is_open, row.is_paused, row.hours, row.timezone, now)
+                if row
+                else True
+            )
+            local = now.astimezone(ZoneInfo(row.timezone if row else "Asia/Kolkata"))
+            products = menus.get(store.id, [])
+            ready = [
+                p.prep_minutes
+                for p in products
+                if p.is_available and in_hours(p.windows, local, "start", "end")
+            ]
             cards.append(
                 PublicStoreCardOut(
                     slug=store.slug,
@@ -506,14 +524,75 @@ class CatalogService:
                     banner_url=self.storage.public_url(row.banner_key)
                     if row and row.banner_key
                     else None,
-                    accepting_orders=store_accepting(
-                        row.is_open, row.is_paused, row.hours, row.timezone, now
-                    )
-                    if row
-                    else True,
+                    accepting_orders=accepting,
+                    pickup_point=row.pickup_point if row else None,
+                    prep_minutes=min(ready) if ready and accepting else None,
+                    top_dishes=[p.name for p in products[:3]],
                 )
             )
         return cards
+
+    async def public_items_by_ids(
+        self, mall_slug: str, counts: list[tuple[uuid.UUID, int]], *, fill_to: int
+    ) -> PopularOut:
+        """Dishes in the given order (most ordered first), topped up with each open store's first
+        dishes so the rail is never empty in a new mall. Unavailable dishes are left out."""
+        _, stores = await self.tenancy.public_directory(mall_slug)
+        by_store = {s.id: s for s in stores}
+        settings = await self.repo.settings_for_stores(list(by_store))
+        now = datetime.now(UTC)
+        accepting = {
+            sid: store_accepting(r.is_open, r.is_paused, r.hours, r.timezone, now)
+            for sid, r in settings.items()
+        }
+        mall_ids = {s.mall_id for s in stores}
+        if not mall_ids:
+            return PopularOut(items=[])
+        (mall_id,) = mall_ids
+        wanted = dict(counts)
+        products = await self.repo.products_by_ids(mall_id, list(wanted))
+        ranked: list[uuid.UUID] = list(wanted)
+        if len(products) < fill_to:
+            menus = await self.repo.menu_teasers(list(by_store))
+            # Round-robin over the stores, so the top-up is a mix rather than one menu.
+            rounds = max((len(v) for v in menus.values()), default=0)
+            extra = [
+                p
+                for i in range(rounds)
+                for sid in by_store
+                for p in menus.get(sid, [])[i : i + 1]
+                if p.id not in wanted
+            ]
+            extra_ids = [p.id for p in extra][: fill_to * 2]
+            products += await self.repo.products_by_ids(mall_id, extra_ids)
+            ranked += extra_ids
+        order = {pid: i for i, pid in enumerate(ranked)}
+        products.sort(key=lambda p: (-wanted.get(p.id, 0), order.get(p.id, len(order))))
+        items: list[PopularItemOut] = []
+        seen: set[uuid.UUID] = set()
+        for product in products:
+            store = by_store.get(product.store_id)
+            if store is None or product.id in seen or product.is_archived:
+                continue
+            row = settings.get(store.id)
+            out = self._public_product(
+                product, now.astimezone(ZoneInfo(row.timezone if row else "Asia/Kolkata"))
+            )
+            if not out.available:
+                continue
+            seen.add(product.id)
+            items.append(
+                PopularItemOut(
+                    store_slug=store.slug,
+                    store_name=store.name,
+                    accepting_orders=accepting.get(store.id, True),
+                    product=out,
+                    orders=wanted.get(product.id, 0),
+                )
+            )
+            if len(items) == fill_to:
+                break
+        return PopularOut(items=items)
 
     async def public_items(
         self,
@@ -592,6 +671,7 @@ class CatalogService:
                 theme=theme_from(row.theme),
                 accepting_orders=accepting,
                 hours=row.hours,
+                pickup_point=row.pickup_point,
                 logo_url=self.storage.public_url(row.logo_key) if row.logo_key else None,
                 banner_url=self.storage.public_url(row.banner_key) if row.banner_key else None,
             ),

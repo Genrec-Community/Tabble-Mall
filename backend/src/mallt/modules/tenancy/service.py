@@ -390,3 +390,7 @@ class TenancyService:
 
     async def stores_by_ids(self, store_ids: list[uuid.UUID]) -> dict[uuid.UUID, Store]:
         return await self.repo.stores_by_ids(store_ids)
+
+    async def mall_slugs(self, mall_ids: list[uuid.UUID]) -> dict[uuid.UUID, str]:
+        """Each mall's public slug, for links back to it from a customer's orders."""
+        return await self.repo.mall_slugs(mall_ids)

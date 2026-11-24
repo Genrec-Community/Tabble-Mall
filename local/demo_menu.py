@@ -13,6 +13,7 @@ STORES: list[dict[str, Any]] = [
     {
         "name": "Burger Hub",
         "slug": "burger-hub",
+        "pickup_point": "Counter 1, Level 2",
         "owner": "burger.owner",
         "description": "Smash burgers, loaded fries and thick shakes.",
         "food_types": ["fast_food"],
@@ -82,6 +83,7 @@ STORES: list[dict[str, Any]] = [
     {
         "name": "Chai Kadai",
         "slug": "chai-point",
+        "pickup_point": "Counter 2, Level 2",
         "owner": "chai.owner",
         "description": "Kulhad chai, filter coffee and hot snacks all day.",
         "food_types": ["beverages", "snacks"],
@@ -151,6 +153,7 @@ STORES: list[dict[str, Any]] = [
     {
         "name": "Madras Tiffin House",
         "slug": "madras-tiffin",
+        "pickup_point": "Counter 3, Level 2",
         "owner": "tiffin.owner",
         "description": "Crisp dosas, soft idlis and strong filter coffee, Chennai style.",
         "food_types": ["south_indian", "meals"],
@@ -222,6 +225,7 @@ STORES: list[dict[str, Any]] = [
     {
         "name": "Tandoor Junction",
         "slug": "tandoor-junction",
+        "pickup_point": "Counter 4, Level 2",
         "owner": "tandoor.owner",
         "description": "North Indian curries, kebabs and fresh breads from the clay oven.",
         "food_types": ["north_indian", "meals"],
@@ -293,6 +297,7 @@ STORES: list[dict[str, Any]] = [
     {
         "name": "Wok Express",
         "slug": "wok-express",
+        "pickup_point": "Counter 5, Level 2",
         "owner": "wok.owner",
         "description": "Indo-Chinese favourites, tossed hot in the wok.",
         "food_types": ["chinese"],
@@ -362,6 +367,7 @@ STORES: list[dict[str, Any]] = [
     {
         "name": "Slice Society",
         "slug": "slice-society",
+        "pickup_point": "Counter 6, Level 2",
         "owner": "pizza.owner",
         "description": "Hand-stretched pizzas baked hot, plus garlic bread and pastas.",
         "food_types": ["fast_food"],
@@ -422,6 +428,7 @@ STORES: list[dict[str, Any]] = [
     {
         "name": "Biryani Darbar",
         "slug": "biryani-darbar",
+        "pickup_point": "Counter 7, Level 2",
         "owner": "biryani.owner",
         "description": "Slow-cooked dum biryanis with raita and salan.",
         "food_types": ["meals"],
@@ -482,6 +489,7 @@ STORES: list[dict[str, Any]] = [
     {
         "name": "Scoops & Shakes",
         "slug": "scoops-shakes",
+        "pickup_point": "Kiosk A, Level 1",
         "owner": "scoops.owner",
         "description": "Thick shakes, sundaes and Indian sweets.",
         "food_types": ["desserts", "beverages"],
@@ -551,6 +559,7 @@ STORES: list[dict[str, Any]] = [
     {
         "name": "Green Bowl",
         "slug": "green-bowl",
+        "pickup_point": "Counter 8, Level 2",
         "owner": "green.owner",
         "description": "Fresh salads, bowls and juices for a lighter meal.",
         "food_types": ["healthy", "beverages"],

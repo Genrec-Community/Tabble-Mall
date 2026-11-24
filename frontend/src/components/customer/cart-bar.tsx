@@ -8,7 +8,8 @@ import { formatPaise } from "@/lib/money";
 
 /**
  * The floating bar at the foot of the mall and store pages (after Tabble's "Review order" bar).
- * It shows only when the cart has something in it: a permanently visible empty bar teaches people
+ * It sits in the customer dock (above the phone's tab bar) and gives a small bump each time
+ * something is added. It shows only when the cart has something in it: a permanently visible empty bar teaches people
  * to ignore that part of the screen. Not on the cart page itself.
  */
 export function CartBar({ mallSlug }: { mallSlug: string }) {
@@ -19,11 +20,11 @@ export function CartBar({ mallSlug }: { mallSlug: string }) {
   if (count === 0 || !data || pathname.endsWith("/cart")) return null;
   const stores = data.stores.length;
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 px-4 pb-safe motion-safe:animate-[rise-in_300ms_cubic-bezier(0.2,0,0.3,1)]">
+    <div key={count} className="pointer-events-none motion-safe:animate-[pop_350ms_ease-out]">
       <Link
         href={`/m/${mallSlug}/cart`}
         aria-label={`View cart, ${count} ${count === 1 ? "item" : "items"}, ${formatPaise(data.total_paise)}`}
-        className="lux-gradient pointer-events-auto mx-auto flex min-h-14 max-w-md items-center justify-between gap-3 rounded-full px-2.5 font-semibold transition hover:brightness-110 active:scale-[0.98]"
+        className="lux-gradient pointer-events-auto mx-auto flex min-h-14 max-w-md shadow-gold items-center justify-between gap-3 rounded-full px-2.5 font-semibold transition hover:brightness-110 active:scale-[0.98]"
       >
         <span className="flex size-9 items-center justify-center rounded-full bg-black/15 text-sm font-bold tabular-nums">{count}</span>
         <span className="flex flex-col items-center leading-tight">

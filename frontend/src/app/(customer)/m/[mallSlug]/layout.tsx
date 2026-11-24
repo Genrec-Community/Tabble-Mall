@@ -1,5 +1,5 @@
 import { Suspense, type ReactNode } from "react";
-import { CartBar } from "@/components/customer/cart-bar";
+import { CustomerDock } from "@/components/customer/customer-dock";
 import { CustomerHeader } from "@/components/customer/customer-header";
 import { LuxTheme } from "@/components/customer/lux";
 import { OrderAlerts } from "@/components/customer/order-alerts";
@@ -21,7 +21,7 @@ export default async function MallLayout({
         <LuxTheme />
         <CustomerHeader mallSlug={mallSlug} />
         <Suspense>{children}</Suspense>
-        <CartBar mallSlug={mallSlug} />
+        <CustomerDock mallSlug={mallSlug} />
         <OrderAlerts />
       </div>
     </CustomerSessionProvider>

@@ -1,9 +1,11 @@
 /** Calls the API from Next.js server components (inside Docker, over the internal network). */
 import {
   publicGetPublicMall,
+  publicPopular,
   publicPublicItems,
   publicPublicMenu,
   publicPublicStores,
+  type PopularOut,
   type PublicItemsOut,
   type PublicMallOut,
   type PublicMenuOut,
@@ -52,5 +54,12 @@ export async function loadMenu(mallSlug: string, storeSlug: string): Promise<Pub
 export async function loadItems(slug: string): Promise<PublicItemsOut> {
   const result = await publicPublicItems({ path: { mall_slug: slug }, ...serverOptions([`mall:${slug}`]) });
   if (result.response?.status === 404) return { items: [], next_cursor: null };
+  return unwrap(result);
+}
+
+/** The mall's most ordered dishes lately (topped up for a new mall), cached like the mall page. */
+export async function loadPopular(slug: string): Promise<PopularOut> {
+  const result = await publicPopular({ path: { mall_slug: slug }, query: { limit: 12 }, ...serverOptions([`mall:${slug}`]) });
+  if (!result.response?.ok) return { items: [] };
   return unwrap(result);
 }
