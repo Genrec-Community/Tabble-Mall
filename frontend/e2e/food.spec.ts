@@ -157,7 +157,9 @@ test("customer orders from a store; the kitchen ticket and bill really print", a
     const browse = await (await browser.newContext()).newPage();
     await browse.goto(`/m/${mallSlug}`);
     await expect(browse.getByRole("heading", { name: "Food Mall" })).toBeVisible();
-    await expect(browse.getByRole("link", { name: /Burger Hub/ })).toBeVisible();
+    // The restaurant list (the Popular rail below it links to restaurants too).
+    const restaurantList = browse.getByRole("region", { name: "Restaurants" });
+    await expect(restaurantList.getByRole("link", { name: /Burger Hub/ })).toBeVisible();
     // Only restaurants until the customer searches: no dish is on the home page.
     await expect(browse.getByRole("button", { name: "Add Cheese Burger from Burger Hub" })).toHaveCount(0);
     const search = browse.getByRole("searchbox", { name: "Search restaurants and dishes" });
@@ -169,7 +171,7 @@ test("customer orders from a store; the kitchen ticket and bill really print", a
     await expect(browse.getByRole("button", { name: "Add Cheese Burger from Burger Hub" })).toBeVisible();
     await search.fill("");
     await browse.getByRole("button", { name: "Veg only" }).click();
-    await browse.getByRole("link", { name: /Burger Hub/ }).first().click();
+    await restaurantList.getByRole("link", { name: /Burger Hub/ }).click();
     await expect(browse).toHaveURL(new RegExp(`/m/${mallSlug}/s/${storeSlug}$`));
     // Inside a restaurant: its own dish search, and back returns to the restaurant list.
     await browse.getByRole("searchbox", { name: "Search Burger Hub's menu" }).fill("cheese");
