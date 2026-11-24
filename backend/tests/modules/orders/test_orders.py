@@ -196,7 +196,7 @@ async def test_customer_cancels_before_accept_only(
     sid = created["stores"][0]["id"]
     cancel = await client.post(f"/api/v1/orders/stores/{sid}/cancel", headers=alice)
     assert cancel.status_code == 200 and cancel.json()["stores"][0]["status"] == "refunded"
-    assert payments.refunds and payments.refunds[0][0] == 12000
+    assert payments.refunds and payments.refunds[0][0] == 11940
 
     await client.post(f"{CART}/lines", json=line(menu.burger), headers=alice)
     second = (await checkout(client, alice, "k2")).json()["stores"][0]["id"]
@@ -307,7 +307,7 @@ async def test_reject_refunds_and_records_the_reason(
     )
     assert r.status_code == 200 and r.json()["status"] == "refunded"
     assert r.json()["reason"] == "kitchen closed"
-    assert payments.refunds[0][0] == 12000
+    assert payments.refunds[0][0] == 11940  # the 0.5% gateway fee is not refunded
     # The store's whole share minus its 0.5% gateway fee left at payment (MallT keeps nothing)
     # and was taken back first; the fee stays with the store as owed.
     assert payments.transfers[0][0] == 11940 and payments.reversals[0][0] == 11940
@@ -320,9 +320,8 @@ async def test_reject_refunds_and_records_the_reason(
         ("charge", 12000),
         ("gateway_fee", 60),
         ("transfer", 11940),
-        ("fee_owed", 60),
         ("transfer_reversal", -11940),
-        ("refund", -12000),
+        ("refund", -11940),
     ]
     assert (
         await client.post(
