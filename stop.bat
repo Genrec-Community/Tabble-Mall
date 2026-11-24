@@ -1,14 +1,15 @@
 @echo off
-rem Stops MallT. Your data is kept; start.bat brings it back.
-rem To wipe everything and start fresh, run:  stop.bat reset
+rem Normally you stop MallT by closing its window. Use this if MallT was closed abruptly
+rem and will not start again:  stop.bat
+rem To delete all local data and start fresh with the demo mall:  stop.bat reset
 cd /d "%~dp0"
-set COMPOSE=docker compose -p mallt -f docker-compose.yml -f local\docker-compose.local.yml
+set UV_CACHE_DIR=%~dp0local\tools\uv-cache
+set UV_PYTHON_INSTALL_DIR=%~dp0local\tools\python
+set UV=%~dp0local\tools\uv\uv.exe
+if not exist "%UV%" (echo Nothing to stop: MallT has not been started on this computer yet. & pause & exit /b 0)
 if /i "%~1"=="reset" (
-  %COMPOSE% down -v
-  if exist demo-logins.txt del demo-logins.txt
-  echo MallT stopped and all its data deleted.
+  "%UV%" run --no-dev --project backend python local\run_local.py --reset
 ) else (
-  %COMPOSE% down
-  echo MallT stopped. Data kept.
+  "%UV%" run --no-dev --project backend python local\run_local.py --stop
 )
 pause

@@ -1,33 +1,37 @@
-# Run MallT on your own computer
+# Run MallT on your own computer (no Docker)
 
-## Once
+## Start
 
-1. Install **Docker Desktop**: https://www.docker.com/products/docker-desktop/
-2. Start Docker Desktop and wait until it says *Engine running*.
+Double-click **`start.bat`**.
 
-## Every time
+- The first run downloads everything MallT needs into `local\tools`: Python, Node.js and a
+  portable PostgreSQL, about 150 MB. Nothing is installed on Windows itself, and no admin rights
+  are needed. This takes a few minutes. Later starts take about 30 seconds.
+- When it's ready, the customer page opens in your browser.
+- **Keep the window open while you use MallT.** Close it, or press Ctrl+C, to stop.
 
-| Do | What happens |
+You need Windows 10 or 11 and an internet connection for the first run. On macOS or Linux, run
+`./start.sh` instead. That needs [uv](https://docs.astral.sh/uv/) and Node 22 installed.
+
+| File | What it does |
 |---|---|
-| Double-click **`start.bat`** | Builds and starts everything, adds the demo mall, opens the customer page. The first run takes 5 to 15 minutes. |
-| **`show-otp.bat`** | Shows customer sign-in codes. No SMS is sent locally. |
-| **`logs.bat`** | Live logs of every part, for when something looks wrong. |
-| **`stop.bat`** | Stops MallT and keeps your data. |
-| **`stop.bat reset`** | Stops MallT and deletes all data, so the next start is fresh. |
-
-On macOS or Linux, run `./start.sh` instead.
+| `start.bat` | Starts MallT. The demo mall is added on the first run. |
+| `show-otp.bat` | Shows customer sign-in codes. Locally no SMS is sent. |
+| `stop.bat` | Only needed if MallT was closed abruptly and won't start again. |
+| `stop.bat reset` | Deletes all local data. The next start begins fresh with the demo mall. |
+| `demo-logins.txt` | The demo logins. It's written on the first run. |
+| `local\logs\` | Logs for the API, website and database, if something looks wrong. |
 
 ## Try the whole journey
 
-Logins are printed by `start.bat` and saved in `demo-logins.txt`. Every staff password is
-`MallT-demo-2026`.
+Every staff password is `MallT-demo-2026`.
 
 1. **Customer:** open http://localhost:8080/m/demo-mall and add items from both Burger Hub and
    Chai Point. Sign in with any 10-digit mobile number. The code comes from `show-otp.bat`.
    Pay, and you get one order with a pickup code for each store.
-2. **Store:** in another browser (or a private window), sign in at http://localhost:8080/login
-   as `burger.owner`. The order shows up live. Accept it, mark it Preparing, then Ready.
-3. **Pickup:** enter the customer's pickup code on the store's order to mark it picked up.
+2. **Store:** in another browser or a private window, sign in at http://localhost:8080/login
+   as `burger.owner`. The order appears live. Accept it, then Start preparing, then Mark ready.
+3. **Pickup:** click the collect button and type the customer's pickup code for Burger Hub.
 4. **Org owner:** `demo.owner` sees every store, mall and staff member.
 5. **Platform admin:** `admin` also needs a code from an authenticator app. The key is in
    `demo-logins.txt`.
@@ -38,16 +42,20 @@ Locally, payments use the **fake provider**. Pressing pay marks the order paid a
 each store's share, its 0.50% gateway fee and the transfer in the ledger. No money moves and no
 Zoho account is needed.
 
-To try real Zoho sandbox payments, fill in the `ZOHO_*` values in `.env`, set
-`PAYMENTS_PROVIDER=zoho`, then run `stop.bat` and `start.bat`. With Zoho on, each store must first
-add its bank account on its **Payouts** tab and be approved by Zoho, or checkout refuses its items.
+To try real Zoho sandbox payments:
 
-## Also works locally
+1. Fill in the `ZOHO_*` values in `.env` and set `PAYMENTS_PROVIDER=zoho`.
+2. Restart MallT.
+3. Each store adds its bank account on its **Payouts** tab and waits for Zoho to approve it.
+   Until then, checkout refuses that store's items.
 
-- **Printing:** the store's **Printers** tab pairs the desktop print agent (`print-agent/`) on the
-  same PC, with KOT and bill printing.
-- **Product photos** upload to the shared dev bucket in `.env`, so they need internet.
+## How it works
 
-## Ports
+`local\run_local.py` starts each part itself:
 
-The website is on **8080**. If something else uses that port, stop it first.
+- PostgreSQL, from the `pgserver` package, on port 55433 with its data in `local\data`
+- the API on port 8000
+- the website on port 3000
+- a small proxy on **8080**, which does nginx's job
+
+Ports 8000, 3000 and 8080 must be free.

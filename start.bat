@@ -1,59 +1,44 @@
 @echo off
 setlocal
 rem ---------------------------------------------------------------------------------------------
-rem  MallT: run the whole app on this computer.
-rem  Needs Docker Desktop (https://www.docker.com/products/docker-desktop/) installed and running.
-rem  First start builds everything and takes 5-15 minutes; later starts take under a minute.
+rem  MallT: double-click to run the whole app on this computer. No Docker, nothing to install.
+rem  The first run downloads Python, Node.js and PostgreSQL into local\tools (about 150 MB, a few
+rem  minutes). Later starts take about half a minute. Keep the window open while you use MallT;
+rem  close it (or press Ctrl+C) to stop.
 rem ---------------------------------------------------------------------------------------------
 cd /d "%~dp0"
-set COMPOSE=docker compose -p mallt -f docker-compose.yml -f local\docker-compose.local.yml
+title MallT
+set TOOLS=%~dp0local\tools
+set UV_VERSION=0.11.32
+set NODE_VERSION=22.23.5
+if not exist "%TOOLS%" mkdir "%TOOLS%"
 
-where docker >nul 2>nul
-if errorlevel 1 (
-  echo Docker is not installed. Install Docker Desktop, start it, then run start.bat again:
-  echo   https://www.docker.com/products/docker-desktop/
-  pause
-  exit /b 1
+if not exist "%TOOLS%\uv\uv.exe" (
+  echo Downloading uv ^(runs Python for MallT^)...
+  call :fetch "https://github.com/astral-sh/uv/releases/download/%UV_VERSION%/uv-x86_64-pc-windows-msvc.zip" "%TOOLS%\uv" || goto :failed
 )
-docker info >nul 2>nul
-if errorlevel 1 (
-  echo Docker Desktop is installed but not running. Start Docker Desktop, wait until it says
-  echo "Engine running", then run start.bat again.
-  pause
-  exit /b 1
+if not exist "%TOOLS%\node-v%NODE_VERSION%-win-x64\node.exe" (
+  echo Downloading Node.js ^(runs the website^)...
+  call :fetch "https://nodejs.org/dist/v%NODE_VERSION%/node-v%NODE_VERSION%-win-x64.zip" "%TOOLS%" || goto :failed
 )
 
-echo.
-echo [1/3] Building and starting MallT (database, API, website, nginx)...
-%COMPOSE% up -d --build --wait
-if errorlevel 1 (
-  echo.
-  echo Something failed to start. The last API log lines:
-  %COMPOSE% logs --tail 40 api
-  pause
-  exit /b 1
-)
+set UV=%TOOLS%\uv\uv.exe
+set MALLT_NODE=%TOOLS%\node-v%NODE_VERSION%-win-x64\node.exe
+set UV_CACHE_DIR=%TOOLS%\uv-cache
+set UV_PYTHON_INSTALL_DIR=%TOOLS%\python
 
-echo.
-echo [2/3] Adding the demo mall, stores and menus (first run only)...
-%COMPOSE% exec -T api python local/seed_demo.py > "%TEMP%\mallt-seed.txt"
-if errorlevel 1 (
-  type "%TEMP%\mallt-seed.txt"
-  echo Seeding the demo failed. See the message above.
-  pause
-  exit /b 1
-)
-findstr /c:"MallT demo logins" "%TEMP%\mallt-seed.txt" >nul && copy /y "%TEMP%\mallt-seed.txt" "demo-logins.txt" >nul
+echo Preparing Python and the API (first run downloads about 100 MB)...
+"%UV%" run --no-dev --project backend python local\run_local.py
+if errorlevel 1 goto :failed
+exit /b 0
 
+:fetch
+rem %1 = URL, %2 = folder to unpack into
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ProgressPreference='SilentlyContinue'; [Net.ServicePointManager]::SecurityProtocol='Tls12'; $z=Join-Path $env:TEMP ('mallt-'+[guid]::NewGuid()+'.zip'); Invoke-WebRequest -UseBasicParsing -Uri '%~1' -OutFile $z; Expand-Archive -Force -Path $z -DestinationPath '%~2'; Remove-Item $z"
+exit /b %errorlevel%
+
+:failed
 echo.
-echo [3/3] Ready.
-echo.
-if exist demo-logins.txt (type demo-logins.txt) else (type "%TEMP%\mallt-seed.txt")
-echo.
-echo   Customer page : http://localhost:8080/m/demo-mall
-echo   Staff sign-in : http://localhost:8080/login
-echo   Login codes   : run show-otp.bat
-echo   Stop          : run stop.bat
-echo.
-start "" "http://localhost:8080/m/demo-mall"
+echo MallT could not start. The message above says why; the logs are in local\logs.
 pause
+exit /b 1

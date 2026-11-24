@@ -1,7 +1,8 @@
 @echo off
-rem Shows the latest customer sign-in codes. Locally no SMS is sent: the API prints the code instead.
+rem Shows customer sign-in codes. Locally no SMS is sent: the API writes the code to its log.
 cd /d "%~dp0"
-docker compose -p mallt -f docker-compose.yml -f local\docker-compose.local.yml logs --no-log-prefix api 2>nul | findstr /c:"DEV OTP"
+if not exist local\logs\api.log (echo MallT has not been started yet. & pause & exit /b 0)
+findstr /c:"DEV OTP" local\logs\api.log
 echo.
 echo The last line is the newest code. Run this again after asking for a new code.
 pause
