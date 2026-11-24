@@ -3,7 +3,8 @@ from fastapi import FastAPI
 from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from mallt.modules.orders.models import OrderEvent, Payment, StoreOrder
+from mallt.modules.orders.models import OrderEvent, StoreOrder
+from mallt.modules.payments.models import LedgerEntry
 from mallt.modules.payments.provider import FakePaymentProvider
 from tests.modules.catalog.conftest import World, product_body
 from tests.modules.orders.conftest import CART, Menu, line
@@ -58,7 +59,7 @@ async def test_checkout_splits_into_store_orders_and_pays_once(
     assert (await client.get(CART, headers=alice)).json()["stores"] == []
 
 
-async def test_commission_is_recorded_per_store_order(
+async def test_each_store_order_carries_its_own_gateway_fee(
     client: httpx.AsyncClient,
     alice: dict,
     menu: Menu,
@@ -68,8 +69,7 @@ async def test_commission_is_recorded_per_store_order(
     await fill_cart(client, alice, menu)
     await checkout(client, alice)
     rows = (await db_session.execute(select(StoreOrder))).scalars().all()
-    assert sorted(r.commission_paise for r in rows) == [150, 2000]  # 5% of 3,000 and 40,000
-    assert all(r.commission_bps == 500 for r in rows)
+    assert sorted(r.gateway_fee_paise for r in rows) == [15, 200]  # 0.5% of 3,000 and 40,000
 
 
 async def test_checkout_is_idempotent(
@@ -196,7 +196,7 @@ async def test_customer_cancels_before_accept_only(
     sid = created["stores"][0]["id"]
     cancel = await client.post(f"/api/v1/orders/stores/{sid}/cancel", headers=alice)
     assert cancel.status_code == 200 and cancel.json()["stores"][0]["status"] == "refunded"
-    assert payments.refunds and payments.refunds[0][0] == 12000
+    assert payments.refunds and payments.refunds[0][0] == 11940
 
     await client.post(f"{CART}/lines", json=line(menu.burger), headers=alice)
     second = (await checkout(client, alice, "k2")).json()["stores"][0]["id"]
@@ -307,11 +307,22 @@ async def test_reject_refunds_and_records_the_reason(
     )
     assert r.status_code == 200 and r.json()["status"] == "refunded"
     assert r.json()["reason"] == "kitchen closed"
-    assert payments.refunds[0][0] == 12000
-    refunds = (
-        (await db_session.execute(select(Payment).where(Payment.kind == "refund"))).scalars().all()
-    )
-    assert len(refunds) == 1 and refunds[0].amount_paise == 12000
+    assert payments.refunds[0][0] == 11940  # the 0.5% gateway fee is not refunded
+    # The store's whole share minus its 0.5% gateway fee left at payment (MallT keeps nothing)
+    # and was taken back first; the fee stays with the store as owed.
+    assert payments.transfers[0][0] == 11940 and payments.reversals[0][0] == 11940
+    ledger = (
+        await db_session.execute(
+            select(LedgerEntry.kind, LedgerEntry.amount_paise).order_by(LedgerEntry.id)
+        )
+    ).all()
+    assert [tuple(r) for r in ledger] == [
+        ("charge", 12000),
+        ("gateway_fee", 60),
+        ("transfer", 11940),
+        ("transfer_reversal", -11940),
+        ("refund", -11940),
+    ]
     assert (
         await client.post(
             store_url(world, f"/{order['id']}/reject"), json={"reason": "x"}, headers=world.owner
@@ -345,6 +356,7 @@ async def test_unaccepted_orders_expire_and_refund(
     db_session: AsyncSession,
 ) -> None:
     from mallt.modules.orders.service import OrderService
+    from mallt.modules.payments.runner import run_money_tasks
 
     order = await place(client, alice, menu)
     await db_session.execute(
@@ -352,6 +364,7 @@ async def test_unaccepted_orders_expire_and_refund(
     )
     svc = OrderService(db_session, app.state.kv, app.state.bus, payments)
     assert await svc.sweep_expired() == 1
+    await run_money_tasks(app)
     got = await client.get(f"/api/v1/orders/{order['id']}", headers=alice)
     assert got.status_code == 404  # store-order id is not a customer-order id
     mine = (await client.get("/api/v1/orders", headers=alice)).json()["items"]

@@ -59,3 +59,18 @@ async def test_seed_admin_rejects_weak_password_and_bad_username(db_session: Asy
             db_session, username="a b", display_name="Root", password="a-long-password"
         )
     assert bad.value.code == "invalid_username"
+
+
+async def test_an_email_address_can_be_a_username(db_session: AsyncSession) -> None:
+    uri = await seed_admin(
+        db_session,
+        username="Owner.Name+mallt@Gmail.com",
+        display_name="Owner",
+        password="a-long-password",
+    )
+    assert uri.startswith("otpauth://")
+    with pytest.raises(Unprocessable) as bad:
+        await seed_admin(
+            db_session, username="not an@email", display_name="X", password="a-long-password"
+        )
+    assert bad.value.code == "invalid_username"

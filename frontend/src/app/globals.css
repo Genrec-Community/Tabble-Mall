@@ -60,3 +60,181 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* ==========================================================================
+   Customer surface ("lux"), after the Tabble diner QR screens: pure black, brand orange and
+   gold, Montserrat. Scoped to `.lux` (set on <html> by <LuxTheme/> while a customer page is
+   mounted, and on the page wrapper for the server render), so staff dashboards keep the stock
+   shadcn look. It only re-points the shadcn tokens, so every stock component follows.
+   ========================================================================== */
+
+@theme inline {
+  --color-gold: var(--gold);
+  --color-gold-hover: var(--gold-hover);
+  --color-on-gold: var(--on-gold);
+  --color-food-veg: #138a36;
+  --color-food-nonveg: #8b2e16;
+  --color-food-egg: #c99a06;
+  --color-status-ready: var(--status-ready);
+  --font-display: var(--font-montserrat), var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  --gold: #f7b538;
+  --gold-hover: #ffb800;
+  --on-gold: #1a1408;
+  --status-ready: #117f3a;
+}
+
+.lux {
+  color-scheme: dark;
+  --background: #000000;
+  --foreground: #ffffff;
+  --card: #121212;
+  --card-foreground: #ffffff;
+  --popover: #121212;
+  --popover-foreground: #ffffff;
+  --primary: #ffa500;
+  --primary-foreground: #1a1408;
+  --secondary: #1c1c1c;
+  --secondary-foreground: #ffffff;
+  --muted: #1c1c1c;
+  --muted-foreground: #e0e0e0;
+  --accent: #1c1c1c;
+  --accent-foreground: #ffffff;
+  --destructive: #ff6b6b;
+  --border: rgb(255 165 0 / 0.2);
+  --input: rgb(255 165 0 / 0.45);
+  --ring: #ffa500;
+  --status-ready: #6ecf77;
+  --lux-orange: #ffa500;
+  --lux-orange-text: #ffb733;
+  --lux-glass: rgb(20 20 20 / 0.78);
+  --lux-card-edge: rgb(255 255 255 / 0.08);
+  --lux-highlight: rgb(255 255 255 / 0.06);
+  --lux-plate-glow: rgb(255 165 0 / 0.22);
+  --lux-plate-line: rgb(255 165 0 / 0.05);
+  --lux-hairline: rgb(255 165 0 / 0.45);
+  --font-sans: var(--font-montserrat), var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-sans);
+}
+
+html.lux,
+html.lux body {
+  background-color: #000000;
+}
+
+@keyframes rise-in {
+  from {
+    transform: translateY(0.75rem);
+    opacity: 0;
+  }
+}
+
+@keyframes pop {
+  40% {
+    transform: scale(1.08);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes ring-fill {
+  from {
+    stroke-dashoffset: var(--ring-full);
+  }
+}
+
+/* Every page settles in gently; nothing moves for people who asked for less motion. */
+.lux main {
+  animation: rise-in 280ms cubic-bezier(0.2, 0, 0.3, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .lux *,
+  .lux *::before,
+  .lux *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@keyframes toast-in {
+  from {
+    transform: translateY(-0.75rem);
+    opacity: 0;
+  }
+}
+
+@layer utilities {
+  .text-lux-orange {
+    color: var(--lux-orange-text);
+  }
+  .lux-glass {
+    background-color: var(--lux-glass);
+    border: 1px solid rgb(255 165 0 / 0.2);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    backdrop-filter: blur(18px) saturate(140%);
+  }
+  .lux-gradient {
+    background-image: linear-gradient(135deg, #ffa500, #ffb733);
+    color: #1a1408;
+    box-shadow: 0 8px 28px rgb(255 165 0 / 0.25);
+  }
+  .shadow-gold {
+    box-shadow: 0 2px 8px rgb(247 181 56 / 0.3);
+  }
+  /* A card lit from above, like a table under a pendant. */
+  .lux-card {
+    background: linear-gradient(180deg, var(--lux-highlight, transparent), transparent 45%), var(--card);
+    border: 1px solid var(--lux-card-edge, var(--border));
+    box-shadow: 0 8px 20px rgb(0 0 0 / 0.5);
+  }
+  /* The foot of a full-bleed photo darkening into the card body. */
+  .lux-photo-fade {
+    background: linear-gradient(
+      to top,
+      var(--card) 0%,
+      color-mix(in srgb, var(--card) 45%, transparent) 18%,
+      transparent 35%
+    );
+  }
+  /* The tile for a dish with no photograph yet: a designed state, not a failed image. */
+  .lux-plate {
+    background:
+      radial-gradient(60% 55% at 50% 42%, var(--lux-plate-glow, transparent), transparent 72%),
+      repeating-linear-gradient(45deg, var(--lux-plate-line, transparent) 0 1px, transparent 1px 10px),
+      repeating-linear-gradient(-45deg, var(--lux-plate-line, transparent) 0 1px, transparent 1px 10px),
+      linear-gradient(160deg, #1c1c1c, #0a0a0a);
+  }
+  /* The thin orange rule beside a section heading. */
+  .lux-rule {
+    height: 1px;
+    background: linear-gradient(to right, var(--lux-hairline, var(--border)), transparent);
+  }
+  .lux-canvas {
+    background:
+      radial-gradient(120% 40% at 50% -8%, rgb(255 165 0 / 0.13), transparent 70%),
+      #000000;
+  }
+  .pb-safe {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+  .pb-inset {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+}

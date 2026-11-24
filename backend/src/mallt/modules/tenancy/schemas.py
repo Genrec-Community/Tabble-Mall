@@ -33,7 +33,6 @@ class OrgCreate(BaseModel):
 class OrgUpdate(BaseModel):
     name: Name | None = None
     accept_timeout_s: int | None = Field(default=None, ge=60, le=3600)
-    commission_bps: int | None = Field(default=None, ge=0, le=10_000)
 
 
 class OrgOut(_Out):
@@ -41,7 +40,6 @@ class OrgOut(_Out):
     name: str
     slug: str
     status: ActiveStatus
-    commission_bps: int
     accept_timeout_s: int
     created_at: datetime
 
@@ -90,7 +88,6 @@ class StoreCreate(BaseModel):
 class StoreUpdate(BaseModel):
     name: Name | None = None
     description: Text | None = None
-    commission_bps: int | None = Field(default=None, ge=0, le=10_000)
 
 
 class StoreOut(_Out):
@@ -101,7 +98,6 @@ class StoreOut(_Out):
     slug: str
     status: ActiveStatus
     description: str | None
-    commission_bps: int | None
 
 
 # ---- public (no auth): only what the QR page needs ----

@@ -342,6 +342,23 @@ async def test_public_directory_and_menu(client: httpx.AsyncClient, world: World
     assert "tax_bps" not in burger and "stock_count" not in burger["variants"][0]
 
 
+async def test_public_store_cards_carry_logo_and_banner(
+    client: httpx.AsyncClient, world: World
+) -> None:
+    prefix = f"org/{world.org.id}/store/{world.store.id}/"
+    r = await client.patch(
+        url(world, "/settings"),
+        json={"logo_key": prefix + "logo/l.webp", "banner_key": prefix + "banner/b.webp"},
+        headers=world.owner,
+    )
+    assert r.status_code == 200, r.text
+    cards = {
+        x["slug"]: x for x in (await client.get("/api/v1/public/malls/phoenix-pune/stores")).json()
+    }
+    assert cards["burger-hub"]["logo_url"].endswith(prefix + "logo/l.webp")
+    assert cards["burger-hub"]["banner_url"].endswith(prefix + "banner/b.webp")
+
+
 async def test_public_menu_marks_sold_out_and_paused(
     client: httpx.AsyncClient, world: World
 ) -> None:
@@ -376,3 +393,35 @@ async def test_public_menu_unknown_or_suspended_is_404(
     assert (
         await client.get("/api/v1/public/malls/phoenix-pune/stores/rival/menu")
     ).status_code == 404
+
+
+async def test_public_store_cards_show_prep_time_top_dishes_and_pickup_point(
+    client: httpx.AsyncClient, world: World
+) -> None:
+    await create_product(client, world, name="Cheese Burger", prep_minutes=12)
+    await create_product(client, world, name="Fries", prep_minutes=6, position=1)
+    r = await client.patch(
+        url(world, "/settings"), json={"pickup_point": " Counter 4, Level 2 "}, headers=world.owner
+    )
+    assert r.status_code == 200 and r.json()["pickup_point"] == "Counter 4, Level 2"
+
+    cards = {
+        x["slug"]: x for x in (await client.get("/api/v1/public/malls/phoenix-pune/stores")).json()
+    }
+    burger = cards["burger-hub"]
+    assert burger["prep_minutes"] == 6
+    assert burger["top_dishes"] == ["Cheese Burger", "Fries"]
+    assert burger["pickup_point"] == "Counter 4, Level 2"
+    assert cards["chai-point"]["prep_minutes"] is None and cards["chai-point"]["top_dishes"] == []
+    menu = (await client.get("/api/v1/public/malls/phoenix-pune/stores/burger-hub/menu")).json()
+    assert menu["store"]["pickup_point"] == "Counter 4, Level 2"
+
+    # Staff can clear it, and only a store's own staff can set it.
+    cleared = await client.patch(
+        url(world, "/settings"), json={"pickup_point": ""}, headers=world.owner
+    )
+    assert cleared.json()["pickup_point"] is None
+    outsider = await client.patch(
+        url(world, "/settings"), json={"pickup_point": "x"}, headers=world.outsider
+    )
+    assert outsider.status_code == 404

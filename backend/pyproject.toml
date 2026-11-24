@@ -17,8 +17,10 @@ dependencies = [
     "pyotp",
     "httpx",
     "boto3",
-    "google-auth",
+    "google-auth[urllib3]",  # the urllib3 transport needs this extra (packaging) at import time
     "pillow>=13.0.0",
+    "tzdata",
+    "cryptography",  # already installed with google-auth; Web Push encryption uses it directly  # time zones on Windows, which has no system zoneinfo database
 ]
 
 [dependency-groups]

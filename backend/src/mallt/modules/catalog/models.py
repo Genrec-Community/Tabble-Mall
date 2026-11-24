@@ -1,7 +1,17 @@
 import uuid
+from datetime import datetime
 from typing import Any
 
-from sqlalchemy import JSON, BigInteger, Boolean, ForeignKey, Integer, Text, UniqueConstraint
+from sqlalchemy import (
+    JSON,
+    BigInteger,
+    Boolean,
+    DateTime,
+    ForeignKey,
+    Integer,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from mallt.core.db import Base, IdMixin, TimestampMixin
@@ -38,6 +48,7 @@ class StoreSettings(IdMixin, TimestampMixin, _StoreOwned, Base):
     banner_key: Mapped[str | None] = mapped_column(Text, nullable=True)
     gstin: Mapped[str | None] = mapped_column(Text, nullable=True)
     fssai: Mapped[str | None] = mapped_column(Text, nullable=True)
+    pickup_point: Mapped[str | None] = mapped_column(Text, nullable=True)  # "Counter 4, Level 2"
     # Printing preferences (the print agent itself lives in the printing module).
     auto_print: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
     kot_when: Mapped[str] = mapped_column(Text, default="accepted", server_default="accepted")
@@ -71,6 +82,9 @@ class Product(IdMixin, TimestampMixin, _StoreOwned, Base):
     )
     is_available: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
     is_archived: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    # "Sold out for today": unavailable until this moment (the store's next local midnight),
+    # then back on its own with no job needed.
+    sold_out_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     image_key: Mapped[str | None] = mapped_column(Text, nullable=True)
     position: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     # [{"days": [0..6], "start": "07:00", "end": "11:00"}]; empty = whenever the store is open.

@@ -150,6 +150,11 @@ function OrderCard(props: {
         <h3 className="text-lg font-semibold">#{o.order_no}</h3>
         <Badge variant="secondary">{STORE_STATUS[o.status]}</Badge>
       </div>
+      {o.pickup_at && (
+        <p className="rounded-md bg-amber-100 px-2 py-1 text-sm font-semibold text-amber-900">
+          Scheduled: pickup at {new Date(o.pickup_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+        </p>
+      )}
       <p className="text-xs text-muted-foreground">
         {o.customer_name ?? "Customer"} {o.customer_phone ? `· ${o.customer_phone}` : ""} · {new Date(o.created_at).toLocaleTimeString()}
       </p>
@@ -163,6 +168,11 @@ function OrderCard(props: {
         ))}
       </ul>
       {o.note && <p className="text-sm">Order note: {o.note}</p>}
+      {(o.discounts ?? []).map((d, i) => (
+        <p key={i} className="text-xs text-muted-foreground">
+          {d.kind === "combo" ? "Combo" : "Offer"}: {d.name} − {formatPaise(d.amount_paise)}
+        </p>
+      ))}
       <p className="text-sm font-medium">{formatPaise(o.total_paise)}</p>
       <div className="flex flex-wrap gap-2">
         {o.status === "paid" && (<><Button size="sm" disabled={busy} onClick={() => props.onStep("accept")}>Accept</Button><Button size="sm" variant="outline" onClick={props.onReject}>Reject</Button></>)}
@@ -225,7 +235,7 @@ function DeclineDialog({ order, kind, storeId, onClose }: { order: StoreOrderOut
         <form onSubmit={submit} className="space-y-4">
           <DialogHeader>
             <DialogTitle>{kind === "reject" ? "Reject" : "Cancel"} order #{order.order_no}?</DialogTitle>
-            <DialogDescription>The customer is refunded in full and sees your reason.</DialogDescription>
+            <DialogDescription>The customer is refunded what you received (the 0.5% payment fee is not refundable) and sees your reason.</DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
             <Label htmlFor="reason">Reason</Label>

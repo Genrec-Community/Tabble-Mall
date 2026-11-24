@@ -153,19 +153,31 @@ test("customer orders from a store; the kitchen ticket and bill really print", a
     await kitchenRow.getByRole("button", { name: "Test print" }).click();
     await expect.poll(() => kitchen.text(), { timeout: 20_000 }).toContain("TEST PRINT");
 
-    // ── The mall home page shows dishes from every store, searchable ─────────────────────────
+    // ── The mall home lists restaurants; one search finds restaurants and dishes ─────────────
     const browse = await (await browser.newContext()).newPage();
     await browse.goto(`/m/${mallSlug}`);
     await expect(browse.getByRole("heading", { name: "Food Mall" })).toBeVisible();
-    await expect(browse.getByRole("button", { name: "Add Cheese Burger from Burger Hub" })).toBeVisible();
-    await browse.getByRole("searchbox", { name: "Search dishes" }).fill("pizza");
+    // The restaurant list (the Popular rail below it links to restaurants too).
+    const restaurantList = browse.getByRole("region", { name: "Restaurants" });
+    await expect(restaurantList.getByRole("link", { name: /Burger Hub/ })).toBeVisible();
+    // Only restaurants until the customer searches: no dish is on the home page.
+    await expect(browse.getByRole("button", { name: "Add Cheese Burger from Burger Hub" })).toHaveCount(0);
+    const search = browse.getByRole("searchbox", { name: "Search restaurants and dishes" });
+    await search.fill("pizza");
     await expect(browse.getByText("Nothing matches")).toBeVisible();
-    await browse.getByRole("searchbox", { name: "Search dishes" }).fill("cheese");
+    await search.fill("cheese");
     await expect(browse.getByRole("button", { name: "Add Cheese Burger from Burger Hub" })).toBeVisible();
     await browse.getByRole("button", { name: "Veg only" }).click();
     await expect(browse.getByRole("button", { name: "Add Cheese Burger from Burger Hub" })).toBeVisible();
-    await browse.getByRole("link", { name: "Burger Hub" }).first().click();
+    await search.fill("");
+    await browse.getByRole("button", { name: "Veg only" }).click();
+    await restaurantList.getByRole("link", { name: /Burger Hub/ }).click();
     await expect(browse).toHaveURL(new RegExp(`/m/${mallSlug}/s/${storeSlug}$`));
+    // Inside a restaurant: its own dish search, and back returns to the restaurant list.
+    await browse.getByRole("searchbox", { name: "Search Burger Hub's menu" }).fill("cheese");
+    await expect(browse.getByRole("button", { name: "Add Cheese Burger" })).toBeVisible();
+    await browse.getByRole("button", { name: "Back" }).click();
+    await expect(browse).toHaveURL(new RegExp(`/m/${mallSlug}$`));
 
     // ── A customer orders ───────────────────────────────────────────────────────────────────
     const customer = await (await browser.newContext()).newPage();
@@ -232,6 +244,45 @@ test("customer orders from a store; the kitchen ticket and bill really print", a
     await collect.getByRole("button", { name: "Confirm pickup" }).click();
     await expect(ownerPage.getByText("Order 1")).toHaveCount(0);
     await expect(customer.getByText("Collected").first()).toBeVisible({ timeout: 20_000 });
+
+    // ── The day's sales report counts the order and its GST ─────────────────────────────────
+    await ownerPage.getByRole("link", { name: "Sales report" }).click();
+    await expect(ownerPage.getByRole("heading", { name: /Sales report/ })).toBeVisible();
+    await expect(ownerPage.getByText("₹200.00").first()).toBeVisible();
+    await expect(ownerPage.getByRole("cell", { name: /Cheese Burger/ })).toBeVisible();
+    await expect(ownerPage.getByRole("cell", { name: "5%" })).toBeVisible();
+
+    // ── The platform owner features the store; the mall home shows a quiet Featured row ─────
+    const boss = await (await browser.newContext()).newPage();
+    await boss.goto("/login");
+    await boss.getByLabel("Username").fill(state.admin.username);
+    await boss.getByLabel("Password").fill(state.admin.password);
+    await boss.getByRole("button", { name: "Sign in" }).click();
+    await boss.getByLabel("Authenticator code").fill(new OTPAuth.TOTP({ secret: OTPAuth.Secret.fromBase32(state.totpSecret) }).generate());
+    await boss.getByRole("button", { name: "Sign in" }).click();
+    await expect(boss).toHaveURL(/\/admin$/);
+    await boss.getByRole("link", { name: "Owner controls" }).click();
+    await expect(boss.getByRole("heading", { name: "Owner controls" })).toBeVisible();
+    const featureSwitch = boss.locator(`#featured-${store.id}`);
+    await expect(featureSwitch).toHaveAttribute("aria-checked", "false");
+    await featureSwitch.click();
+    await expect(featureSwitch).toHaveAttribute("aria-checked", "true");
+    await expect(async () => {
+      await browse.goto(`/m/${mallSlug}`);
+      await expect(browse.getByRole("region", { name: "Featured restaurants" }).getByRole("link", { name: /Burger Hub/ })).toBeVisible({ timeout: 2_000 });
+    }).toPass({ timeout: 30_000 });
+
+    // ── Switching a feature off hides it from the store's dashboard ──────────────────────────
+    const reports = boss.locator("#feature-sales_reports");
+    await reports.click();
+    await expect(reports).toHaveAttribute("aria-checked", "false");
+    await ownerPage.goto(`/store/${store.id}`);
+    await expect(ownerPage.getByRole("link", { name: "Orders" })).toBeVisible();
+    await expect(ownerPage.getByRole("link", { name: "Sales report" })).toHaveCount(0);
+    await reports.click();
+    await expect(reports).toHaveAttribute("aria-checked", "true");
+    await featureSwitch.click();
+    await expect(featureSwitch).toHaveAttribute("aria-checked", "false");
   } finally {
     agent?.kill();
     kitchen.close();

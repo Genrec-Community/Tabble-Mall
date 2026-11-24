@@ -45,6 +45,33 @@ class Settings(BaseSettings):
     s3_secret_access_key: str = ""
     s3_public_base_url: str = ""
 
+    # Payments. "fake" pays instantly (dev/tests); "zoho" is Zoho Payments with Split.
+    payments_provider: Literal["fake", "zoho"] = "fake"
+    # Gateway fee each store bears on its own share of an order, in basis points (50 = 0.50%).
+    gateway_fee_bps: int = 50
+    zoho_account_id: str = ""
+    zoho_client_id: str = ""
+    zoho_client_secret: str = ""
+    zoho_refresh_token: str = ""
+    zoho_api_key: str = ""  # the widget's public API key (Settings > Developer Space)
+    zoho_webhook_signing_key: str = ""
+    zoho_sandbox: bool = True
+
+    # The customer site, for links in notifications (no trailing slash).
+    public_site_url: str = "http://localhost:8080"
+
+    # Web Push (installable app). Generate a pair with `python -m mallt.cli vapid-keys`.
+    # Empty = push notifications are off (the app still installs and works offline).
+    vapid_public_key: str = ""
+    vapid_private_key: str = ""
+    vapid_subject: str = "https://tabble-mall.vercel.app"
+
+    # WhatsApp: "off" (default), "log" (dev: logs what it would send) or "meta" (Cloud API).
+    whatsapp_provider: Literal["off", "log", "meta"] = "off"
+    whatsapp_meta_token: str = ""
+    whatsapp_meta_phone_number_id: str = ""
+    whatsapp_template_language: str = "en"
+
     @model_validator(mode="after")
     def _prod_must_be_safe(self) -> "Settings":
         if self.env != "prod":
@@ -62,6 +89,17 @@ class Settings(BaseSettings):
             raise ValueError("cookie_secure must be true in prod")
         if self.sms_backend != "fast2sms":
             raise ValueError("sms_backend must be fast2sms in prod (OTPs would never be sent)")
+        if self.payments_provider == "zoho":
+            zoho = (
+                "zoho_account_id",
+                "zoho_client_id",
+                "zoho_client_secret",
+                "zoho_refresh_token",
+                "zoho_api_key",
+                "zoho_webhook_signing_key",
+            )
+            if missing := [name for name in zoho if not getattr(self, name)]:
+                raise ValueError(f"payments_provider=zoho needs {', '.join(missing)}")
         if any("localhost" in o or "127.0.0.1" in o for o in self.cors_origins):
             raise ValueError("cors_origins must not include localhost in prod")
         return self

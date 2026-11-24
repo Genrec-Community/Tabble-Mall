@@ -1,5 +1,6 @@
 "use client";
 
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
@@ -8,8 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { CustomerMe } from "@/lib/api";
-import { ApiError } from "@/lib/api-error";
+import { Switch } from "@/components/ui/switch";
+import { notifyGetNotifyPrefs, notifyNotifyConfig, notifySetNotifyPrefs, type CustomerMe } from "@/lib/api";
+import { ApiError, unwrap } from "@/lib/api-error";
 import { useCustomerSession } from "@/lib/auth/customer-session";
 
 export function CustomerAccount() {
@@ -41,6 +43,8 @@ export function CustomerAccount() {
       )}
 
       <ProfileForm key={`${me.name}-${me.email}`} me={me} />
+
+      {me.has_phone && <WhatsAppToggle />}
 
       <Button
         variant="outline"
@@ -90,5 +94,31 @@ function ProfileForm({ me }: { me: CustomerMe }) {
       </div>
       <Button type="submit" disabled={busy}>Save</Button>
     </form>
+  );
+}
+
+/** Order updates on WhatsApp, offered only once the mall has a WhatsApp sender switched on. */
+function WhatsAppToggle() {
+  const qc = useQueryClient();
+  const config = useQuery({ queryKey: ["notify-config"], queryFn: async () => unwrap(await notifyNotifyConfig()), staleTime: 300_000 });
+  const prefs = useQuery({
+    queryKey: ["notify-prefs"],
+    queryFn: async () => unwrap(await notifyGetNotifyPrefs()),
+    enabled: config.data?.whatsapp_available === true,
+  });
+  const save = useMutation({
+    mutationFn: async (whatsapp: boolean) => unwrap(await notifySetNotifyPrefs({ body: { whatsapp } })),
+    onSuccess: (p) => qc.setQueryData(["notify-prefs"], p),
+    onError: () => toast.error("Could not save. Please try again."),
+  });
+  if (!config.data?.whatsapp_available || !prefs.data) return null;
+  return (
+    <label className="flex items-center justify-between gap-4 rounded-lg border p-4">
+      <span>
+        <span className="block font-medium">WhatsApp updates</span>
+        <span className="block text-sm text-muted-foreground">Order confirmed, ready to collect and your receipt, on WhatsApp.</span>
+      </span>
+      <Switch checked={prefs.data.whatsapp} disabled={save.isPending} onCheckedChange={(on) => save.mutate(on)} aria-label="WhatsApp updates" />
+    </label>
   );
 }

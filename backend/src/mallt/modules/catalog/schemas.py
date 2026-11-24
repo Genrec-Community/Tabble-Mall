@@ -1,5 +1,6 @@
 import re
 import uuid
+from datetime import datetime
 from typing import Annotated, Any, Literal
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
@@ -118,6 +119,8 @@ class AvailabilityVariant(BaseModel):
 
 class AvailabilityUpdate(BaseModel):
     is_available: bool | None = None
+    # True: sold out until the store's next local midnight, then back by itself. False: undo.
+    sold_out_today: bool | None = None
     variants: list[AvailabilityVariant] | None = None
 
 
@@ -155,6 +158,7 @@ class ProductOut(_Out):
     tax_bps: int
     stock_mode: StockMode
     is_available: bool
+    sold_out_until: datetime | None = None
     image_key: str | None
     image_url: str | None = None
     position: int
@@ -202,6 +206,10 @@ class SettingsUpdate(BaseModel):
     banner_key: str | None = Field(default=None, max_length=300)
     gstin: Annotated[str, StringConstraints(strip_whitespace=True, to_upper=True)] | None = None
     fssai: Annotated[str, StringConstraints(strip_whitespace=True, max_length=20)] | None = None
+    # Where customers collect, e.g. "Counter 4, Level 2". An empty string clears it.
+    pickup_point: Annotated[str, StringConstraints(strip_whitespace=True, max_length=60)] | None = (
+        None
+    )
     auto_print: bool | None = None
     kot_when: str | None = None
     bill_when: str | None = None
@@ -259,6 +267,7 @@ class SettingsOut(_Out):
     banner_url: str | None = None
     gstin: str | None
     fssai: str | None
+    pickup_point: str | None = None
     auto_print: bool
     kot_when: str
     bill_when: str
@@ -274,7 +283,15 @@ class PublicStoreCardOut(BaseModel):
     description: str | None
     food_types: list[str]
     logo_url: str | None
+    banner_url: str | None
     accepting_orders: bool
+    pickup_point: str | None
+    # The quickest dish to make right now (minutes), None when nothing can be ordered.
+    prep_minutes: int | None
+    top_dishes: list[str]  # the first few dishes on the menu, for the card's teaser line
+    # A paid featured spot is running (the owner's switches decide where it shows). 0 = first.
+    featured: bool = False
+    featured_rank: int | None = None
 
 
 class PublicOptionOut(BaseModel):
@@ -329,6 +346,7 @@ class PublicStoreOut(BaseModel):
     theme: Theme
     accepting_orders: bool
     hours: list[HoursWindow]
+    pickup_point: str | None
 
 
 class PublicMenuOut(BaseModel):
@@ -352,3 +370,13 @@ class PublicItemOut(BaseModel):
 class PublicItemsOut(BaseModel):
     items: list[PublicItemOut]
     next_cursor: uuid.UUID | None = None
+
+
+class PopularItemOut(PublicItemOut):
+    orders: int  # how many were paid for in this mall lately
+    rating: float | None = None  # customers' average stars for this dish, when rated
+    rating_count: int = 0
+
+
+class PopularOut(BaseModel):
+    items: list[PopularItemOut]

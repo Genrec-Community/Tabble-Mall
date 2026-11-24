@@ -334,6 +334,17 @@
             ],
             "title": "Is Available"
           },
+          "sold_out_today": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sold Out Today"
+          },
           "variants": {
             "anyOf": [
               {
@@ -371,6 +382,76 @@
           "stock_count"
         ],
         "title": "AvailabilityVariant",
+        "type": "object"
+      },
+      "BestSellerOut": {
+        "properties": {
+          "gross_paise": {
+            "title": "Gross Paise",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "quantity": {
+            "title": "Quantity",
+            "type": "integer"
+          },
+          "store_name": {
+            "title": "Store Name",
+            "type": "string"
+          },
+          "variant_name": {
+            "title": "Variant Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "variant_name",
+          "store_name",
+          "quantity",
+          "gross_paise"
+        ],
+        "title": "BestSellerOut",
+        "type": "object"
+      },
+      "CartGroupOut": {
+        "description": "Set while this cart is the customer's share of a group order.",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_host": {
+            "title": "Is Host",
+            "type": "boolean"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "token": {
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "token",
+          "name",
+          "is_host"
+        ],
+        "title": "CartGroupOut",
         "type": "object"
       },
       "CartLineIn": {
@@ -545,6 +626,36 @@
             "title": "Can Checkout",
             "type": "boolean"
           },
+          "coupon": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CouponOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "discount_paise": {
+            "default": 0,
+            "title": "Discount Paise",
+            "type": "integer"
+          },
+          "group": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CartGroupOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "items_total_paise": {
+            "default": 0,
+            "title": "Items Total Paise",
+            "type": "integer"
+          },
           "mall_slug": {
             "title": "Mall Slug",
             "type": "string"
@@ -576,6 +687,18 @@
             "title": "Accepting Orders",
             "type": "boolean"
           },
+          "discount_paise": {
+            "default": 0,
+            "title": "Discount Paise",
+            "type": "integer"
+          },
+          "discounts": {
+            "items": {
+              "$ref": "#/components/schemas/DiscountOut"
+            },
+            "title": "Discounts",
+            "type": "array"
+          },
           "lines": {
             "items": {
               "$ref": "#/components/schemas/CartLineOut"
@@ -597,6 +720,11 @@
           },
           "subtotal_paise": {
             "title": "Subtotal Paise",
+            "type": "integer"
+          },
+          "total_paise": {
+            "default": 0,
+            "title": "Total Paise",
             "type": "integer"
           }
         },
@@ -702,9 +830,368 @@
               }
             ],
             "title": "Note"
+          },
+          "pickup_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pickup At"
           }
         },
         "title": "CheckoutIn",
+        "type": "object"
+      },
+      "ComboCreate": {
+        "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At"
+          },
+          "is_active": {
+            "default": true,
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ComboItemIn"
+            },
+            "maxItems": 8,
+            "minItems": 2,
+            "title": "Items",
+            "type": "array"
+          },
+          "name": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "price_paise": {
+            "exclusiveMinimum": 0.0,
+            "title": "Price Paise",
+            "type": "integer"
+          },
+          "starts_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts At"
+          }
+        },
+        "required": [
+          "name",
+          "price_paise",
+          "items"
+        ],
+        "title": "ComboCreate",
+        "type": "object"
+      },
+      "ComboItemIn": {
+        "properties": {
+          "product_id": {
+            "format": "uuid",
+            "title": "Product Id",
+            "type": "string"
+          },
+          "quantity": {
+            "default": 1,
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Quantity",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "product_id"
+        ],
+        "title": "ComboItemIn",
+        "type": "object"
+      },
+      "ComboItemOut": {
+        "properties": {
+          "product_id": {
+            "format": "uuid",
+            "title": "Product Id",
+            "type": "string"
+          },
+          "product_name": {
+            "title": "Product Name",
+            "type": "string"
+          },
+          "quantity": {
+            "title": "Quantity",
+            "type": "integer"
+          },
+          "regular_price_paise": {
+            "title": "Regular Price Paise",
+            "type": "integer"
+          },
+          "store_id": {
+            "format": "uuid",
+            "title": "Store Id",
+            "type": "string"
+          },
+          "store_name": {
+            "title": "Store Name",
+            "type": "string"
+          },
+          "store_slug": {
+            "title": "Store Slug",
+            "type": "string"
+          }
+        },
+        "required": [
+          "product_id",
+          "product_name",
+          "store_id",
+          "store_slug",
+          "store_name",
+          "quantity",
+          "regular_price_paise"
+        ],
+        "title": "ComboItemOut",
+        "type": "object"
+      },
+      "ComboOut": {
+        "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_active": {
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ComboItemOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "mall_id": {
+            "format": "uuid",
+            "title": "Mall Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "price_paise": {
+            "title": "Price Paise",
+            "type": "integer"
+          },
+          "regular_price_paise": {
+            "title": "Regular Price Paise",
+            "type": "integer"
+          },
+          "starts_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts At"
+          }
+        },
+        "required": [
+          "id",
+          "mall_id",
+          "name",
+          "description",
+          "price_paise",
+          "regular_price_paise",
+          "starts_at",
+          "ends_at",
+          "is_active",
+          "items"
+        ],
+        "title": "ComboOut",
+        "type": "object"
+      },
+      "ComboUpdate": {
+        "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At"
+          },
+          "is_active": {
+            "default": true,
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ComboItemIn"
+            },
+            "maxItems": 8,
+            "minItems": 2,
+            "title": "Items",
+            "type": "array"
+          },
+          "name": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "price_paise": {
+            "exclusiveMinimum": 0.0,
+            "title": "Price Paise",
+            "type": "integer"
+          },
+          "starts_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts At"
+          }
+        },
+        "required": [
+          "name",
+          "price_paise",
+          "items"
+        ],
+        "title": "ComboUpdate",
+        "type": "object"
+      },
+      "CouponIn": {
+        "properties": {
+          "code": {
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "title": "CouponIn",
+        "type": "object"
+      },
+      "CouponOut": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "status": {
+            "enum": [
+              "applied",
+              "invalid",
+              "not_eligible",
+              "better_offer"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "status",
+          "message"
+        ],
+        "title": "CouponOut",
         "type": "object"
       },
       "CustomerMe": {
@@ -769,6 +1256,23 @@
             "title": "Created At",
             "type": "string"
           },
+          "discount_paise": {
+            "default": 0,
+            "title": "Discount Paise",
+            "type": "integer"
+          },
+          "group_order_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Order Id"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -784,6 +1288,28 @@
               }
             ],
             "title": "Mall Slug"
+          },
+          "payment": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OrderPaymentOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "pickup_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pickup At"
           },
           "status": {
             "$ref": "#/components/schemas/CustomerOrderStatus"
@@ -838,6 +1364,18 @@
             "title": "Created At",
             "type": "string"
           },
+          "discount_paise": {
+            "default": 0,
+            "title": "Discount Paise",
+            "type": "integer"
+          },
+          "discounts": {
+            "items": {
+              "$ref": "#/components/schemas/DiscountOut"
+            },
+            "title": "Discounts",
+            "type": "array"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -865,6 +1403,18 @@
             "title": "Order No",
             "type": "integer"
           },
+          "pickup_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pickup At"
+          },
           "pickup_code": {
             "title": "Pickup Code",
             "type": "string"
@@ -884,6 +1434,16 @@
             ],
             "title": "Reason"
           },
+          "review": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReviewOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "status": {
             "$ref": "#/components/schemas/StoreOrderStatus"
           },
@@ -901,6 +1461,11 @@
           "store_slug": {
             "title": "Store Slug",
             "type": "string"
+          },
+          "subtotal_paise": {
+            "default": 0,
+            "title": "Subtotal Paise",
+            "type": "integer"
           },
           "tax_paise": {
             "title": "Tax Paise",
@@ -961,6 +1526,30 @@
           }
         },
         "title": "CustomerUpdate",
+        "type": "object"
+      },
+      "DayOut": {
+        "properties": {
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "gross_paise": {
+            "title": "Gross Paise",
+            "type": "integer"
+          },
+          "orders": {
+            "title": "Orders",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "date",
+          "orders",
+          "gross_paise"
+        ],
+        "title": "DayOut",
         "type": "object"
       },
       "DesignIn": {
@@ -1180,6 +1769,375 @@
         "title": "Diet",
         "type": "string"
       },
+      "DirectoryMallOut": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ActiveStatus"
+          },
+          "stores": {
+            "items": {
+              "$ref": "#/components/schemas/DirectoryStoreOut"
+            },
+            "title": "Stores",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "status",
+          "stores"
+        ],
+        "title": "DirectoryMallOut",
+        "type": "object"
+      },
+      "DirectoryOrgOut": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "malls": {
+            "items": {
+              "$ref": "#/components/schemas/DirectoryMallOut"
+            },
+            "title": "Malls",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ActiveStatus"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "status",
+          "malls"
+        ],
+        "title": "DirectoryOrgOut",
+        "type": "object"
+      },
+      "DirectoryOut": {
+        "properties": {
+          "orgs": {
+            "items": {
+              "$ref": "#/components/schemas/DirectoryOrgOut"
+            },
+            "title": "Orgs",
+            "type": "array"
+          }
+        },
+        "required": [
+          "orgs"
+        ],
+        "title": "DirectoryOut",
+        "type": "object"
+      },
+      "DirectoryStoreOut": {
+        "properties": {
+          "featured": {
+            "title": "Featured",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ActiveStatus"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "status",
+          "featured"
+        ],
+        "title": "DirectoryStoreOut",
+        "type": "object"
+      },
+      "DiscountOut": {
+        "properties": {
+          "amount_paise": {
+            "title": "Amount Paise",
+            "type": "integer"
+          },
+          "kind": {
+            "enum": [
+              "combo",
+              "offer"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "name",
+          "amount_paise"
+        ],
+        "title": "DiscountOut",
+        "type": "object"
+      },
+      "FeatureOut": {
+        "properties": {
+          "default": {
+            "title": "Default",
+            "type": "boolean"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "group": {
+            "title": "Group",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "description",
+          "group",
+          "default",
+          "enabled"
+        ],
+        "title": "FeatureOut",
+        "type": "object"
+      },
+      "FeatureUpdate": {
+        "properties": {
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "enabled"
+        ],
+        "title": "FeatureUpdate",
+        "type": "object"
+      },
+      "FeaturedSpotCreate": {
+        "properties": {
+          "amount_paise": {
+            "default": 0,
+            "maximum": 1000000000.0,
+            "minimum": 0.0,
+            "title": "Amount Paise",
+            "type": "integer"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "starts_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts At"
+          },
+          "store_id": {
+            "format": "uuid",
+            "title": "Store Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "store_id"
+        ],
+        "title": "FeaturedSpotCreate",
+        "type": "object"
+      },
+      "FeaturedSpotOut": {
+        "properties": {
+          "amount_paise": {
+            "title": "Amount Paise",
+            "type": "integer"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "live": {
+            "title": "Live",
+            "type": "boolean"
+          },
+          "mall_id": {
+            "format": "uuid",
+            "title": "Mall Id",
+            "type": "string"
+          },
+          "mall_name": {
+            "title": "Mall Name",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "organization_id": {
+            "format": "uuid",
+            "title": "Organization Id",
+            "type": "string"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "starts_at": {
+            "format": "date-time",
+            "title": "Starts At",
+            "type": "string"
+          },
+          "store_id": {
+            "format": "uuid",
+            "title": "Store Id",
+            "type": "string"
+          },
+          "store_name": {
+            "title": "Store Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "organization_id",
+          "mall_id",
+          "store_id",
+          "store_name",
+          "mall_name",
+          "starts_at",
+          "ends_at",
+          "amount_paise",
+          "note",
+          "revoked_at",
+          "live"
+        ],
+        "title": "FeaturedSpotOut",
+        "type": "object"
+      },
+      "FeaturesOut": {
+        "description": "Public: which features are switched on right now.",
+        "properties": {
+          "flags": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "title": "Flags",
+            "type": "object"
+          }
+        },
+        "required": [
+          "flags"
+        ],
+        "title": "FeaturesOut",
+        "type": "object"
+      },
       "GoogleLogin": {
         "properties": {
           "id_token": {
@@ -1259,6 +2217,207 @@
         "title": "GrantOut",
         "type": "object"
       },
+      "GroupCreate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 40,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "title": "GroupCreate",
+        "type": "object"
+      },
+      "GroupLineOut": {
+        "properties": {
+          "product_name": {
+            "title": "Product Name",
+            "type": "string"
+          },
+          "quantity": {
+            "title": "Quantity",
+            "type": "integer"
+          },
+          "store_name": {
+            "title": "Store Name",
+            "type": "string"
+          },
+          "variant_name": {
+            "title": "Variant Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "store_name",
+          "product_name",
+          "variant_name",
+          "quantity"
+        ],
+        "title": "GroupLineOut",
+        "type": "object"
+      },
+      "GroupMemberOut": {
+        "description": "What friends see of each other: a first name and what they picked. Never a phone.",
+        "properties": {
+          "is_host": {
+            "title": "Is Host",
+            "type": "boolean"
+          },
+          "is_you": {
+            "title": "Is You",
+            "type": "boolean"
+          },
+          "item_count": {
+            "title": "Item Count",
+            "type": "integer"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/GroupLineOut"
+            },
+            "title": "Lines",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "paid_paise": {
+            "title": "Paid Paise",
+            "type": "integer"
+          },
+          "total_paise": {
+            "title": "Total Paise",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name",
+          "is_you",
+          "is_host",
+          "item_count",
+          "total_paise",
+          "paid_paise",
+          "lines"
+        ],
+        "title": "GroupMemberOut",
+        "type": "object"
+      },
+      "GroupOrderOut": {
+        "properties": {
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_host": {
+            "title": "Is Host",
+            "type": "boolean"
+          },
+          "joined": {
+            "title": "Joined",
+            "type": "boolean"
+          },
+          "mall_slug": {
+            "title": "Mall Slug",
+            "type": "string"
+          },
+          "members": {
+            "items": {
+              "$ref": "#/components/schemas/GroupMemberOut"
+            },
+            "title": "Members",
+            "type": "array"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "status": {
+            "enum": [
+              "open",
+              "closed",
+              "expired"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "token": {
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "token",
+          "name",
+          "mall_slug",
+          "status",
+          "expires_at",
+          "is_host",
+          "joined",
+          "members"
+        ],
+        "title": "GroupOrderOut",
+        "type": "object"
+      },
+      "GstRateOut": {
+        "properties": {
+          "cgst_paise": {
+            "title": "Cgst Paise",
+            "type": "integer"
+          },
+          "gross_paise": {
+            "title": "Gross Paise",
+            "type": "integer"
+          },
+          "sgst_paise": {
+            "title": "Sgst Paise",
+            "type": "integer"
+          },
+          "tax_bps": {
+            "title": "Tax Bps",
+            "type": "integer"
+          },
+          "tax_paise": {
+            "title": "Tax Paise",
+            "type": "integer"
+          },
+          "taxable_paise": {
+            "title": "Taxable Paise",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "tax_bps",
+          "taxable_paise",
+          "cgst_paise",
+          "sgst_paise",
+          "tax_paise",
+          "gross_paise"
+        ],
+        "title": "GstRateOut",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -1270,6 +2429,29 @@
           }
         },
         "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HourOut": {
+        "properties": {
+          "gross_paise": {
+            "title": "Gross Paise",
+            "type": "integer"
+          },
+          "hour": {
+            "title": "Hour",
+            "type": "integer"
+          },
+          "orders": {
+            "title": "Orders",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "hour",
+          "orders",
+          "gross_paise"
+        ],
+        "title": "HourOut",
         "type": "object"
       },
       "HoursWindow": {
@@ -1366,6 +2548,175 @@
           "public_url"
         ],
         "title": "ImagePresignOut",
+        "type": "object"
+      },
+      "InvoiceLineOut": {
+        "properties": {
+          "cgst_paise": {
+            "title": "Cgst Paise",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "quantity": {
+            "title": "Quantity",
+            "type": "integer"
+          },
+          "sgst_paise": {
+            "title": "Sgst Paise",
+            "type": "integer"
+          },
+          "tax_bps": {
+            "title": "Tax Bps",
+            "type": "integer"
+          },
+          "taxable_paise": {
+            "title": "Taxable Paise",
+            "type": "integer"
+          },
+          "total_paise": {
+            "title": "Total Paise",
+            "type": "integer"
+          },
+          "unit_price_paise": {
+            "title": "Unit Price Paise",
+            "type": "integer"
+          },
+          "variant_name": {
+            "title": "Variant Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "variant_name",
+          "quantity",
+          "unit_price_paise",
+          "tax_bps",
+          "taxable_paise",
+          "cgst_paise",
+          "sgst_paise",
+          "total_paise"
+        ],
+        "title": "InvoiceLineOut",
+        "type": "object"
+      },
+      "InvoiceOut": {
+        "description": "A GST tax invoice for one store order. Never carries the pickup code.",
+        "properties": {
+          "cgst_paise": {
+            "title": "Cgst Paise",
+            "type": "integer"
+          },
+          "customer_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Name"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "invoice_no": {
+            "title": "Invoice No",
+            "type": "string"
+          },
+          "issued_at": {
+            "format": "date-time",
+            "title": "Issued At",
+            "type": "string"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/InvoiceLineOut"
+            },
+            "title": "Lines",
+            "type": "array"
+          },
+          "order_id": {
+            "format": "uuid",
+            "title": "Order Id",
+            "type": "string"
+          },
+          "order_no": {
+            "title": "Order No",
+            "type": "integer"
+          },
+          "sac": {
+            "title": "Sac",
+            "type": "string"
+          },
+          "sgst_paise": {
+            "title": "Sgst Paise",
+            "type": "integer"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "store_fssai": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Store Fssai"
+          },
+          "store_gstin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Store Gstin"
+          },
+          "store_name": {
+            "title": "Store Name",
+            "type": "string"
+          },
+          "taxable_paise": {
+            "title": "Taxable Paise",
+            "type": "integer"
+          },
+          "total_paise": {
+            "title": "Total Paise",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "invoice_no",
+          "order_id",
+          "order_no",
+          "date",
+          "issued_at",
+          "status",
+          "store_name",
+          "store_gstin",
+          "store_fssai",
+          "customer_name",
+          "sac",
+          "lines",
+          "taxable_paise",
+          "cgst_paise",
+          "sgst_paise",
+          "total_paise"
+        ],
+        "title": "InvoiceOut",
         "type": "object"
       },
       "JobKind": {
@@ -1491,6 +2842,31 @@
         "title": "MallOut",
         "type": "object"
       },
+      "MallRatingsOut": {
+        "description": "Ratings for a mall's stores (by slug) and dishes (by product id).",
+        "properties": {
+          "products": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/RatingOut"
+            },
+            "title": "Products",
+            "type": "object"
+          },
+          "stores": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/RatingOut"
+            },
+            "title": "Stores",
+            "type": "object"
+          }
+        },
+        "required": [
+          "stores",
+          "products"
+        ],
+        "title": "MallRatingsOut",
+        "type": "object"
+      },
       "MallUpdate": {
         "properties": {
           "address": {
@@ -1533,6 +2909,395 @@
           }
         },
         "title": "MallUpdate",
+        "type": "object"
+      },
+      "NotifyConfigOut": {
+        "description": "Public: what the browser needs to offer notifications.",
+        "properties": {
+          "push_public_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Push Public Key"
+          },
+          "whatsapp_available": {
+            "title": "Whatsapp Available",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "push_public_key",
+          "whatsapp_available"
+        ],
+        "title": "NotifyConfigOut",
+        "type": "object"
+      },
+      "NotifyPrefsOut": {
+        "properties": {
+          "push_devices": {
+            "title": "Push Devices",
+            "type": "integer"
+          },
+          "whatsapp": {
+            "title": "Whatsapp",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "whatsapp",
+          "push_devices"
+        ],
+        "title": "NotifyPrefsOut",
+        "type": "object"
+      },
+      "NotifyPrefsUpdate": {
+        "properties": {
+          "whatsapp": {
+            "title": "Whatsapp",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "whatsapp"
+        ],
+        "title": "NotifyPrefsUpdate",
+        "type": "object"
+      },
+      "OfferActiveUpdate": {
+        "properties": {
+          "is_active": {
+            "title": "Is Active",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "is_active"
+        ],
+        "title": "OfferActiveUpdate",
+        "type": "object"
+      },
+      "OfferCreate": {
+        "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9]{3,20}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At"
+          },
+          "is_active": {
+            "default": true,
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "kind": {
+            "enum": [
+              "percent",
+              "flat"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "max_discount_paise": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Discount Paise"
+          },
+          "min_subtotal_paise": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Min Subtotal Paise",
+            "type": "integer"
+          },
+          "per_customer_limit": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Per Customer Limit"
+          },
+          "starts_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts At"
+          },
+          "title": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "value": {
+            "exclusiveMinimum": 0.0,
+            "maximum": 10000000.0,
+            "title": "Value",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "title",
+          "kind",
+          "value"
+        ],
+        "title": "OfferCreate",
+        "type": "object"
+      },
+      "OfferOut": {
+        "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_active": {
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "max_discount_paise": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Discount Paise"
+          },
+          "min_subtotal_paise": {
+            "title": "Min Subtotal Paise",
+            "type": "integer"
+          },
+          "per_customer_limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Per Customer Limit"
+          },
+          "starts_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts At"
+          },
+          "store_id": {
+            "format": "uuid",
+            "title": "Store Id",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "store_id",
+          "title",
+          "code",
+          "kind",
+          "value",
+          "max_discount_paise",
+          "min_subtotal_paise",
+          "per_customer_limit",
+          "starts_at",
+          "ends_at",
+          "is_active",
+          "created_at"
+        ],
+        "title": "OfferOut",
+        "type": "object"
+      },
+      "OfferUpdate": {
+        "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9]{3,20}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At"
+          },
+          "is_active": {
+            "default": true,
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "kind": {
+            "enum": [
+              "percent",
+              "flat"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "max_discount_paise": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Discount Paise"
+          },
+          "min_subtotal_paise": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Min Subtotal Paise",
+            "type": "integer"
+          },
+          "per_customer_limit": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Per Customer Limit"
+          },
+          "starts_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts At"
+          },
+          "title": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "value": {
+            "exclusiveMinimum": 0.0,
+            "maximum": 10000000.0,
+            "title": "Value",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "title",
+          "kind",
+          "value"
+        ],
+        "title": "OfferUpdate",
         "type": "object"
       },
       "OptionGroupIn": {
@@ -1750,6 +3515,41 @@
         "title": "OrderLineOut",
         "type": "object"
       },
+      "OrderPaymentOut": {
+        "properties": {
+          "pay_by": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pay By"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "zoho": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ZohoCheckoutOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "provider"
+        ],
+        "title": "OrderPaymentOut",
+        "type": "object"
+      },
       "OrderStepOut": {
         "properties": {
           "at": {
@@ -1821,10 +3621,6 @@
             "title": "Accept Timeout S",
             "type": "integer"
           },
-          "commission_bps": {
-            "title": "Commission Bps",
-            "type": "integer"
-          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -1852,7 +3648,6 @@
           "name",
           "slug",
           "status",
-          "commission_bps",
           "accept_timeout_s",
           "created_at"
         ],
@@ -1873,19 +3668,6 @@
               }
             ],
             "title": "Accept Timeout S"
-          },
-          "commission_bps": {
-            "anyOf": [
-              {
-                "maximum": 10000.0,
-                "minimum": 0.0,
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Commission Bps"
           },
           "name": {
             "anyOf": [
@@ -2071,6 +3853,34 @@
         "title": "Page[StoreOrderOut]",
         "type": "object"
       },
+      "Page_StoreReviewOut_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/StoreReviewOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "Page[StoreReviewOut]",
+        "type": "object"
+      },
       "PasswordChange": {
         "properties": {
           "current_password": {
@@ -2093,6 +3903,301 @@
         "title": "PasswordChange",
         "type": "object"
       },
+      "PaymentConfirmIn": {
+        "additionalProperties": false,
+        "properties": {
+          "payment_id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Payment Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "payment_id"
+        ],
+        "title": "PaymentConfirmIn",
+        "type": "object"
+      },
+      "PaymentTaskOut": {
+        "properties": {
+          "amount_paise": {
+            "title": "Amount Paise",
+            "type": "integer"
+          },
+          "attempts": {
+            "title": "Attempts",
+            "type": "integer"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "customer_order_id": {
+            "format": "uuid",
+            "title": "Customer Order Id",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/TaskKind"
+          },
+          "last_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error"
+          },
+          "next_attempt_at": {
+            "format": "date-time",
+            "title": "Next Attempt At",
+            "type": "string"
+          },
+          "order_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Label"
+          },
+          "provider_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider Ref"
+          },
+          "status": {
+            "$ref": "#/components/schemas/TaskStatus"
+          },
+          "store_id": {
+            "format": "uuid",
+            "title": "Store Id",
+            "type": "string"
+          },
+          "store_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Store Name"
+          },
+          "store_order_id": {
+            "format": "uuid",
+            "title": "Store Order Id",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "store_id",
+          "customer_order_id",
+          "store_order_id",
+          "kind",
+          "status",
+          "amount_paise",
+          "attempts",
+          "last_error",
+          "created_at",
+          "updated_at",
+          "next_attempt_at"
+        ],
+        "title": "PaymentTaskOut",
+        "type": "object"
+      },
+      "PaymentsOverviewOut": {
+        "properties": {
+          "accounts": {
+            "items": {
+              "$ref": "#/components/schemas/PayoutAccountOut"
+            },
+            "title": "Accounts",
+            "type": "array"
+          },
+          "failed_tasks": {
+            "items": {
+              "$ref": "#/components/schemas/PaymentTaskOut"
+            },
+            "title": "Failed Tasks",
+            "type": "array"
+          },
+          "retrying_tasks": {
+            "items": {
+              "$ref": "#/components/schemas/PaymentTaskOut"
+            },
+            "title": "Retrying Tasks",
+            "type": "array"
+          }
+        },
+        "required": [
+          "accounts",
+          "failed_tasks"
+        ],
+        "title": "PaymentsOverviewOut",
+        "type": "object"
+      },
+      "PayoutAccountCreate": {
+        "additionalProperties": false,
+        "description": "A store's bank details for its Zoho connected account. Sent once to Zoho; MallT keeps only\nthe masked parts.",
+        "properties": {
+          "account_name": {
+            "maxLength": 100,
+            "minLength": 2,
+            "title": "Account Name",
+            "type": "string"
+          },
+          "account_number": {
+            "pattern": "^\\d{9,18}$",
+            "title": "Account Number",
+            "type": "string"
+          },
+          "business_description": {
+            "maxLength": 1000,
+            "minLength": 10,
+            "title": "Business Description",
+            "type": "string"
+          },
+          "email": {
+            "maxLength": 254,
+            "pattern": "^[^@\\s]+@[^@\\s]+\\.\\w+$",
+            "title": "Email",
+            "type": "string"
+          },
+          "ifsc": {
+            "pattern": "^[A-Za-z]{4}0[A-Za-z0-9]{6}$",
+            "title": "Ifsc",
+            "type": "string"
+          },
+          "mcc": {
+            "default": "5814",
+            "description": "Merchant category code; 5814 = fast food restaurants",
+            "pattern": "^\\d{4}$",
+            "title": "Mcc",
+            "type": "string"
+          },
+          "pan": {
+            "pattern": "^[A-Za-z]{5}[0-9]{4}[A-Za-z]$",
+            "title": "Pan",
+            "type": "string"
+          }
+        },
+        "required": [
+          "account_name",
+          "email",
+          "pan",
+          "business_description",
+          "ifsc",
+          "account_number"
+        ],
+        "title": "PayoutAccountCreate",
+        "type": "object"
+      },
+      "PayoutAccountOut": {
+        "properties": {
+          "account_name": {
+            "title": "Account Name",
+            "type": "string"
+          },
+          "bank_masked": {
+            "title": "Bank Masked",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "ifsc": {
+            "title": "Ifsc",
+            "type": "string"
+          },
+          "mcc": {
+            "title": "Mcc",
+            "type": "string"
+          },
+          "pan_masked": {
+            "title": "Pan Masked",
+            "type": "string"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "review_status": {
+            "title": "Review Status",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PayoutStatus"
+          },
+          "store_id": {
+            "format": "uuid",
+            "title": "Store Id",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "store_id",
+          "provider",
+          "account_name",
+          "email",
+          "pan_masked",
+          "bank_masked",
+          "ifsc",
+          "mcc",
+          "status",
+          "review_status",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "PayoutAccountOut",
+        "type": "object"
+      },
+      "PayoutStatus": {
+        "enum": [
+          "pending",
+          "active",
+          "disabled"
+        ],
+        "title": "PayoutStatus",
+        "type": "string"
+      },
       "PickupIn": {
         "properties": {
           "code": {
@@ -2105,6 +4210,98 @@
           "code"
         ],
         "title": "PickupIn",
+        "type": "object"
+      },
+      "PickupSlotsOut": {
+        "description": "When this cart can be collected: as soon as possible, or one of these times.",
+        "properties": {
+          "asap_minutes": {
+            "title": "Asap Minutes",
+            "type": "integer"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "slots": {
+            "items": {
+              "format": "date-time",
+              "type": "string"
+            },
+            "title": "Slots",
+            "type": "array"
+          }
+        },
+        "required": [
+          "enabled",
+          "asap_minutes",
+          "slots"
+        ],
+        "title": "PickupSlotsOut",
+        "type": "object"
+      },
+      "PopularItemOut": {
+        "properties": {
+          "accepting_orders": {
+            "title": "Accepting Orders",
+            "type": "boolean"
+          },
+          "orders": {
+            "title": "Orders",
+            "type": "integer"
+          },
+          "product": {
+            "$ref": "#/components/schemas/PublicProductOut"
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating"
+          },
+          "rating_count": {
+            "default": 0,
+            "title": "Rating Count",
+            "type": "integer"
+          },
+          "store_name": {
+            "title": "Store Name",
+            "type": "string"
+          },
+          "store_slug": {
+            "title": "Store Slug",
+            "type": "string"
+          }
+        },
+        "required": [
+          "store_slug",
+          "store_name",
+          "accepting_orders",
+          "product",
+          "orders"
+        ],
+        "title": "PopularItemOut",
+        "type": "object"
+      },
+      "PopularOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PopularItemOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "PopularOut",
         "type": "object"
       },
       "PrintJobOut": {
@@ -2858,6 +5055,18 @@
             "title": "Prep Minutes",
             "type": "integer"
           },
+          "sold_out_until": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sold Out Until"
+          },
           "stock_mode": {
             "$ref": "#/components/schemas/StockMode"
           },
@@ -3054,6 +5263,112 @@
         "title": "PublicMenuOut",
         "type": "object"
       },
+      "PublicOfferOut": {
+        "description": "An offer a customer may see: automatic ones and coupons alike.",
+        "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "max_discount_paise": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Discount Paise"
+          },
+          "min_subtotal_paise": {
+            "title": "Min Subtotal Paise",
+            "type": "integer"
+          },
+          "store_name": {
+            "title": "Store Name",
+            "type": "string"
+          },
+          "store_slug": {
+            "title": "Store Slug",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "store_slug",
+          "store_name",
+          "title",
+          "code",
+          "kind",
+          "value",
+          "max_discount_paise",
+          "min_subtotal_paise",
+          "ends_at"
+        ],
+        "title": "PublicOfferOut",
+        "type": "object"
+      },
+      "PublicOffersOut": {
+        "properties": {
+          "combos": {
+            "items": {
+              "$ref": "#/components/schemas/ComboOut"
+            },
+            "title": "Combos",
+            "type": "array"
+          },
+          "offers": {
+            "items": {
+              "$ref": "#/components/schemas/PublicOfferOut"
+            },
+            "title": "Offers",
+            "type": "array"
+          }
+        },
+        "required": [
+          "offers",
+          "combos"
+        ],
+        "title": "PublicOffersOut",
+        "type": "object"
+      },
       "PublicOptionGroupOut": {
         "properties": {
           "id": {
@@ -3227,6 +5542,17 @@
             "title": "Accepting Orders",
             "type": "boolean"
           },
+          "banner_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Banner Url"
+          },
           "description": {
             "anyOf": [
               {
@@ -3237,6 +5563,22 @@
               }
             ],
             "title": "Description"
+          },
+          "featured": {
+            "default": false,
+            "title": "Featured",
+            "type": "boolean"
+          },
+          "featured_rank": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Featured Rank"
           },
           "food_types": {
             "items": {
@@ -3260,9 +5602,38 @@
             "title": "Name",
             "type": "string"
           },
+          "pickup_point": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pickup Point"
+          },
+          "prep_minutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prep Minutes"
+          },
           "slug": {
             "title": "Slug",
             "type": "string"
+          },
+          "top_dishes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Top Dishes",
+            "type": "array"
           }
         },
         "required": [
@@ -3271,7 +5642,11 @@
           "description",
           "food_types",
           "logo_url",
-          "accepting_orders"
+          "banner_url",
+          "accepting_orders",
+          "pickup_point",
+          "prep_minutes",
+          "top_dishes"
         ],
         "title": "PublicStoreCardOut",
         "type": "object"
@@ -3305,6 +5680,82 @@
         "title": "PublicVariantOut",
         "type": "object"
       },
+      "PushKeys": {
+        "properties": {
+          "auth": {
+            "maxLength": 200,
+            "minLength": 8,
+            "pattern": "^[A-Za-z0-9_\\-=]+$",
+            "title": "Auth",
+            "type": "string"
+          },
+          "p256dh": {
+            "maxLength": 200,
+            "minLength": 8,
+            "pattern": "^[A-Za-z0-9_\\-=]+$",
+            "title": "P256Dh",
+            "type": "string"
+          }
+        },
+        "required": [
+          "p256dh",
+          "auth"
+        ],
+        "title": "PushKeys",
+        "type": "object"
+      },
+      "PushSubscriptionIn": {
+        "description": "What the browser's PushManager.subscribe() returns (subscription.toJSON()).",
+        "properties": {
+          "endpoint": {
+            "maxLength": 1000,
+            "pattern": "^https://",
+            "title": "Endpoint",
+            "type": "string"
+          },
+          "keys": {
+            "$ref": "#/components/schemas/PushKeys"
+          }
+        },
+        "required": [
+          "endpoint",
+          "keys"
+        ],
+        "title": "PushSubscriptionIn",
+        "type": "object"
+      },
+      "PushUnsubscribeIn": {
+        "properties": {
+          "endpoint": {
+            "maxLength": 1000,
+            "title": "Endpoint",
+            "type": "string"
+          }
+        },
+        "required": [
+          "endpoint"
+        ],
+        "title": "PushUnsubscribeIn",
+        "type": "object"
+      },
+      "RatingOut": {
+        "properties": {
+          "average": {
+            "title": "Average",
+            "type": "number"
+          },
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "average",
+          "count"
+        ],
+        "title": "RatingOut",
+        "type": "object"
+      },
       "ReasonIn": {
         "properties": {
           "reason": {
@@ -3318,6 +5769,103 @@
           "reason"
         ],
         "title": "ReasonIn",
+        "type": "object"
+      },
+      "ReorderIn": {
+        "properties": {
+          "order_id": {
+            "format": "uuid",
+            "title": "Order Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "order_id"
+        ],
+        "title": "ReorderIn",
+        "type": "object"
+      },
+      "ReorderOut": {
+        "properties": {
+          "added": {
+            "title": "Added",
+            "type": "integer"
+          },
+          "cart": {
+            "$ref": "#/components/schemas/CartOut"
+          },
+          "skipped": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Skipped",
+            "type": "array"
+          }
+        },
+        "required": [
+          "cart",
+          "added",
+          "skipped"
+        ],
+        "title": "ReorderOut",
+        "type": "object"
+      },
+      "ReportTotalsOut": {
+        "properties": {
+          "average_order_paise": {
+            "title": "Average Order Paise",
+            "type": "integer"
+          },
+          "cancelled_orders": {
+            "title": "Cancelled Orders",
+            "type": "integer"
+          },
+          "cancelled_paise": {
+            "title": "Cancelled Paise",
+            "type": "integer"
+          },
+          "gateway_fee_paise": {
+            "title": "Gateway Fee Paise",
+            "type": "integer"
+          },
+          "gross_paise": {
+            "title": "Gross Paise",
+            "type": "integer"
+          },
+          "items": {
+            "title": "Items",
+            "type": "integer"
+          },
+          "orders": {
+            "title": "Orders",
+            "type": "integer"
+          },
+          "payout_paise": {
+            "title": "Payout Paise",
+            "type": "integer"
+          },
+          "tax_paise": {
+            "title": "Tax Paise",
+            "type": "integer"
+          },
+          "taxable_paise": {
+            "title": "Taxable Paise",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "orders",
+          "items",
+          "gross_paise",
+          "tax_paise",
+          "taxable_paise",
+          "gateway_fee_paise",
+          "payout_paise",
+          "average_order_paise",
+          "cancelled_orders",
+          "cancelled_paise"
+        ],
+        "title": "ReportTotalsOut",
         "type": "object"
       },
       "ReprintIn": {
@@ -3349,6 +5897,91 @@
           "queued"
         ],
         "title": "ReprintOut",
+        "type": "object"
+      },
+      "ReviewIn": {
+        "properties": {
+          "comment": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "rating": {
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Rating",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "rating"
+        ],
+        "title": "ReviewIn",
+        "type": "object"
+      },
+      "ReviewOut": {
+        "properties": {
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "rating": {
+            "title": "Rating",
+            "type": "integer"
+          },
+          "reply": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reply"
+          }
+        },
+        "required": [
+          "rating",
+          "comment",
+          "reply",
+          "created_at"
+        ],
+        "title": "ReviewOut",
+        "type": "object"
+      },
+      "ReviewReplyIn": {
+        "properties": {
+          "reply": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Reply",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reply"
+        ],
+        "title": "ReviewReplyIn",
         "type": "object"
       },
       "RoleAssign": {
@@ -3418,6 +6051,75 @@
           "grantable_by"
         ],
         "title": "RoleOut",
+        "type": "object"
+      },
+      "SalesReportOut": {
+        "properties": {
+          "best_sellers": {
+            "items": {
+              "$ref": "#/components/schemas/BestSellerOut"
+            },
+            "title": "Best Sellers",
+            "type": "array"
+          },
+          "days": {
+            "items": {
+              "$ref": "#/components/schemas/DayOut"
+            },
+            "title": "Days",
+            "type": "array"
+          },
+          "end": {
+            "format": "date",
+            "title": "End",
+            "type": "string"
+          },
+          "gst": {
+            "items": {
+              "$ref": "#/components/schemas/GstRateOut"
+            },
+            "title": "Gst",
+            "type": "array"
+          },
+          "hours": {
+            "items": {
+              "$ref": "#/components/schemas/HourOut"
+            },
+            "title": "Hours",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "start": {
+            "format": "date",
+            "title": "Start",
+            "type": "string"
+          },
+          "stores": {
+            "items": {
+              "$ref": "#/components/schemas/StoreTotalsOut"
+            },
+            "title": "Stores",
+            "type": "array"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/ReportTotalsOut"
+          }
+        },
+        "required": [
+          "start",
+          "end",
+          "name",
+          "totals",
+          "best_sellers",
+          "hours",
+          "days",
+          "gst",
+          "stores"
+        ],
+        "title": "SalesReportOut",
         "type": "object"
       },
       "ScanOut": {
@@ -3605,6 +6307,17 @@
             ],
             "title": "Logo Url"
           },
+          "pickup_point": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pickup Point"
+          },
           "store_id": {
             "format": "uuid",
             "title": "Store Id",
@@ -3770,6 +6483,18 @@
               }
             ],
             "title": "Logo Key"
+          },
+          "pickup_point": {
+            "anyOf": [
+              {
+                "maxLength": 60,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pickup Point"
           },
           "theme": {
             "anyOf": [
@@ -4343,6 +7068,18 @@
             ],
             "title": "Customer Phone"
           },
+          "discount_paise": {
+            "default": 0,
+            "title": "Discount Paise",
+            "type": "integer"
+          },
+          "discounts": {
+            "items": {
+              "$ref": "#/components/schemas/DiscountOut"
+            },
+            "title": "Discounts",
+            "type": "array"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -4381,6 +7118,18 @@
               }
             ],
             "title": "Picked Up At"
+          },
+          "pickup_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pickup At"
           },
           "prep_minutes": {
             "title": "Prep Minutes",
@@ -4423,6 +7172,11 @@
             "format": "uuid",
             "title": "Store Id",
             "type": "string"
+          },
+          "subtotal_paise": {
+            "default": 0,
+            "title": "Subtotal Paise",
+            "type": "integer"
           },
           "tax_paise": {
             "title": "Tax Paise",
@@ -4475,17 +7229,6 @@
       },
       "StoreOut": {
         "properties": {
-          "commission_bps": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Commission Bps"
-          },
           "description": {
             "anyOf": [
               {
@@ -4531,27 +7274,270 @@
           "name",
           "slug",
           "status",
-          "description",
-          "commission_bps"
+          "description"
         ],
         "title": "StoreOut",
         "type": "object"
       },
-      "StoreUpdate": {
+      "StorePayoutRowOut": {
         "properties": {
-          "commission_bps": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "fee_paise": {
+            "title": "Fee Paise",
+            "type": "integer"
+          },
+          "order_label": {
             "anyOf": [
               {
-                "maximum": 10000.0,
-                "minimum": 0.0,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Label"
+          },
+          "order_total_paise": {
+            "title": "Order Total Paise",
+            "type": "integer"
+          },
+          "payout_paise": {
+            "title": "Payout Paise",
+            "type": "integer"
+          },
+          "refund_paise": {
+            "anyOf": [
+              {
                 "type": "integer"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Commission Bps"
+            "title": "Refund Paise"
           },
+          "refund_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TaskStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "store_order_id": {
+            "format": "uuid",
+            "title": "Store Order Id",
+            "type": "string"
+          },
+          "transfer_status": {
+            "$ref": "#/components/schemas/TaskStatus"
+          }
+        },
+        "required": [
+          "store_order_id",
+          "order_label",
+          "created_at",
+          "order_total_paise",
+          "fee_paise",
+          "payout_paise",
+          "transfer_status"
+        ],
+        "title": "StorePayoutRowOut",
+        "type": "object"
+      },
+      "StorePayoutSummaryOut": {
+        "description": "All amounts in paise, over the store's whole history.",
+        "properties": {
+          "failed_paise": {
+            "title": "Failed Paise",
+            "type": "integer"
+          },
+          "fees_paise": {
+            "title": "Fees Paise",
+            "type": "integer"
+          },
+          "on_the_way_paise": {
+            "title": "On The Way Paise",
+            "type": "integer"
+          },
+          "paid_out_paise": {
+            "title": "Paid Out Paise",
+            "type": "integer"
+          },
+          "refunded_paise": {
+            "title": "Refunded Paise",
+            "type": "integer"
+          },
+          "sales_paise": {
+            "title": "Sales Paise",
+            "type": "integer"
+          },
+          "taken_back_paise": {
+            "title": "Taken Back Paise",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "sales_paise",
+          "fees_paise",
+          "paid_out_paise",
+          "on_the_way_paise",
+          "failed_paise",
+          "taken_back_paise",
+          "refunded_paise"
+        ],
+        "title": "StorePayoutSummaryOut",
+        "type": "object"
+      },
+      "StorePayoutsOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/StorePayoutRowOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/StorePayoutSummaryOut"
+          }
+        },
+        "required": [
+          "summary",
+          "items"
+        ],
+        "title": "StorePayoutsOut",
+        "type": "object"
+      },
+      "StoreReviewOut": {
+        "description": "A review as the store and other customers see it: a first name, never a phone.",
+        "properties": {
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "customer_name": {
+            "title": "Customer Name",
+            "type": "string"
+          },
+          "dishes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Dishes",
+            "type": "array"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "order_no": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order No"
+          },
+          "rating": {
+            "title": "Rating",
+            "type": "integer"
+          },
+          "reply": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reply"
+          },
+          "store_order_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Store Order Id"
+          }
+        },
+        "required": [
+          "id",
+          "rating",
+          "comment",
+          "reply",
+          "customer_name",
+          "dishes",
+          "created_at"
+        ],
+        "title": "StoreReviewOut",
+        "type": "object"
+      },
+      "StoreTotalsOut": {
+        "properties": {
+          "store_id": {
+            "format": "uuid",
+            "title": "Store Id",
+            "type": "string"
+          },
+          "store_name": {
+            "title": "Store Name",
+            "type": "string"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/ReportTotalsOut"
+          }
+        },
+        "required": [
+          "store_id",
+          "store_name",
+          "totals"
+        ],
+        "title": "StoreTotalsOut",
+        "type": "object"
+      },
+      "StoreUpdate": {
+        "properties": {
           "description": {
             "anyOf": [
               {
@@ -4580,6 +7566,25 @@
         },
         "title": "StoreUpdate",
         "type": "object"
+      },
+      "TaskKind": {
+        "enum": [
+          "transfer",
+          "reversal",
+          "refund"
+        ],
+        "title": "TaskKind",
+        "type": "string"
+      },
+      "TaskStatus": {
+        "enum": [
+          "pending",
+          "done",
+          "failed",
+          "cancelled"
+        ],
+        "title": "TaskStatus",
+        "type": "string"
       },
       "TempPasswordOut": {
         "properties": {
@@ -4846,6 +7851,77 @@
         "title": "Window",
         "type": "object"
       },
+      "ZohoCheckoutOut": {
+        "description": "What the browser passes to Zoho's checkout widget (zpayments.js). No secrets: the API key\nis Zoho's public widget key.",
+        "properties": {
+          "account_id": {
+            "title": "Account Id",
+            "type": "string"
+          },
+          "amount": {
+            "title": "Amount",
+            "type": "string"
+          },
+          "api_key": {
+            "title": "Api Key",
+            "type": "string"
+          },
+          "currency_code": {
+            "title": "Currency Code",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "domain": {
+            "title": "Domain",
+            "type": "string"
+          },
+          "is_test_mode": {
+            "title": "Is Test Mode",
+            "type": "boolean"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "payments_session_id": {
+            "title": "Payments Session Id",
+            "type": "string"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          }
+        },
+        "required": [
+          "account_id",
+          "api_key",
+          "domain",
+          "is_test_mode",
+          "payments_session_id",
+          "amount",
+          "currency_code",
+          "description"
+        ],
+        "title": "ZohoCheckoutOut",
+        "type": "object"
+      },
       "mallt__modules__catalog__schemas__PublicStoreOut": {
         "properties": {
           "accepting_orders": {
@@ -4903,6 +7979,17 @@
             "title": "Name",
             "type": "string"
           },
+          "pickup_point": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pickup Point"
+          },
           "slug": {
             "title": "Slug",
             "type": "string"
@@ -4920,7 +8007,8 @@
           "banner_url",
           "theme",
           "accepting_orders",
-          "hours"
+          "hours",
+          "pickup_point"
         ],
         "title": "PublicStoreOut",
         "type": "object"
@@ -5040,6 +8128,304 @@
         "summary": "List All Audit",
         "tags": [
           "audit"
+        ]
+      }
+    },
+    "/api/v1/admin/directory": {
+      "get": {
+        "operationId": "owner_directory",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DirectoryOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Directory",
+        "tags": [
+          "owner"
+        ]
+      }
+    },
+    "/api/v1/admin/featured": {
+      "get": {
+        "operationId": "owner_list_featured",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "mall_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Mall Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/FeaturedSpotOut"
+                  },
+                  "title": "Response Owner List Featured",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Featured",
+        "tags": [
+          "owner"
+        ]
+      },
+      "post": {
+        "operationId": "owner_grant_featured",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeaturedSpotCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeaturedSpotOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Grant Featured",
+        "tags": [
+          "owner"
+        ]
+      }
+    },
+    "/api/v1/admin/featured/{spot_id}/revoke": {
+      "post": {
+        "operationId": "owner_revoke_featured",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "spot_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Spot Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeaturedSpotOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Revoke Featured",
+        "tags": [
+          "owner"
+        ]
+      }
+    },
+    "/api/v1/admin/features": {
+      "get": {
+        "operationId": "owner_list_features",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/FeatureOut"
+                  },
+                  "title": "Response Owner List Features",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Features",
+        "tags": [
+          "owner"
+        ]
+      }
+    },
+    "/api/v1/admin/features/{key}": {
+      "put": {
+        "operationId": "owner_set_feature",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "title": "Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeatureUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeatureOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Feature",
+        "tags": [
+          "owner"
+        ]
+      }
+    },
+    "/api/v1/admin/payments": {
+      "get": {
+        "operationId": "payments_payments_overview",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentsOverviewOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Payments Overview",
+        "tags": [
+          "payments"
+        ]
+      }
+    },
+    "/api/v1/admin/payments/tasks/{task_id}/retry": {
+      "post": {
+        "operationId": "payments_retry_payment_task",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Task Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentTaskOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Retry Payment Task",
+        "tags": [
+          "payments"
         ]
       }
     },
@@ -5527,6 +8913,190 @@
         ]
       }
     },
+    "/api/v1/features": {
+      "get": {
+        "operationId": "features_get_features",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeaturesOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Features",
+        "tags": [
+          "features"
+        ]
+      }
+    },
+    "/api/v1/groups/{token}": {
+      "get": {
+        "operationId": "orders_get_group",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupOrderOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Group",
+        "tags": [
+          "orders"
+        ]
+      }
+    },
+    "/api/v1/groups/{token}/close": {
+      "post": {
+        "description": "The host stops new people joining. Members can still pay for their share.",
+        "operationId": "orders_close_group",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupOrderOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Close Group",
+        "tags": [
+          "orders"
+        ]
+      }
+    },
+    "/api/v1/groups/{token}/join": {
+      "post": {
+        "description": "Your cart in the group's mall becomes your share; you pay for it yourself.",
+        "operationId": "orders_join_group",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupOrderOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Join Group",
+        "tags": [
+          "orders"
+        ]
+      }
+    },
+    "/api/v1/groups/{token}/leave": {
+      "post": {
+        "operationId": "orders_leave_group",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Leave Group",
+        "tags": [
+          "orders"
+        ]
+      }
+    },
     "/api/v1/health": {
       "get": {
         "operationId": "health_get_health",
@@ -5685,6 +9255,274 @@
         ]
       }
     },
+    "/api/v1/malls/{mall_id}/combos": {
+      "get": {
+        "operationId": "offers_list_combos",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mall_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Mall Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ComboOut"
+                  },
+                  "title": "Response Offers List Combos",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Combos",
+        "tags": [
+          "offers"
+        ]
+      },
+      "post": {
+        "operationId": "offers_create_combo",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mall_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Mall Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ComboCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComboOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Combo",
+        "tags": [
+          "offers"
+        ]
+      }
+    },
+    "/api/v1/malls/{mall_id}/combos/{combo_id}": {
+      "delete": {
+        "operationId": "offers_delete_combo",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mall_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Mall Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "combo_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Combo Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Combo",
+        "tags": [
+          "offers"
+        ]
+      },
+      "put": {
+        "operationId": "offers_update_combo",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mall_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Mall Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "combo_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Combo Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ComboUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComboOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Combo",
+        "tags": [
+          "offers"
+        ]
+      }
+    },
+    "/api/v1/malls/{mall_id}/combos/{combo_id}/active": {
+      "patch": {
+        "operationId": "offers_set_combo_active",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mall_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Mall Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "combo_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Combo Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OfferActiveUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComboOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Combo Active",
+        "tags": [
+          "offers"
+        ]
+      }
+    },
     "/api/v1/malls/{mall_id}/orders": {
       "get": {
         "operationId": "store-orders_list_mall_orders",
@@ -5765,6 +9603,84 @@
         "summary": "List Mall Orders",
         "tags": [
           "store-orders"
+        ]
+      }
+    },
+    "/api/v1/malls/{mall_id}/reports/sales": {
+      "get": {
+        "operationId": "store-orders_mall_sales_report",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mall_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Mall Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "start",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start"
+            }
+          },
+          {
+            "in": "query",
+            "name": "end",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalesReportOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Mall Sales Report",
+        "tags": [
+          "store-orders",
+          "reports"
         ]
       }
     },
@@ -6082,6 +9998,99 @@
         ]
       }
     },
+    "/api/v1/malls/{mall_slug}/cart/coupon": {
+      "delete": {
+        "operationId": "cart_remove_coupon",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mall_slug",
+            "required": true,
+            "schema": {
+              "title": "Mall Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove Coupon",
+        "tags": [
+          "cart"
+        ]
+      },
+      "put": {
+        "description": "Keep a store coupon on the cart; the cart says whether it applies.",
+        "operationId": "cart_apply_coupon",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mall_slug",
+            "required": true,
+            "schema": {
+              "title": "Mall Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CouponIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Apply Coupon",
+        "tags": [
+          "cart"
+        ]
+      }
+    },
     "/api/v1/malls/{mall_slug}/cart/lines": {
       "post": {
         "operationId": "cart_add_line",
@@ -6196,6 +10205,102 @@
         ]
       }
     },
+    "/api/v1/malls/{mall_slug}/cart/pickup-slots": {
+      "get": {
+        "description": "Schedule ahead: the times this cart can be collected.",
+        "operationId": "cart_pickup_slots",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mall_slug",
+            "required": true,
+            "schema": {
+              "title": "Mall Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PickupSlotsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Pickup Slots",
+        "tags": [
+          "cart"
+        ]
+      }
+    },
+    "/api/v1/malls/{mall_slug}/cart/reorder": {
+      "post": {
+        "description": "Put a past order back in this mall's cart.",
+        "operationId": "cart_reorder",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mall_slug",
+            "required": true,
+            "schema": {
+              "title": "Mall Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReorderOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reorder",
+        "tags": [
+          "cart"
+        ]
+      }
+    },
     "/api/v1/malls/{mall_slug}/checkout": {
       "post": {
         "operationId": "orders_checkout",
@@ -6262,6 +10367,209 @@
         "summary": "Checkout",
         "tags": [
           "orders"
+        ]
+      }
+    },
+    "/api/v1/malls/{mall_slug}/groups": {
+      "post": {
+        "description": "Start a group order; your cart in this mall becomes your share. Share the link.",
+        "operationId": "orders_start_group",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mall_slug",
+            "required": true,
+            "schema": {
+              "title": "Mall Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroupCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupOrderOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Start Group",
+        "tags": [
+          "orders"
+        ]
+      }
+    },
+    "/api/v1/notify/config": {
+      "get": {
+        "description": "Public: the push key the browser subscribes with, and whether WhatsApp is offered.",
+        "operationId": "notify_notify_config",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotifyConfigOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Notify Config",
+        "tags": [
+          "notify"
+        ]
+      }
+    },
+    "/api/v1/notify/prefs": {
+      "get": {
+        "operationId": "notify_get_notify_prefs",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotifyPrefsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Notify Prefs",
+        "tags": [
+          "notify"
+        ]
+      },
+      "put": {
+        "operationId": "notify_set_notify_prefs",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NotifyPrefsUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotifyPrefsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Notify Prefs",
+        "tags": [
+          "notify"
+        ]
+      }
+    },
+    "/api/v1/notify/push": {
+      "post": {
+        "operationId": "notify_push_subscribe",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushSubscriptionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Push Subscribe",
+        "tags": [
+          "notify"
+        ]
+      }
+    },
+    "/api/v1/notify/push/remove": {
+      "post": {
+        "operationId": "notify_push_unsubscribe",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushUnsubscribeIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Push Unsubscribe",
+        "tags": [
+          "notify"
         ]
       }
     },
@@ -6370,6 +10678,60 @@
         ]
       }
     },
+    "/api/v1/orders/stores/{store_order_id}/review": {
+      "put": {
+        "description": "Rate a collected order (1-5 stars, optional words). Can be changed for 7 days.",
+        "operationId": "orders_rate_my_order",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "store_order_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Store Order Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Rate My Order",
+        "tags": [
+          "orders"
+        ]
+      }
+    },
     "/api/v1/orders/{order_id}": {
       "get": {
         "operationId": "orders_get_my_order",
@@ -6408,6 +10770,60 @@
           }
         },
         "summary": "Get My Order",
+        "tags": [
+          "orders"
+        ]
+      }
+    },
+    "/api/v1/orders/{order_id}/payment": {
+      "post": {
+        "description": "After the provider's checkout says it paid: the server checks with the provider.",
+        "operationId": "orders_confirm_my_payment",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "order_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Order Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentConfirmIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerOrderOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Confirm My Payment",
         "tags": [
           "orders"
         ]
@@ -7200,6 +11616,147 @@
         ]
       }
     },
+    "/api/v1/public/malls/{mall_slug}/offers": {
+      "get": {
+        "description": "Live offers, coupons and combos in a mall, for the mall page and cart.",
+        "operationId": "public_public_offers",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mall_slug",
+            "required": true,
+            "schema": {
+              "title": "Mall Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicOffersOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Public Offers",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/api/v1/public/malls/{mall_slug}/popular": {
+      "get": {
+        "description": "The mall's most ordered dishes lately, topped up so a new mall still shows some.",
+        "operationId": "public_popular",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mall_slug",
+            "required": true,
+            "schema": {
+              "title": "Mall Slug",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 12,
+              "maximum": 24,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PopularOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Popular",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/api/v1/public/malls/{mall_slug}/ratings": {
+      "get": {
+        "description": "Average stars of every rated store (by slug) and dish (by id) in the mall.",
+        "operationId": "public_mall_ratings",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mall_slug",
+            "required": true,
+            "schema": {
+              "title": "Mall Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MallRatingsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Mall Ratings",
+        "tags": [
+          "public"
+        ]
+      }
+    },
     "/api/v1/public/malls/{mall_slug}/stores": {
       "get": {
         "operationId": "public_public_stores",
@@ -7292,6 +11849,74 @@
           }
         },
         "summary": "Public Menu",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/api/v1/public/malls/{mall_slug}/stores/{store_slug}/reviews": {
+      "get": {
+        "description": "A store's latest written reviews (first names only).",
+        "operationId": "public_store_public_reviews",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mall_slug",
+            "required": true,
+            "schema": {
+              "title": "Mall Slug",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "store_slug",
+            "required": true,
+            "schema": {
+              "title": "Store Slug",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 50,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/StoreReviewOut"
+                  },
+                  "title": "Response Public Store Public Reviews",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Store Public Reviews",
         "tags": [
           "public"
         ]
@@ -8055,6 +12680,274 @@
         ]
       }
     },
+    "/api/v1/stores/{store_id}/offers": {
+      "get": {
+        "operationId": "offers_list_offers",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "store_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Store Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/OfferOut"
+                  },
+                  "title": "Response Offers List Offers",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Offers",
+        "tags": [
+          "offers"
+        ]
+      },
+      "post": {
+        "operationId": "offers_create_offer",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "store_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Store Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OfferCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Offer",
+        "tags": [
+          "offers"
+        ]
+      }
+    },
+    "/api/v1/stores/{store_id}/offers/{offer_id}": {
+      "delete": {
+        "operationId": "offers_delete_offer",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "store_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Store Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "offer_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Offer Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Offer",
+        "tags": [
+          "offers"
+        ]
+      },
+      "put": {
+        "operationId": "offers_update_offer",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "store_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Store Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "offer_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Offer Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OfferUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Offer",
+        "tags": [
+          "offers"
+        ]
+      }
+    },
+    "/api/v1/stores/{store_id}/offers/{offer_id}/active": {
+      "patch": {
+        "operationId": "offers_set_offer_active",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "store_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Store Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "offer_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Offer Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OfferActiveUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Offer Active",
+        "tags": [
+          "offers"
+        ]
+      }
+    },
     "/api/v1/stores/{store_id}/orders": {
       "get": {
         "operationId": "store-orders_list_store_orders",
@@ -8599,6 +13492,215 @@
         "summary": "Reject Order",
         "tags": [
           "store-orders"
+        ]
+      }
+    },
+    "/api/v1/stores/{store_id}/payout-account": {
+      "get": {
+        "operationId": "payments_get_payout_account",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "store_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Store Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayoutAccountOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Payout Account",
+        "tags": [
+          "payments"
+        ]
+      },
+      "put": {
+        "operationId": "payments_submit_payout_account",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "store_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Store Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PayoutAccountCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayoutAccountOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Submit Payout Account",
+        "tags": [
+          "payments"
+        ]
+      }
+    },
+    "/api/v1/stores/{store_id}/payout-account/refresh": {
+      "post": {
+        "operationId": "payments_refresh_payout_account",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "store_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Store Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayoutAccountOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Refresh Payout Account",
+        "tags": [
+          "payments"
+        ]
+      }
+    },
+    "/api/v1/stores/{store_id}/payouts": {
+      "get": {
+        "operationId": "payments_store_payouts",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "store_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Store Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorePayoutsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Store Payouts",
+        "tags": [
+          "payments"
         ]
       }
     },
@@ -9663,6 +14765,301 @@
         "summary": "Set Availability",
         "tags": [
           "catalog"
+        ]
+      }
+    },
+    "/api/v1/stores/{store_id}/reports/invoices": {
+      "get": {
+        "operationId": "store-orders_store_invoices",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "store_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Store Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "start",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start"
+            }
+          },
+          {
+            "in": "query",
+            "name": "end",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/InvoiceOut"
+                  },
+                  "title": "Response Store-Orders Store Invoices",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Store Invoices",
+        "tags": [
+          "store-orders",
+          "reports"
+        ]
+      }
+    },
+    "/api/v1/stores/{store_id}/reports/sales": {
+      "get": {
+        "operationId": "store-orders_store_sales_report",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "store_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Store Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "start",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start"
+            }
+          },
+          {
+            "in": "query",
+            "name": "end",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalesReportOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Store Sales Report",
+        "tags": [
+          "store-orders",
+          "reports"
+        ]
+      }
+    },
+    "/api/v1/stores/{store_id}/reviews": {
+      "get": {
+        "operationId": "store-orders_list_store_reviews",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "store_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Store Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "before",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Before"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 30,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_StoreReviewOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Store Reviews",
+        "tags": [
+          "store-orders"
+        ]
+      }
+    },
+    "/api/v1/stores/{store_id}/reviews/{review_id}/reply": {
+      "put": {
+        "operationId": "store-orders_reply_to_review",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "store_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Store Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "review_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Review Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewReplyIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoreReviewOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reply To Review",
+        "tags": [
+          "store-orders"
         ]
       }
     },

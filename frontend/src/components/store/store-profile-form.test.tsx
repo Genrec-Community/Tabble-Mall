@@ -11,7 +11,7 @@ vi.mock("sonner", () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
 
 const store: StoreOut = {
   id: "s1", organization_id: "o", mall_id: "m", name: "Burger Hub", slug: "burger-hub",
-  status: "active", description: "Old blurb", commission_bps: null,
+  status: "active", description: "Old blurb",
 };
 
 function show(props: { canEditProfile: boolean; canRename: boolean }) {

@@ -29,3 +29,14 @@ frontend/e2e/.state.json
 frontend/test-results/
 frontend/playwright-report/
 dump.rdb
+demo-logins.txt
+owner-login.txt
+local/data/
+local/logs/
+local/tools/
+frontend-build/
+local/update/
+local/version.txt
+local/frontend.hash
+local/env.hash
+.env.latest

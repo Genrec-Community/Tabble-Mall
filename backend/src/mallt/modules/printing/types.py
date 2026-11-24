@@ -35,6 +35,10 @@ class PrintableOrder:
     tax_paise: int
     total_paise: int
     lines: list[PrintableLine]
+    # A scheduled pickup (None = as soon as it's ready).
+    pickup_at: datetime | None = None
+    # (name, paise) taken off this store's part: offers and combos, borne by the store.
+    discounts: list[tuple[str, int]] = field(default_factory=list)
 
 
 @dataclass(frozen=True)

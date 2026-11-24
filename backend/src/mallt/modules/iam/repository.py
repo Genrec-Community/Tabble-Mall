@@ -244,6 +244,12 @@ class CustomerRepository:
     async def get(self, customer_id: uuid.UUID) -> Customer | None:
         return await self.session.get(Customer, customer_id)
 
+    async def by_ids(self, ids: list[uuid.UUID]) -> list[Customer]:
+        if not ids:
+            return []
+        stmt = select(Customer).where(Customer.id.in_(ids))
+        return list((await self.session.execute(stmt)).scalars())
+
     async def by_phone(self, phone: str) -> Customer | None:
         stmt = select(Customer).where(Customer.phone == phone)
         return (await self.session.execute(stmt)).scalar_one_or_none()

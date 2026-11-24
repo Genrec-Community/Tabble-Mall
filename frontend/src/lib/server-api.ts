@@ -1,13 +1,22 @@
 /** Calls the API from Next.js server components (inside Docker, over the internal network). */
 import {
+  featuresGetFeatures,
   publicGetPublicMall,
+  publicMallRatings,
+  publicPopular,
+  publicPublicOffers,
   publicPublicItems,
   publicPublicMenu,
   publicPublicStores,
+  publicStorePublicReviews,
+  type MallRatingsOut,
+  type PopularOut,
+  type PublicOffersOut,
   type PublicItemsOut,
   type PublicMallOut,
   type PublicMenuOut,
   type PublicStoreCardOut,
+  type StoreReviewOut,
 } from "@/lib/api";
 import { unwrap } from "@/lib/api-error";
 
@@ -52,5 +61,44 @@ export async function loadMenu(mallSlug: string, storeSlug: string): Promise<Pub
 export async function loadItems(slug: string): Promise<PublicItemsOut> {
   const result = await publicPublicItems({ path: { mall_slug: slug }, ...serverOptions([`mall:${slug}`]) });
   if (result.response?.status === 404) return { items: [], next_cursor: null };
+  return unwrap(result);
+}
+
+/** The mall's most ordered dishes lately (topped up for a new mall), cached like the mall page. */
+export async function loadPopular(slug: string): Promise<PopularOut> {
+  const result = await publicPopular({ path: { mall_slug: slug }, query: { limit: 12 }, ...serverOptions([`mall:${slug}`]) });
+  if (!result.response?.ok) return { items: [] };
+  return unwrap(result);
+}
+
+/** The owner's feature switches, cached like the mall page and purged by `refreshFeatures()`.
+ *  If the API cannot be reached, every feature counts as off. */
+export async function loadFeatures(): Promise<Record<string, boolean>> {
+  const result = await featuresGetFeatures(serverOptions(["features"]));
+  if (!result.response?.ok) return {};
+  return unwrap(result).flags;
+}
+
+/** The mall's running store offers and mall-wide combos, cached like the mall page. */
+export async function loadOffers(slug: string): Promise<PublicOffersOut> {
+  const result = await publicPublicOffers({ path: { mall_slug: slug }, ...serverOptions([`mall:${slug}`]) });
+  if (!result.response?.ok) return { offers: [], combos: [] };
+  return unwrap(result);
+}
+
+/** Customers' average stars per store and per dish in this mall, cached like the mall page. */
+export async function loadRatings(slug: string): Promise<MallRatingsOut> {
+  const result = await publicMallRatings({ path: { mall_slug: slug }, ...serverOptions([`mall:${slug}`]) });
+  if (!result.response?.ok) return { stores: {}, products: {} };
+  return unwrap(result);
+}
+
+/** A restaurant's latest reviews for its menu page, cached with its menu. */
+export async function loadStoreReviews(mallSlug: string, storeSlug: string): Promise<StoreReviewOut[]> {
+  const result = await publicStorePublicReviews({
+    path: { mall_slug: mallSlug, store_slug: storeSlug },
+    ...serverOptions([`menu:${mallSlug}:${storeSlug}`, `mall:${mallSlug}`]),
+  });
+  if (!result.response?.ok) return [];
   return unwrap(result);
 }

@@ -11,6 +11,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from mallt.core.bus import Bus
+from mallt.core.config import get_settings
 from mallt.core.db import defer_after_commit, run_after_commit
 from mallt.core.enums import ActorType
 from mallt.core.errors import AppError, BadRequest, Conflict, NotFound
@@ -21,6 +22,8 @@ from mallt.core.ratelimit import hit
 from mallt.core.rbac import P, Scope
 from mallt.modules.iam.authz import AuthzService, Principal
 from mallt.modules.iam.users import IamCustomers
+from mallt.modules.notify.service import NotifyService, run_notifications
+from mallt.modules.orders import schedule
 from mallt.modules.orders.cart import CartService, PricedLine
 from mallt.modules.orders.enums import CustomerOrderStatus, StoreOrderStatus
 from mallt.modules.orders.models import (
@@ -30,17 +33,29 @@ from mallt.modules.orders.models import (
     StoreOrder,
     StoreOrderLine,
 )
-from mallt.modules.orders.pricing import commission, tax_included
+from mallt.modules.orders.pricing import gateway_fee, store_payout, tax_included
 from mallt.modules.orders.repository import OrdersRepository
+from mallt.modules.orders.reviews import review_out
 from mallt.modules.orders.schemas import (
     CustomerOrderOut,
     CustomerStoreOrderOut,
+    DiscountOut,
     OrderLineOut,
+    OrderPaymentOut,
     OrderStepOut,
     StoreOrderOut,
+    ZohoCheckoutOut,
 )
 from mallt.modules.orders.state import CUSTOMER_CANCELLABLE, REFUND_STATES, can_transition
-from mallt.modules.payments.provider import PaymentProvider
+from mallt.modules.payments.enums import LedgerKind
+from mallt.modules.payments.provider import (
+    PaymentInfo,
+    PaymentProvider,
+    PaymentState,
+    ProviderError,
+)
+from mallt.modules.payments.runner import run_money_tasks
+from mallt.modules.payments.service import Kick, Owner, PaymentsService
 from mallt.modules.printing.service import PrintingService
 from mallt.modules.printing.types import PrintableLine, PrintableOrder
 from mallt.modules.tenancy.service import TenancyService
@@ -48,9 +63,20 @@ from mallt.modules.tenancy.service import TenancyService
 S = StoreOrderStatus
 log = logging.getLogger(__name__)
 
+UNPAID = frozenset({S.PENDING_PAYMENT, S.PAYMENT_FAILED})
 PRINT_TRIGGERS = frozenset({S.PAID, S.ACCEPTED, S.READY, S.PICKED_UP})
+# What the customer hears about outside the order page (push, WhatsApp).
+NOTIFY_ON = {
+    S.READY: "ready",
+    S.PICKED_UP: "receipt",
+    S.REJECTED: "cancelled",
+    S.EXPIRED: "cancelled",
+    S.CANCELLED: "cancelled",
+}
 PICKUP_ATTEMPTS_PER_ORDER = (5, 600)  # tries, per seconds
 PICKUP_ATTEMPTS_PER_STORE = (60, 600)
+# How long past the provider's session expiry an unpaid order waits before it is given up.
+UNPAID_GRACE = timedelta(minutes=5)
 
 
 class PaymentFailed(AppError):
@@ -58,14 +84,26 @@ class PaymentFailed(AppError):
 
 
 class OrderService:
-    def __init__(self, session: AsyncSession, kv: KV, bus: Bus, payments: PaymentProvider) -> None:
+    def __init__(
+        self,
+        session: AsyncSession,
+        kv: KV,
+        bus: Bus,
+        payments: PaymentProvider,
+        kick: Kick | None = None,
+        notify: NotifyService | None = None,
+    ) -> None:
         self.session = session
+        # Messages are always queued; without a kick the sweeper sends them a little later.
+        self.notify = notify or NotifyService(session)
         self.kv = kv
         self.bus = bus
         self.payments = payments
+        self.money = PaymentsService(session, kv, payments, kick)
         self.repo = OrdersRepository(session)
         self.cart = CartService(session, kv)
         self.catalog = self.cart.catalog
+        self.features = self.cart.features
         self.tenancy = TenancyService(session, kv)
         self.authz = AuthzService(session, kv)
         self.customers = IamCustomers(session)
@@ -133,22 +171,63 @@ class OrderService:
         self._announce(order, "order.created" if to is S.PAID else "order.updated")
         if to in PRINT_TRIGGERS:
             await self.printing.on_order_status(await self._printable(order), to.value)
+        kind = NOTIFY_ON.get(to)
+        if kind and not (to is S.CANCELLED and actor is ActorType.CUSTOMER):
+            await self._notify(order, kind)
+        if to is S.PAYMENT_FAILED:
+            await self._release_stock(order)
         if to in REFUND_STATES:
             await self._release_stock(order)
-            result = await self.payments.refund(
-                amount_paise=order.total_paise, reference=str(order.id)
-            )
-            self.session.add(
-                Payment(
-                    customer_order_id=order.customer_order_id,
-                    store_order_id=order.id,
-                    provider=self.payments.name,
-                    provider_ref=result.provider_ref,
-                    amount_paise=order.total_paise,
-                    kind="refund",
-                )
+            # REFUNDED = the refund is queued irrevocably; the money outbox carries it out.
+            await self.money.queue_refund(
+                self._owner(order),
+                customer_order_id=order.customer_order_id,
+                store_order_id=order.id,
+                payment_ref=await self._payment_ref(order),
+                amount_paise=store_payout(order.total_paise, order.gateway_fee_paise),
             )
             await self._transition(order, S.REFUNDED, ActorType.SYSTEM, None)
+
+    def _money(self, paise: int) -> str:
+        whole, frac = divmod(paise, 100)
+        return f"₹{whole}" if frac == 0 else f"₹{whole}.{frac:02d}"
+
+    async def _notify(self, order: StoreOrder, kind: str) -> None:
+        await self._store_name(order.store_id)
+        url = f"/account/orders/{order.customer_order_id}"
+        self.notify.queue(
+            order.customer_id,
+            kind,
+            {
+                "store": self._store_names[order.store_id],
+                "url": url,
+                "link": f"{get_settings().public_site_url}{url}",
+                "total": self._money(order.total_paise),
+                "refund": self._money(store_payout(order.total_paise, order.gateway_fee_paise)),
+                "tag": f"{kind}:{order.id}",
+            },
+        )
+
+    async def _store_name(self, store_id: uuid.UUID) -> str:
+        if store_id not in self._store_names:
+            stores = await self.tenancy.stores_by_ids([store_id])
+            self._store_names[store_id] = stores[store_id].name
+        return self._store_names[store_id]
+
+    @staticmethod
+    def _owner(order: StoreOrder) -> Owner:
+        return Owner(
+            order.organization_id,
+            order.mall_id,
+            order.store_id,
+            f"#{order.order_no} · {order.order_date.isoformat()}",
+        )
+
+    async def _payment_ref(self, order: StoreOrder) -> str:
+        parent = await self.session.get(CustomerOrder, order.customer_order_id)
+        if parent is None or not parent.payment_ref:  # pragma: no cover - paid orders have one
+            raise Conflict("not_paid", "This order has no payment.")
+        return parent.payment_ref
 
     async def _printable(self, order: StoreOrder) -> PrintableOrder:
         if order.store_id not in self._store_names:
@@ -169,6 +248,8 @@ class OrderService:
             subtotal_paise=order.subtotal_paise,
             tax_paise=order.tax_paise,
             total_paise=order.total_paise,
+            pickup_at=order.pickup_at,
+            discounts=[(str(d["name"]), int(d["amount_paise"])) for d in order.discounts or []],
             lines=[
                 PrintableLine(
                     name=ln.name,
@@ -204,7 +285,12 @@ class OrderService:
     # ------------------------------------------------------------------ checkout
 
     async def checkout(
-        self, customer_id: uuid.UUID, mall_slug: str, key: str, note: str | None
+        self,
+        customer_id: uuid.UUID,
+        mall_slug: str,
+        key: str,
+        note: str | None,
+        pickup_at: datetime | None = None,
     ) -> tuple[CustomerOrderOut, bool]:
         """Returns the order and whether it was newly created (False = idempotent replay)."""
         existing = await self.repo.find_by_idempotency(customer_id, key)
@@ -222,7 +308,29 @@ class OrderService:
         contact = await self.customers.contact(customer_id)
         if contact.phone_masked is None:
             raise BadRequest("phone_required", "Verify your mobile number before ordering.")
-        org_bps, accept_timeout = await self.tenancy.org_terms(mall.organization_id)
+        cart_stores = list(dict.fromkeys(p.line.store_id for p in priced))
+        if unpayable := await self.money.unpayable_stores(cart_stores):
+            names = sorted(mall.stores[s].name for s in unpayable)
+            raise Conflict(
+                "store_not_payable",
+                f"{', '.join(names)} cannot take online orders yet. Remove their items to"
+                " continue.",
+                extra={"store_ids": [str(s) for s in unpayable]},
+            )
+        by_store: dict[uuid.UUID, list[PricedLine]] = {}
+        for p in priced:
+            by_store.setdefault(p.line.store_id, []).append(p)
+        if pickup_at is not None:
+            if not await self.features.is_enabled("schedule_ahead"):
+                raise BadRequest("feature_off", "Ordering ahead is switched off right now.")
+            prep = max((p.product.prep_minutes for p in priced if p.product), default=10)
+            why = schedule.problem(
+                pickup_at, datetime.now(UTC), prep, [mall.stores[s] for s in by_store]
+            )
+            if why:
+                raise BadRequest("bad_pickup_time", why)
+            pickup_at = pickup_at.astimezone(UTC)
+        quote = await self.cart.quote(cart, mall, priced)
         holds: dict[uuid.UUID, int] = {}
         for p in priced:
             if p.product and p.product.counted:
@@ -235,7 +343,10 @@ class OrderService:
             organization_id=mall.organization_id,
             mall_id=mall.id,
             idempotency_key=key,
-            total_paise=sum(p.total_paise for p in priced),
+            total_paise=sum(p.total_paise for p in priced) - quote.discount_paise,
+            discount_paise=quote.discount_paise,
+            pickup_at=pickup_at,
+            group_order_id=cart.group_order_id,
             note=note,
         )
         try:
@@ -248,18 +359,22 @@ class OrderService:
                 raise
             return await self._customer_view(customer_id, winner.id), False
 
-        by_store: dict[uuid.UUID, list[PricedLine]] = {}
-        for p in priced:
-            by_store.setdefault(p.line.store_id, []).append(p)
         store_orders: list[StoreOrder] = []
-        total_commission = 0
+        # One pickup code for the whole order (owner, 2026-11-24): the customer shows the same four
+        # digits at every counter. It must be free at each of the order's stores.
+        taken: set[str] = set()
+        for store_id in by_store:
+            taken |= await self.repo.open_pickup_codes(store_id)
+        pickup_code = self._new_code(taken)
         for store_id, rows in by_store.items():
             store = mall.stores[store_id]
             today = datetime.now(UTC).astimezone(ZoneInfo(store.timezone)).date()
-            codes = await self.repo.open_pickup_codes(store_id)
-            bps = store.commission_bps if store.commission_bps is not None else org_bps
             subtotal = sum(r.total_paise for r in rows)
+            sq = quote.stores.get(store_id)
+            discount = sq.discount_paise if sq else 0
+            total = subtotal - discount
             lines = [self._order_line(store_id, i, r) for i, r in enumerate(rows)]
+            line_tax = sum(ln.tax_paise for ln in lines)
             so = StoreOrder(
                 id=uuid7(),
                 customer_order_id=order.id,
@@ -270,21 +385,27 @@ class OrderService:
                 status=S.PENDING_PAYMENT,
                 order_date=today,
                 order_no=await self.repo.next_order_no(store_id, today),
-                pickup_code=self._new_code(codes),
+                pickup_code=pickup_code,
                 subtotal_paise=subtotal,
-                tax_paise=sum(ln.tax_paise for ln in lines),
-                total_paise=subtotal,
-                commission_bps=bps,
-                commission_paise=commission(subtotal, bps),
+                # GST is contained in what is actually paid, so a discount lowers it too.
+                tax_paise=(line_tax * total + subtotal // 2) // subtotal if subtotal else 0,
+                discount_paise=discount,
+                discounts=[
+                    {"kind": d.kind, "name": d.name, "amount_paise": d.amount_paise}
+                    for d in (sq.discounts if sq else [])
+                ],
+                offer_id=sq.offer_id if sq else None,
+                total_paise=total,
+                # The store's fee is on what it really receives (owner, 2026-11-24).
+                gateway_fee_paise=gateway_fee(total, get_settings().gateway_fee_bps),
+                pickup_at=pickup_at,
                 prep_minutes=max((r.product.prep_minutes for r in rows if r.product), default=10),
                 customer_name=contact.name,
                 customer_phone=contact.phone_masked,
                 note=note,
             )
             so.lines = lines
-            total_commission += so.commission_paise
             store_orders.append(so)
-        order.commission_paise = total_commission
         self.session.add_all(store_orders)
         await self.session.flush()
         for so in store_orders:
@@ -299,28 +420,175 @@ class OrderService:
                 )
             )
 
-        result = await self.payments.charge(amount_paise=order.total_paise, reference=str(order.id))
-        if not result.ok:
+        started = await self.payments.start(
+            amount_paise=order.total_paise,
+            reference=str(order.id),
+            description=f"Pickup order at {mall.slug}",
+        )
+        if not started.ok:
             # Raising rolls the whole request back: no orders, and the held stock is released.
             raise PaymentFailed(detail="The payment did not go through. Please try again.")
+        order.payment_provider = self.payments.name
+        order.payment_session_ref = started.session_ref
+        if started.expires_at is not None:
+            order.pay_by = started.expires_at + UNPAID_GRACE
+        await self.session.flush()
+        if started.paid:
+            await self._settle(order, started.payment_ref)
+        view = await self._customer_view(customer_id, order.id)
+        view.mall_slug = mall.slug
+        return view, True
+
+    # ------------------------------------------------------------------ payment settlement
+
+    async def _settle(self, order: CustomerOrder, payment_ref: str) -> None:
+        """Mark a customer order paid (idempotent). The caller holds the order's row lock or
+        just created it. A payment for an order already given up is refunded in full."""
+        if order.status is CustomerOrderStatus.PAID:
+            return
+        store_orders = await self.repo.store_orders_of(order.id, lock=True)
+        order.payment_ref = payment_ref
         self.session.add(
             Payment(
                 customer_order_id=order.id,
                 provider=self.payments.name,
-                provider_ref=result.provider_ref,
+                provider_ref=payment_ref,
                 amount_paise=order.total_paise,
                 kind="charge",
             )
         )
+        self.money.record(
+            LedgerKind.CHARGE,
+            organization_id=order.organization_id,
+            mall_id=order.mall_id,
+            customer_order_id=order.id,
+            amount_paise=order.total_paise,
+            provider_ref=payment_ref,
+        )
+        if order.status is CustomerOrderStatus.PAYMENT_FAILED:
+            log.warning("payment arrived for given-up order %s: refunding it", order.id)
+            for so in store_orders:
+                await self.money.queue_refund(
+                    self._owner(so),
+                    customer_order_id=order.id,
+                    store_order_id=so.id,
+                    payment_ref=payment_ref,
+                    amount_paise=store_payout(so.total_paise, so.gateway_fee_paise),
+                )
+            await self.session.flush()
+            return
+        accept_timeout = await self.tenancy.accept_timeout(order.organization_id)
         order.status = CustomerOrderStatus.PAID
         for so in store_orders:
+            self.money.record(
+                LedgerKind.GATEWAY_FEE,
+                organization_id=order.organization_id,
+                mall_id=order.mall_id,
+                customer_order_id=order.id,
+                amount_paise=so.gateway_fee_paise,
+                store_id=so.store_id,
+                store_order_id=so.id,
+            )
             so.accept_by = datetime.now(UTC) + timedelta(seconds=accept_timeout)
             await self._transition(so, S.PAID, ActorType.SYSTEM, None)
-        cart.lines.clear()
+            # Owner decision: each store's share leaves at once; a later refund reverses it.
+            await self.money.queue_transfer(
+                self._owner(so),
+                customer_order_id=order.id,
+                store_order_id=so.id,
+                payment_ref=payment_ref,
+                # MallT keeps nothing: the store gets its whole share minus its own fee.
+                amount_paise=store_payout(so.total_paise, so.gateway_fee_paise),
+            )
+        names = [await self._store_name(so.store_id) for so in store_orders]
+        url = f"/account/orders/{order.id}"
+        self.notify.queue(
+            order.customer_id,
+            "confirmed",
+            {
+                "stores": ", ".join(names),
+                "url": url,
+                "link": f"{get_settings().public_site_url}{url}",
+                "total": self._money(order.total_paise),
+                "tag": f"confirmed:{order.id}",
+            },
+        )
+        cart = await self.repo.cart_for_update(order.customer_id, order.mall_id)
+        if cart is not None:
+            cart.lines.clear()
+            cart.coupon_code = None
         await self.session.flush()
-        view = await self._customer_view(customer_id, order.id)
-        view.mall_slug = mall.slug
-        return view, True
+
+    def _verified(self, order: CustomerOrder, info: PaymentInfo | None) -> bool:
+        """Only the provider's own record counts, and it must be this order's money."""
+        return (
+            info is not None
+            and info.state is PaymentState.SUCCEEDED
+            and info.amount_paise == order.total_paise
+            and (
+                info.reference == str(order.id)
+                or (bool(info.session_ref) and info.session_ref == order.payment_session_ref)
+            )
+        )
+
+    async def confirm_payment(
+        self, customer_id: uuid.UUID, order_id: uuid.UUID, payment_ref: str
+    ) -> CustomerOrderOut:
+        """The browser says it paid. Ask the provider; settle only on its word."""
+        order = await self.repo.customer_order_for_update(order_id)
+        if order is None or order.customer_id != customer_id:
+            raise NotFound("not_found", "Not found.")
+        if order.status is not CustomerOrderStatus.PAID:
+            try:
+                info = await self.payments.get_payment(payment_ref)
+            except ProviderError as exc:
+                raise Conflict(
+                    "provider_unavailable",
+                    "We could not confirm the payment yet. It will update on its own shortly.",
+                ) from exc
+            if info is not None and info.state is PaymentState.SUCCEEDED:
+                if not self._verified(order, info):
+                    raise BadRequest("payment_mismatch", "That payment is not for this order.")
+                await self._settle(order, info.payment_ref)
+            elif info is not None and info.state is PaymentState.FAILED:
+                raise PaymentFailed(detail="The payment did not go through. Please try again.")
+        return await self._customer_view(customer_id, order_id)
+
+    async def on_provider_payment(self, info: PaymentInfo) -> None:
+        """A signed provider event about a payment (webhook)."""
+        try:
+            order_id = uuid.UUID(info.reference)
+        except ValueError:
+            log.info("payment %s has no MallT reference", info.payment_ref)
+            return
+        order = await self.repo.customer_order_for_update(order_id)
+        if order is None:
+            return
+        if self._verified(order, info):
+            await self._settle(order, info.payment_ref)
+
+    async def sweep_unpaid(self, limit: int = 20) -> int:
+        """Give up orders whose payment window passed: ask the provider once more, then fail
+        them and return their stock. Safe to run anywhere (SKIP LOCKED)."""
+        orders = await self.repo.unpaid_overdue(limit)
+        for order in orders:
+            try:
+                info = await self.payments.find_payment(str(order.id))
+            except ProviderError:
+                log.warning("could not check payment for order %s; will retry", order.id)
+                continue
+            if self._verified(order, info):
+                assert info is not None  # noqa: S101 - _verified checked it
+                await self._settle(order, info.payment_ref)
+                continue
+            order.status = CustomerOrderStatus.PAYMENT_FAILED
+            for so in await self.repo.store_orders_of(order.id, lock=True):
+                if so.status is S.PENDING_PAYMENT:
+                    await self._transition(
+                        so, S.PAYMENT_FAILED, ActorType.SYSTEM, None, "Not paid in time"
+                    )
+        await self.session.flush()
+        return len(orders)
 
     @staticmethod
     def _order_line(store_id: uuid.UUID, position: int, r: PricedLine) -> StoreOrderLine:
@@ -365,6 +633,16 @@ class OrderService:
         store_orders = [so for o in orders for so in o.store_orders]
         stores = await self.tenancy.stores_by_ids(list({so.store_id for so in store_orders}))
         events = await self.repo.events_for([so.id for so in store_orders])
+        reviews = {
+            r.store_order_id: review_out(r)
+            for r in await self.repo.reviews_for([so.id for so in store_orders])
+        }
+        malls = await self.tenancy.mall_slugs(list({o.mall_id for o in orders}))
+        payer: tuple[str | None, str | None] = (None, None)
+        if any(o.status is CustomerOrderStatus.PLACED and o.payment_session_ref for o in orders):
+            customer_id = orders[0].customer_id  # a customer only ever reads their own orders
+            contact = await self.customers.contact(customer_id)
+            payer = (await self.customers.own_phone(customer_id), contact.name)
         out: list[CustomerOrderOut] = []
         for o in orders:
             views = []
@@ -377,16 +655,22 @@ class OrderService:
                         store_name=store.name,
                         status=so.status,
                         order_no=so.order_no,
-                        pickup_code=so.pickup_code,
+                        # Shown once paid: before that it proves nothing.
+                        pickup_code="" if so.status in UNPAID else so.pickup_code,
+                        subtotal_paise=so.subtotal_paise,
+                        discount_paise=so.discount_paise,
+                        discounts=self._discounts(so),
                         total_paise=so.total_paise,
                         tax_paise=so.tax_paise,
                         prep_minutes=so.prep_minutes,
+                        pickup_at=so.pickup_at,
                         accept_by=so.accept_by,
                         reason=so.reason,
                         note=so.note,
                         created_at=so.created_at,
                         lines=[OrderLineOut.model_validate(x) for x in so.lines],
                         steps=self._steps(events.get(so.id, [])),
+                        review=reviews.get(so.id),
                     )
                 )
             out.append(
@@ -394,11 +678,43 @@ class OrderService:
                     id=o.id,
                     status=o.status,
                     total_paise=o.total_paise,
+                    discount_paise=o.discount_paise,
+                    pickup_at=o.pickup_at,
+                    group_order_id=o.group_order_id,
                     created_at=o.created_at,
+                    payment=self._payment_view(o, payer),
                     stores=views,
+                    mall_slug=malls.get(o.mall_id),
                 )
             )
         return out
+
+    def _payment_view(
+        self, order: CustomerOrder, payer: tuple[str | None, str | None] = (None, None)
+    ) -> OrderPaymentOut | None:
+        if order.status is not CustomerOrderStatus.PLACED or not order.payment_session_ref:
+            return None
+        params = None
+        if order.payment_provider == self.payments.name:
+            params = self.payments.client_params(
+                session_ref=order.payment_session_ref,
+                amount_paise=order.total_paise,
+                description=f"Order {str(order.id)[-8:]}",
+            )
+        if params:
+            params = {**params, "phone": payer[0], "name": payer[1]}
+        return OrderPaymentOut(
+            provider=order.payment_provider or "",
+            zoho=ZohoCheckoutOut.model_validate(params) if params else None,
+            pay_by=order.pay_by,
+        )
+
+    @staticmethod
+    def _discounts(so: StoreOrder) -> list[DiscountOut]:
+        return [
+            DiscountOut(kind=d["kind"], name=d["name"], amount_paise=d["amount_paise"])
+            for d in so.discounts or []
+        ]
 
     @staticmethod
     def _steps(events: list[OrderEvent]) -> list[OrderStepOut]:
@@ -469,9 +785,13 @@ class OrderService:
                 status=o.status,
                 customer_name=o.customer_name,
                 customer_phone=o.customer_phone,
+                subtotal_paise=o.subtotal_paise,
+                discount_paise=o.discount_paise,
+                discounts=self._discounts(o),
                 total_paise=o.total_paise,
                 tax_paise=o.tax_paise,
                 prep_minutes=o.prep_minutes,
+                pickup_at=o.pickup_at,
                 accept_by=o.accept_by,
                 accepted_at=o.accepted_at,
                 ready_at=o.ready_at,
@@ -594,19 +914,30 @@ class OrderService:
         return len(expired)
 
 
+async def sweep_once(app: Any) -> tuple[int, int, int]:
+    """Expire unaccepted orders, give up unpaid ones, then run due money tasks."""
+    async with app.state.session_factory() as session:
+        service = OrderService(session, app.state.kv, app.state.bus, app.state.payments)
+        expired = await service.sweep_expired()
+        unpaid = await service.sweep_unpaid()
+        await session.commit()
+        await run_after_commit(session)
+    money = await run_money_tasks(app)
+    await run_notifications(app)
+    return expired, unpaid, money
+
+
 async def sweep_loop(app: Any, interval_s: float = 15.0) -> None:
-    """Background: expire unaccepted orders. Row locks (SKIP LOCKED) make several API
-    containers running this at once safe."""
+    """Background sweeper. Row locks (SKIP LOCKED) make several API containers running this at
+    once safe."""
     while True:
         await asyncio.sleep(interval_s)
         try:
-            async with app.state.session_factory() as session:
-                service = OrderService(session, app.state.kv, app.state.bus, app.state.payments)
-                count = await service.sweep_expired()
-                await session.commit()
-                await run_after_commit(session)
-            if count:
-                log.info("expired %d unaccepted order(s)", count)
+            expired, unpaid, money = await sweep_once(app)
+            if expired or unpaid or money:
+                log.info(
+                    "sweep: %d expired, %d unpaid checked, %d money task(s)", expired, unpaid, money
+                )
         except asyncio.CancelledError:
             raise
         except Exception:

@@ -19,7 +19,8 @@ each item at the store's counter by showing a **4-digit pickup code** on their
 phone. Think Swiggy/Zomato, but scoped to a single mall and built around
 pickup.
 
-MallT earns a **commission (default 5%)** on each order. The payment is split
+*(Superseded 2026-11-23: MallT keeps no money and takes no commission; payments use Zoho
+Payments Split, see `2026-11-23-zoho-split-payments.md`.)* MallT earns a **commission (default 5%)** on each order. The payment is split
 automatically: each store's share goes straight to that store's bank account
 and MallT's commission goes to MallT's account. The split uses
 **Razorpay Route**. Payments are **on hold** and will be designed in detail
@@ -328,6 +329,10 @@ PENDING_PAYMENT → PAYMENT_FAILED / ABANDONED (stock released)
 
 ## 8. Payments: Razorpay Route (ON HOLD; concept only)
 
+> **Superseded 2026-11-23:** payments were reopened on **Zoho Payments Split**. See
+> [`2026-11-23-zoho-split-payments.md`](2026-11-23-zoho-split-payments.md). The rules below
+> (paise, signed idempotent webhooks, ledger, onboarding before orders) still apply.
+
 > **Development of payments is paused by the owner.** Nothing here gets built
 > until the owner reopens it. The concept is recorded so other modules leave
 > room for it.
@@ -488,7 +493,7 @@ tested, and UI polish is a separate later pass.
 | **M1** | **IAM** | Everything in §5 |
 | M2 | Food catalog & theming | §6 (plan Part A) |
 | M3 | Cart & orders + **Printing** | §7 with `FakePaymentProvider`, real-time dashboard, pickup code (Part B); print agent, KOT, bill designer (Part C, §14) |
-| M4 | Payments | §8. **On hold until the owner reopens it** |
+| M4 | Payments | Zoho Payments Split (reopened 2026-11-23; see the Zoho spec) |
 | M5 | Production | AWS infra (RDS, ElastiCache, S3/CloudFront, EC2/ALB), deploy pipeline, backups, monitoring |
 
 ---
@@ -522,7 +527,7 @@ Where the build refined or departed from the text above. The owner has seen the 
 1. **Redis is optional (owner).** `REDIS_URL` empty → a Postgres table (`kv_store`) backs OTPs, rate
    limits and counters, and jobs run inline; with Redis, the permission cache and session checks
    use it. Same code, same tests on both.
-2. **Commission is platform-only.** §5.2 gave `org.billing.manage` to Org Owners, but commission
+2. *(Retired 2026-11-23: there is no commission.)* **Commission is platform-only.** §5.2 gave `org.billing.manage` to Org Owners, but commission
    is MallT's own revenue, so editing `commission_bps` (org and per-store override) requires
    `platform.org.manage`. Org Owners can see it, not change it. *(Engineering call; easy to revert
    in `tenancy/service.py`.)*
@@ -606,7 +611,7 @@ Decisions made while building; each says what it costs if wrong.
    (5 / 10 min) and per store (60 / 10 min); the limit also blocks the correct code while it applies.
    *This corrects the earlier plan, which put the code on the KOT.*
 8. **Order numbers** (1, 2, 3 …) restart each day per store (store-local date) and are what slips show.
-9. **Commission** is computed per store order (store override, else the organization's, default 5 %,
+9. *(Retired 2026-11-23: no commission is computed or stored.)* **Commission** was computed per store order (store override, else the organization's, default 5 %,
    half-up rounding) and recorded; nothing is settled until M4.
 10. **Live updates**: `/ws/orders` (first frame carries the token; sockets close after one access-token
     lifetime so logout, suspension and role changes take effect). Pub/sub is Redis when configured,

@@ -17,8 +17,10 @@ MallT is a multi-tenant mall ordering platform.
   3. They pay once.
   4. They collect each store's part at the counter by showing a 4-digit
      pickup code.
-- **Money:** MallT takes a commission (default 5%) through Razorpay Route.
-- **Payments are ON HOLD.** Do not build them until told to.
+- **Money:** MallT **keeps and pays no money**: no commission, no fees. Customers pay once through
+  **Zoho Payments Split** and each store receives its whole share minus its own gateway fee
+  (payments reopened 2026-11-23; design in
+  [`docs/superpowers/specs/2026-11-23-zoho-split-payments.md`](docs/superpowers/specs/2026-11-23-zoho-split-payments.md)).
 - **Fulfilment:** v1 is **pickup only**. There is no delivery.
 - **Printing:** each store prints a KOT and a bill through a desktop `print-agent/` on its counter
   PC (spec §14). Printing never blocks ordering.
@@ -169,7 +171,8 @@ by the same targets (`uv run --no-project`); its releases are built per OS with 
   of their roles yourself (`GRANT_RULES` in `core/rbac.py`, plus holding every permission in the
   role). Owners can create owners; managers can't create managers or owners; nobody manages
   themselves; an organization always keeps one active owner.
-- **Commission** (`commission_bps`) is MallT's revenue, so only `platform.org.manage` may edit it.
+- **No commission.** MallT keeps no money (owner, 2026-11-23). The old `commission_*` columns are
+  retired (migration 0010) and must never be read, written or shown again.
 - **Anything that changes roles, status or passwords must call `AuthzService.invalidate(staff_id)`**
   (Redis caches a principal for 60 s). It clears the cache now *and again after commit*
   (`defer_after_commit`); use that helper for any cache you invalidate from inside a request. Tests that change those by raw SQL must call it too.
@@ -194,10 +197,16 @@ by the same targets (`uv run --no-project`); its releases are built per OS with 
   committed when payment succeeds and released when payment fails or expires.
   `MANUAL` stock is a toggle.
 - `fulfilment_type` exists, but only `PICKUP` is valid in v1.
-- Payments go through a `PaymentProvider` interface. Use only
-  `FakePaymentProvider` until payments are reopened. When payments are built:
-  verify webhook signatures, process each webhook idempotently, and record
-  every movement in an append-only ledger.
+- Payments go through a `PaymentProvider` interface (`ZohoPaymentProvider` in production,
+  `FakePaymentProvider` in dev/tests via `PAYMENTS_PROVIDER`). An order is paid only on the
+  provider's word (server-side check or signed webhook), never the browser's. Each store's share
+  (minus its own fee; MallT keeps nothing) is transferred as soon as payment is confirmed; a
+  refund reverses that store's transfer first and returns only what the store got (the gateway
+  fee is not refunded). A refund never runs while that reversal is failed. A failed money task is
+  shown at `/admin/payments` and retried from there, never by editing rows by hand.
+  Money movements go through the outbox (`payment_tasks`), never inline in a request; every
+  movement is recorded in the append-only `ledger_entries`; webhooks are signature-checked and
+  deduplicated by event id.
 - Images:
   1. The browser uploads straight to the bucket using a presigned PUT URL
      with a server-generated, tenant-scoped key.
@@ -213,7 +222,13 @@ by the same targets (`uv run --no-project`); its releases are built per OS with 
 
 ## 8. Frontend rules
 
-> **Current phase: functionality first.** Build plain, clean,
+> **Customer pages follow Tabble** (owner, 2026-11-24): the customer surface (`/m/...`, `/account/...`)
+> uses the "lux" look of the Genrec-Community/tabble diner screens: black canvas, orange and gold,
+> Montserrat, two-up dish cards with photo or plate, one-tap add, sticky section strip, floating
+> cart bar, top alerts. It is scoped to the `.lux` class (`components/customer/lux.tsx`,
+> `globals.css`); staff dashboards keep stock shadcn until they get their own pass.
+>
+> **Elsewhere, functionality first.** Build plain, clean,
 > functional screens with stock shadcn/ui components and default styling. No
 > custom visual design, animation or branding work until the owner supplies
 > design inspiration. UI polish is a separate later pass after everything is
@@ -251,7 +266,7 @@ by the same targets (`uv run --no-project`); its releases are built per OS with 
   - Unit tests for services.
   - Integration tests that hit the real HTTP app against a real Postgres 17
     container. No SQLite and no mocked database.
-  - Mock only external services: Fast2SMS, Google, Razorpay, S3.
+  - Mock only external services: Fast2SMS, Google, Zoho Payments, S3.
 - Must-have tests:
   - permission matrix
   - cross-tenant isolation
@@ -287,7 +302,7 @@ by the same targets (`uv run --no-project`); its releases are built per OS with 
 
 ## 11. Things to never do
 
-- Build payments, delivery or a native app before they are reopened.
+- Build delivery or a native app before they are reopened.
 - Put permissions in JWTs, or skip the service-layer authorization check.
 - Use floats for money.
 - Let the API stream image bytes, or render store-supplied HTML or CSS.

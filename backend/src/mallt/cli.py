@@ -15,6 +15,7 @@ from mallt.core.db import make_engine
 from mallt.core.errors import AppError, Conflict
 from mallt.main import create_app
 from mallt.modules.iam.seed import seed_admin
+from mallt.modules.notify.webpush import generate_keys
 
 
 def build_openapi() -> dict[str, Any]:
@@ -52,6 +53,7 @@ def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(prog="python -m mallt.cli")
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("openapi", help="print the OpenAPI schema as JSON")
+    sub.add_parser("vapid-keys", help="print a new Web Push key pair for VAPID_* settings")
     seed = sub.add_parser("seed-admin", help="create the first Platform Admin")
     seed.add_argument("--username", required=True)
     seed.add_argument("--display-name", required=True)
@@ -60,6 +62,10 @@ def main(argv: list[str]) -> int:
     if args.command == "openapi":
         json.dump(build_openapi(), sys.stdout, indent=2, sort_keys=True)
         sys.stdout.write("\n")
+        return 0
+    if args.command == "vapid-keys":
+        private, public = generate_keys()
+        sys.stdout.write(f"VAPID_PRIVATE_KEY={private}\nVAPID_PUBLIC_KEY={public}\n")
         return 0
 
     try:

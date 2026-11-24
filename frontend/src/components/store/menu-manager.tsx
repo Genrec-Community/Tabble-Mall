@@ -20,7 +20,15 @@ import {
 } from "@/lib/api";
 import { ApiError, ensureOk, unwrap } from "@/lib/api-error";
 import { useStaffSession } from "@/lib/auth/staff-session";
+import { useFeatures } from "@/lib/features";
 import { formatPaise } from "@/lib/money";
+
+/** When a "sold out for today" is still running, the moment it ends; otherwise null. */
+function soldOutTill(p: ProductOut): Date | null {
+  if (!p.sold_out_until) return null;
+  const until = new Date(p.sold_out_until);
+  return until.getTime() > Date.now() ? until : null;
+}
 
 const message = (err: unknown, fallback: string) => (err instanceof ApiError ? (err.detail ?? err.title) : fallback);
 
@@ -30,6 +38,7 @@ export function MenuManager() {
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState<ProductOut | "new" | null>(null);
   const [newCategory, setNewCategory] = useState("");
+  const features = useFeatures();
 
   const products = useQuery({ queryKey: ["products", storeId], queryFn: async () => unwrap(await catalogListProducts({ path: { store_id: storeId } })) });
   const categories = useQuery({ queryKey: ["categories", storeId], queryFn: async () => unwrap(await catalogListCategories({ path: { store_id: storeId } })) });
@@ -42,6 +51,11 @@ export function MenuManager() {
   const toggle = useMutation({
     mutationFn: async (p: ProductOut) => unwrap(await catalogSetAvailability({ path: { store_id: storeId, product_id: p.id }, body: { is_available: !p.is_available } })),
     onSuccess: refresh,
+    onError: (err) => toast.error(message(err, "Could not update.")),
+  });
+  const soldOutToday = useMutation({
+    mutationFn: async ({ p, on }: { p: ProductOut; on: boolean }) => unwrap(await catalogSetAvailability({ path: { store_id: storeId, product_id: p.id }, body: { sold_out_today: on } })),
+    onSuccess: (_data, { on }) => { if (on) toast.success("Sold out for today. It comes back at midnight."); refresh(); },
     onError: (err) => toast.error(message(err, "Could not update.")),
   });
   const archive = useMutation({
@@ -94,11 +108,13 @@ export function MenuManager() {
               {rows.map((p) => (
                 <li key={p.id} className="flex flex-wrap items-center gap-3 p-3">
                   <div className="min-w-0 flex-1">
-                    <p className="font-medium">{p.name} <Badge variant="outline">{p.diet}</Badge> {!p.is_available && <Badge variant="destructive">Sold out</Badge>}</p>
+                    <p className="font-medium">{p.name} <Badge variant="outline">{p.diet}</Badge> {!p.is_available && <Badge variant="destructive">Sold out</Badge>}{p.is_available && soldOutTill(p) && <Badge variant="secondary">Sold out today · back tomorrow</Badge>}</p>
                     <p className="text-sm text-muted-foreground">
                       {p.variants.map((v) => `${v.name} ${formatPaise(v.price_paise)}${p.stock_mode === "counted" ? ` (${v.stock_count} left)` : ""}`).join(" · ")}
                     </p>
                   </div>
+                  {canStock && p.is_available && soldOutTill(p) && <Button size="sm" variant="outline" onClick={() => soldOutToday.mutate({ p, on: false })} aria-label={`Back on sale: ${p.name}`}>Back on sale</Button>}
+                  {canStock && features.on("auto_sold_out") && p.is_available && !soldOutTill(p) && <Button size="sm" variant="outline" onClick={() => soldOutToday.mutate({ p, on: true })} aria-label={`Sold out today: ${p.name}`}>Sold out today</Button>}
                   {canStock && <Button size="sm" variant="outline" onClick={() => toggle.mutate(p)} aria-label={`${p.is_available ? "Mark sold out" : "Mark available"}: ${p.name}`}>{p.is_available ? "Mark sold out" : "Mark available"}</Button>}
                   {canWrite && <Button size="sm" variant="outline" onClick={() => setEditing(p)}>Edit</Button>}
                   {canWrite && <Button size="sm" variant="ghost" onClick={() => window.confirm(`Remove ${p.name} from the menu?`) && archive.mutate(p)}>Remove</Button>}

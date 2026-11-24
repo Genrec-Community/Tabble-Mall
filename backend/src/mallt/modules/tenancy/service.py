@@ -27,9 +27,6 @@ from mallt.modules.tenancy.schemas import (
     StoreUpdate,
 )
 
-# Commission is MallT's own revenue, so only the platform may change it (not the tenant).
-COMMISSION_PERMISSION = P.PLATFORM_ORG_MANAGE
-
 
 def _snapshot(obj: Any, fields: Any) -> dict[str, Any]:
     return {f: getattr(obj, f) for f in fields}
@@ -181,8 +178,6 @@ class TenancyService:
         changes = data.model_dump(exclude_unset=True, exclude_none=True)
         if not changes:
             return org
-        if "commission_bps" in changes:
-            self.authz.require(principal, COMMISSION_PERMISSION, Scope.platform())
         if changes.keys() & {"name", "accept_timeout_s"}:
             self.authz.require(principal, P.ORG_SETTINGS_UPDATE, scope)
         self._ensure_operational(principal, org)
@@ -329,8 +324,6 @@ class TenancyService:
             self.authz.require(principal, P.ORG_STORE_MANAGE, scope)
         if "description" in changes:
             self.authz.require(principal, P.STORE_PROFILE_UPDATE, scope)
-        if "commission_bps" in changes:
-            self.authz.require(principal, COMMISSION_PERMISSION, Scope.platform())
         self._ensure_operational(
             principal,
             await self._org(store.organization_id),
@@ -391,10 +384,23 @@ class TenancyService:
 
     # ---- internal lookups for other modules (no authorization: callers have already decided) ----
 
-    async def org_terms(self, org_id: uuid.UUID) -> tuple[int, int]:
-        """(commission_bps, accept_timeout_s) for an organization."""
-        org = await self._org(org_id)
-        return org.commission_bps, org.accept_timeout_s
+    async def accept_timeout(self, org_id: uuid.UUID) -> int:
+        """Seconds the organization's stores have to accept a paid order."""
+        return (await self._org(org_id)).accept_timeout_s
+
+    async def everything(
+        self, principal: Principal
+    ) -> tuple[list[Organization], list[Mall], list[Store]]:
+        """Every tenant, for the platform owner's dashboard (platform staff only)."""
+        self.authz.require(principal, P.PLATFORM_ORG_MANAGE, Scope.platform())
+        return await self.repo.everything()
+
+    async def malls_by_ids(self, mall_ids: list[uuid.UUID]) -> dict[uuid.UUID, Mall]:
+        return await self.repo.malls_by_ids(mall_ids)
 
     async def stores_by_ids(self, store_ids: list[uuid.UUID]) -> dict[uuid.UUID, Store]:
         return await self.repo.stores_by_ids(store_ids)
+
+    async def mall_slugs(self, mall_ids: list[uuid.UUID]) -> dict[uuid.UUID, str]:
+        """Each mall's public slug, for links back to it from a customer's orders."""
+        return await self.repo.mall_slugs(mall_ids)

@@ -1,5 +1,6 @@
 import uuid
 from dataclasses import dataclass
+from dataclasses import field as dc_field
 from datetime import UTC, datetime
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -13,7 +14,12 @@ from mallt.core.kv import KV
 from mallt.core.rbac import P, Scope
 from mallt.core.storage import Storage
 from mallt.modules.audit.service import Actor, AuditService
-from mallt.modules.catalog.availability import in_hours, store_accepting
+from mallt.modules.catalog.availability import (
+    in_hours,
+    next_local_midnight,
+    on_sale,
+    store_accepting,
+)
 from mallt.modules.catalog.enums import StockMode
 from mallt.modules.catalog.models import (
     MenuCategory,
@@ -31,6 +37,8 @@ from mallt.modules.catalog.schemas import (
     ImagePresignIn,
     ImagePresignOut,
     OptionGroupIn,
+    PopularItemOut,
+    PopularOut,
     ProductIn,
     PublicCategoryOut,
     PublicItemOut,
@@ -47,6 +55,7 @@ from mallt.modules.catalog.schemas import (
     theme_from,
 )
 from mallt.modules.iam.authz import AuthzService, Principal
+from mallt.modules.platform.service import FeatureService
 from mallt.modules.tenancy.models import Store
 from mallt.modules.tenancy.service import TenancyService
 
@@ -56,6 +65,7 @@ _PROFILE_FIELDS = {
     "food_types",
     "gstin",
     "fssai",
+    "pickup_point",
     "auto_print",
     "kot_when",
     "bill_when",
@@ -74,6 +84,7 @@ class CatalogService:
         self.tenancy = TenancyService(session, kv)
         self.authz = AuthzService(session, kv)
         self.audit = AuditService(session)
+        self.features = FeatureService(session)
         self.storage = storage
 
     # ---- access ----
@@ -170,6 +181,8 @@ class CatalogService:
                 value = theme_from(value).model_dump()
             if field == "hours" and value is not None:
                 value = [dict(w) for w in value]
+            if field == "pickup_point":
+                value = value or None  # "" clears it
             setattr(row, field, value)
         if changes:
             await self.repo.session.flush()
@@ -391,6 +404,7 @@ class CatalogService:
                 "tax_bps",
                 "stock_mode",
                 "is_available",
+                "sold_out_until",
                 "image_key",
                 "position",
                 "windows",
@@ -467,6 +481,14 @@ class CatalogService:
         product = await self._product(store, product_id)
         if data.is_available is not None:
             product.is_available = data.is_available
+            if data.is_available:
+                product.sold_out_until = None
+        if data.sold_out_today:
+            await self.features.require("auto_sold_out")
+            row = await self._settings(store)
+            product.sold_out_until = next_local_midnight(datetime.now(UTC), row.timezone)
+        elif data.sold_out_today is False:
+            product.sold_out_until = None
         if data.variants:
             by_id = {v.id: v for v in product.variants}
             for item in data.variants:
@@ -488,12 +510,29 @@ class CatalogService:
     # ---- public (customer) ----
 
     async def public_cards(self, mall_slug: str) -> list[PublicStoreCardOut]:
-        _, stores = await self.tenancy.public_directory(mall_slug)
+        mall, stores = await self.tenancy.public_directory(mall_slug)
+        featured = {
+            sid: rank for rank, sid in enumerate(await self.features.featured_store_ids(mall.id))
+        }
         settings = await self.repo.settings_for_stores([s.id for s in stores])
+        menus = await self.repo.menu_teasers([s.id for s in stores])
         now = datetime.now(UTC)
         cards = []
         for store in stores:
             row = settings.get(store.id)
+            accepting = (
+                store_accepting(row.is_open, row.is_paused, row.hours, row.timezone, now)
+                if row
+                else True
+            )
+            local = now.astimezone(ZoneInfo(row.timezone if row else "Asia/Kolkata"))
+            products = menus.get(store.id, [])
+            ready = [
+                p.prep_minutes
+                for p in products
+                if on_sale(p.is_available, p.sold_out_until, now)
+                and in_hours(p.windows, local, "start", "end")
+            ]
             cards.append(
                 PublicStoreCardOut(
                     slug=store.slug,
@@ -503,14 +542,80 @@ class CatalogService:
                     logo_url=self.storage.public_url(row.logo_key)
                     if row and row.logo_key
                     else None,
-                    accepting_orders=store_accepting(
-                        row.is_open, row.is_paused, row.hours, row.timezone, now
-                    )
-                    if row
-                    else True,
+                    banner_url=self.storage.public_url(row.banner_key)
+                    if row and row.banner_key
+                    else None,
+                    accepting_orders=accepting,
+                    pickup_point=row.pickup_point if row else None,
+                    prep_minutes=min(ready) if ready and accepting else None,
+                    top_dishes=[p.name for p in products[:3]],
+                    featured=store.id in featured,
+                    featured_rank=featured.get(store.id),
                 )
             )
         return cards
+
+    async def public_items_by_ids(
+        self, mall_slug: str, counts: list[tuple[uuid.UUID, int]], *, fill_to: int
+    ) -> PopularOut:
+        """Dishes in the given order (the caller ranks them), topped up with each open store's first
+        dishes so the rail is never empty in a new mall. Unavailable dishes are left out."""
+        _, stores = await self.tenancy.public_directory(mall_slug)
+        by_store = {s.id: s for s in stores}
+        settings = await self.repo.settings_for_stores(list(by_store))
+        now = datetime.now(UTC)
+        accepting = {
+            sid: store_accepting(r.is_open, r.is_paused, r.hours, r.timezone, now)
+            for sid, r in settings.items()
+        }
+        mall_ids = {s.mall_id for s in stores}
+        if not mall_ids:
+            return PopularOut(items=[])
+        (mall_id,) = mall_ids
+        wanted = dict(counts)
+        products = await self.repo.products_by_ids(mall_id, list(wanted))
+        ranked: list[uuid.UUID] = list(wanted)
+        if len(products) < fill_to:
+            menus = await self.repo.menu_teasers(list(by_store))
+            # Round-robin over the stores, so the top-up is a mix rather than one menu.
+            rounds = max((len(v) for v in menus.values()), default=0)
+            extra = [
+                p
+                for i in range(rounds)
+                for sid in by_store
+                for p in menus.get(sid, [])[i : i + 1]
+                if p.id not in wanted
+            ]
+            extra_ids = [p.id for p in extra][: fill_to * 2]
+            products += await self.repo.products_by_ids(mall_id, extra_ids)
+            ranked += extra_ids
+        order = {pid: i for i, pid in enumerate(ranked)}
+        products.sort(key=lambda p: order.get(p.id, len(order)))  # callers pass the ranking
+        items: list[PopularItemOut] = []
+        seen: set[uuid.UUID] = set()
+        for product in products:
+            store = by_store.get(product.store_id)
+            if store is None or product.id in seen or product.is_archived:
+                continue
+            row = settings.get(store.id)
+            out = self._public_product(
+                product, now.astimezone(ZoneInfo(row.timezone if row else "Asia/Kolkata"))
+            )
+            if not out.available:
+                continue
+            seen.add(product.id)
+            items.append(
+                PopularItemOut(
+                    store_slug=store.slug,
+                    store_name=store.name,
+                    accepting_orders=accepting.get(store.id, True),
+                    product=out,
+                    orders=wanted.get(product.id, 0),
+                )
+            )
+            if len(items) == fill_to:
+                break
+        return PopularOut(items=items)
 
     async def public_items(
         self,
@@ -589,6 +694,7 @@ class CatalogService:
                 theme=theme_from(row.theme),
                 accepting_orders=accepting,
                 hours=row.hours,
+                pickup_point=row.pickup_point,
                 logo_url=self.storage.public_url(row.logo_key) if row.logo_key else None,
                 banner_url=self.storage.public_url(row.banner_key) if row.banner_key else None,
             ),
@@ -599,7 +705,7 @@ class CatalogService:
         counted = product.stock_mode == StockMode.COUNTED
         variants = [v for v in product.variants if v.is_active]
         reason: str | None = None
-        if not product.is_available or (
+        if not on_sale(product.is_available, product.sold_out_until, local_now) or (
             counted and all((v.stock_count or 0) <= 0 for v in variants)
         ):
             reason = "sold_out"
@@ -682,8 +788,13 @@ class OrderableStore:
     name: str
     timezone: str
     accepting: bool
-    commission_bps: int | None
     gstin: str | None
+    # Opening hours ([{"days", "open", "close"}], local time; empty = always open).
+    hours: list[dict[str, Any]] = dc_field(default_factory=list, hash=False, compare=False)
+
+    def open_at(self, when: datetime) -> bool:
+        """Whether the store's hours cover ``when`` (it may still be paused or closed now)."""
+        return in_hours(self.hours, when.astimezone(ZoneInfo(self.timezone)), "open", "close")
 
 
 @dataclass(frozen=True)
@@ -734,8 +845,8 @@ class OrderingCatalog:
                 accepting=store_accepting(row.is_open, row.is_paused, row.hours, row.timezone, now)
                 if row
                 else True,
-                commission_bps=s.commission_bps,
                 gstin=row.gstin if row else None,
+                hours=list(row.hours or []) if row else [],
             )
         return OrderableMall(mall.id, mall.organization_id, mall.slug, out)
 
@@ -763,7 +874,7 @@ class OrderingCatalog:
                 counted=p.stock_mode == StockMode.COUNTED,
                 available_now=(
                     not p.is_archived
-                    and p.is_available
+                    and on_sale(p.is_available, p.sold_out_until, now)
                     and in_hours(p.windows, local, "start", "end")
                 ),
                 variants={
@@ -816,3 +927,21 @@ async def print_prefs(session: AsyncSession, store_id: uuid.UUID) -> StorePrintP
     return StorePrintPrefs(
         row.auto_print, row.kot_when, row.bill_when, row.gstin, row.fssai, row.timezone
     )
+
+
+async def store_profiles(
+    session: AsyncSession, store_ids: list[uuid.UUID]
+) -> dict[uuid.UUID, StorePrintPrefs]:
+    """Timezone, GSTIN and FSSAI of several stores at once (defaults for unsaved settings)."""
+    rows = await CatalogRepository(session).settings_for_stores(store_ids)
+    out = {}
+    for store_id in store_ids:
+        row = rows.get(store_id)
+        out[store_id] = (
+            StorePrintPrefs(
+                row.auto_print, row.kot_when, row.bill_when, row.gstin, row.fssai, row.timezone
+            )
+            if row
+            else StorePrintPrefs(True, "accepted", "ready", None, None, "Asia/Kolkata")
+        )
+    return out

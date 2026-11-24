@@ -7,7 +7,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       area="platform"
       title="Platform admin"
       nav={[
+        { href: "/admin/owner", label: "Owner controls" },
         { href: "/admin", label: "Organizations" },
+        { href: "/admin/payments", label: "Payments" },
         { href: "/admin/audit", label: "Audit log" },
       ]}
     >

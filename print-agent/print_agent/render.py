@@ -132,8 +132,12 @@ def render_ticket(payload: dict[str, Any], *, width: int, layout: Layout) -> byt
     when = _text(payload.get("time"))
     if when and options.show("ticket_show_time"):
         out += escpos.centered(when)
+    collect_at = _text(payload.get("collect_at"))
+    if collect_at:
+        # A scheduled order: the kitchen must see this before anything else about timing.
+        out += big(f"PICKUP {collect_at}")
     eta = _int(payload.get("eta_minutes"))
-    if eta and options.show("ticket_show_eta"):
+    if eta and not collect_at and options.show("ticket_show_eta"):
         out += escpos.centered(f"Ready in about {eta} min")
     customer = _text(payload.get("customer_name"))
     if customer and options.show("ticket_show_customer"):
@@ -255,6 +259,12 @@ def render_bill(payload: dict[str, Any], *, width: int, layout: Layout) -> bytes
         money(payload.get("subtotal", "")),
         cols,
     )
+    discounts = payload.get("discounts")
+    if isinstance(discounts, list):
+        for row in discounts:
+            if isinstance(row, dict) and _nonzero(row.get("amount")):
+                label = _text(row.get("name")) or "Discount"
+                out += escpos.columns(label, f"-{money(row.get('amount', ''))}", cols)
     if options.show("show_tax_breakdown"):
         tax_lines = payload.get("tax_lines")
         if isinstance(tax_lines, list) and tax_lines:

@@ -47,7 +47,8 @@ async def test_admin_creates_org_with_an_owner_who_must_change_password(
 
     assert r.status_code == 201
     body = r.json()
-    assert body["org"]["slug"] == "phoenix" and body["org"]["commission_bps"] == 500
+    assert body["org"]["slug"] == "phoenix"
+    assert "commission_bps" not in body["org"]  # MallT keeps no money
     assert body["owner_username"] == "phoenix.owner" and len(body["temp_password"]) >= 16
 
     owner = await client.post(
@@ -102,8 +103,6 @@ async def test_org_input_is_validated(client: httpx.AsyncClient, db_session: Asy
         r = await client.post("/api/v1/orgs", json={**ORG_BODY, **bad}, headers=h)
         assert r.status_code == 422, bad
     org = await make_org(db_session, "ok-org")
-    r = await client.patch(f"/api/v1/orgs/{org.id}", json={"commission_bps": 10001}, headers=h)
-    assert r.status_code == 422
     r = await client.patch(f"/api/v1/orgs/{org.id}", json={"accept_timeout_s": 5}, headers=h)
     assert r.status_code == 422
 
@@ -128,7 +127,7 @@ async def test_org_lists_are_scoped_and_paged(
     assert sorted(got) == sorted(str(o.id) for o in (a, b, c)) and second["next_cursor"] is None
 
 
-async def test_org_settings_and_commission_permissions(
+async def test_org_settings_permissions(
     client: httpx.AsyncClient, db_session: AsyncSession
 ) -> None:
     org = await make_org(db_session)
@@ -141,12 +140,8 @@ async def test_org_settings_and_commission_permissions(
     assert (await client.patch(url, json={"name": "New"}, headers=manager)).status_code == 403
     ok = await client.patch(url, json={"name": "New Name", "accept_timeout_s": 600}, headers=owner)
     assert ok.status_code == 200 and ok.json()["name"] == "New Name"
-    # Commission is MallT's revenue: only the platform may change it.
-    assert (await client.patch(url, json={"commission_bps": 0}, headers=owner)).status_code == 403
-    root = await admin(client, db_session)
-    done = await client.patch(url, json={"commission_bps": 700}, headers=root)
-    assert done.status_code == 200 and done.json()["commission_bps"] == 700
-    assert await audit_actions(db_session) == ["org.updated", "org.updated"]
+    assert ok.json()["accept_timeout_s"] == 600 and "commission_bps" not in ok.json()
+    assert await audit_actions(db_session) == ["org.updated"]
 
 
 async def test_cross_org_access_is_404(client: httpx.AsyncClient, db_session: AsyncSession) -> None:
@@ -254,11 +249,10 @@ async def test_store_owner_edits_description_but_not_name_or_status(
     assert ok.status_code == 200 and ok.json()["description"] == "Best burgers"
     assert (await client.patch(url, json={"name": "Renamed"}, headers=h)).status_code == 403
     assert (await client.post(f"{url}/suspend", headers=h)).status_code == 403
-    assert (await client.patch(url, json={"commission_bps": 0}, headers=h)).status_code == 403
     assert (await client.get(url, headers=h)).json()["name"] == store.name
 
 
-async def test_org_manager_can_rename_and_suspend_stores_and_platform_sets_override(
+async def test_org_manager_can_rename_and_suspend_stores(
     client: httpx.AsyncClient, db_session: AsyncSession
 ) -> None:
     org = await make_org(db_session)
@@ -273,11 +267,7 @@ async def test_org_manager_can_rename_and_suspend_stores_and_platform_sets_overr
     ] == "Renamed"
     assert (await client.post(f"{url}/suspend", headers=h)).json()["status"] == "suspended"
     assert (await client.post(f"{url}/activate", headers=h)).json()["status"] == "active"
-    assert (await client.patch(url, json={"commission_bps": 300}, headers=h)).status_code == 403
-    root = await admin(client, db_session)
-    assert (await client.patch(url, json={"commission_bps": 300}, headers=root)).json()[
-        "commission_bps"
-    ] == 300
+    assert "commission_bps" not in (await client.get(url, headers=h)).json()
 
 
 async def test_scope_visibility_for_store_level_staff(

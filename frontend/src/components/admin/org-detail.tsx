@@ -64,10 +64,9 @@ export function AdminOrgDetail() {
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">Settings</h2>
         <OrgSettingsForm
-          key={`${o.name}-${o.commission_bps}-${o.accept_timeout_s}`}
+          key={`${o.name}-${o.accept_timeout_s}`}
           org={o}
           canEditSettings
-          canEditCommission
           onSaved={(updated) => queryClient.setQueryData(["org", orgId], updated)}
         />
       </section>

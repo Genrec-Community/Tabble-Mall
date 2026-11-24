@@ -31,10 +31,9 @@ export function OrgOverview() {
         </p>
       )}
       <OrgSettingsForm
-        key={`${o.name}-${o.commission_bps}-${o.accept_timeout_s}`}
+        key={`${o.name}-${o.accept_timeout_s}`}
         org={o}
         canEditSettings={can("org.settings.update", scope)}
-        canEditCommission={can("platform.org.manage")}
         onSaved={(updated) => queryClient.setQueryData(["org", orgId], updated)}
       />
     </section>
