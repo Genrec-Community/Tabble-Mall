@@ -12,17 +12,27 @@ from mallt.core.pagination import Page
 from mallt.core.rbac import P
 from mallt.modules.catalog.schemas import PopularOut
 from mallt.modules.iam.deps import CustomerId, KvDep, Staff
+from mallt.modules.notify.service import NotifyService, notify_kick
 from mallt.modules.orders.discovery import DiscoveryService
 from mallt.modules.orders.enums import StoreOrderStatus as S
+from mallt.modules.orders.groups import GroupService
 from mallt.modules.orders.reports import ReportService
+from mallt.modules.orders.reviews import ReviewService
 from mallt.modules.orders.schemas import (
     CheckoutIn,
     CustomerOrderOut,
+    GroupCreate,
+    GroupOrderOut,
     InvoiceOut,
+    MallRatingsOut,
     PickupIn,
     ReasonIn,
+    ReviewIn,
+    ReviewOut,
+    ReviewReplyIn,
     SalesReportOut,
     StoreOrderOut,
+    StoreReviewOut,
 )
 from mallt.modules.orders.service import OrderService
 from mallt.modules.payments.provider import PaymentProvider
@@ -34,7 +44,14 @@ from mallt.modules.printing.schemas import ReprintIn
 def _svc(session: SessionDep, kv: KvDep, request: Request) -> OrderService:
     bus: Bus = request.app.state.bus
     payments: PaymentProvider = request.app.state.payments
-    return OrderService(session, kv, bus, payments, money_kick(request.app))
+    return OrderService(
+        session,
+        kv,
+        bus,
+        payments,
+        money_kick(request.app),
+        notify=NotifyService(session, request.app.state.notify, notify_kick(request.app)),
+    )
 
 
 Svc = Annotated[OrderService, Depends(_svc, scope="function")]
@@ -60,7 +77,9 @@ async def checkout(
 ) -> CustomerOrderOut:
     if not idempotency_key:
         raise BadRequest("idempotency_key_required", "Send an Idempotency-Key header.")
-    order, created = await svc.checkout(customer_id, mall_slug, idempotency_key, body.note)
+    order, created = await svc.checkout(
+        customer_id, mall_slug, idempotency_key, body.note, body.pickup_at
+    )
     response.status_code = status.HTTP_201_CREATED if created else status.HTTP_200_OK
     return order
 
@@ -254,3 +273,100 @@ async def popular(
     """The mall's most ordered dishes lately, topped up so a new mall still shows some."""
     response.headers["Cache-Control"] = "public, max-age=60"
     return await svc.popular(mall_slug, limit)
+
+
+# ---- group orders ----
+
+
+def _groups(session: SessionDep, kv: KvDep) -> GroupService:
+    return GroupService(session, kv)
+
+
+Groups = Annotated[GroupService, Depends(_groups, scope="function")]
+
+
+@customer_router.post("/malls/{mall_slug}/groups", status_code=status.HTTP_201_CREATED)
+async def start_group(
+    mall_slug: str, body: GroupCreate, customer_id: CustomerId, svc: Groups
+) -> GroupOrderOut:
+    """Start a group order; your cart in this mall becomes your share. Share the link."""
+    return await svc.create(customer_id, mall_slug, body.name)
+
+
+@customer_router.get("/groups/{token}")
+async def get_group(token: str, customer_id: CustomerId, svc: Groups) -> GroupOrderOut:
+    return await svc.view(customer_id, token)
+
+
+@customer_router.post("/groups/{token}/join")
+async def join_group(token: str, customer_id: CustomerId, svc: Groups) -> GroupOrderOut:
+    """Your cart in the group's mall becomes your share; you pay for it yourself."""
+    return await svc.join(customer_id, token)
+
+
+@customer_router.post("/groups/{token}/leave", status_code=status.HTTP_204_NO_CONTENT)
+async def leave_group(token: str, customer_id: CustomerId, svc: Groups) -> Response:
+    await svc.leave(customer_id, token)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@customer_router.post("/groups/{token}/close")
+async def close_group(token: str, customer_id: CustomerId, svc: Groups) -> GroupOrderOut:
+    """The host stops new people joining. Members can still pay for their share."""
+    return await svc.close(customer_id, token)
+
+
+# ---- ratings and reviews ----
+
+
+def _reviews(session: SessionDep, kv: KvDep) -> ReviewService:
+    return ReviewService(session, kv)
+
+
+Reviews = Annotated[ReviewService, Depends(_reviews, scope="function")]
+
+
+@customer_router.put("/orders/stores/{store_order_id}/review")
+async def rate_my_order(
+    store_order_id: uuid.UUID, body: ReviewIn, customer_id: CustomerId, svc: Reviews
+) -> ReviewOut:
+    """Rate a collected order (1-5 stars, optional words). Can be changed for 7 days."""
+    return await svc.rate(customer_id, store_order_id, body)
+
+
+@store_router.get("/stores/{store_id}/reviews")
+async def list_store_reviews(
+    store_id: uuid.UUID,
+    principal: Staff,
+    svc: Reviews,
+    before: uuid.UUID | None = None,
+    limit: Limit = 30,
+) -> Page[StoreReviewOut]:
+    return await svc.store_reviews(principal, store_id, before, limit)
+
+
+@store_router.put("/stores/{store_id}/reviews/{review_id}/reply")
+async def reply_to_review(
+    store_id: uuid.UUID, review_id: uuid.UUID, body: ReviewReplyIn, principal: Staff, svc: Reviews
+) -> StoreReviewOut:
+    return await svc.reply(principal, store_id, review_id, body.reply)
+
+
+@public_router.get("/malls/{mall_slug}/ratings")
+async def mall_ratings(mall_slug: str, response: Response, svc: Reviews) -> MallRatingsOut:
+    """Average stars of every rated store (by slug) and dish (by id) in the mall."""
+    response.headers["Cache-Control"] = "public, max-age=60"
+    return await svc.mall_ratings(mall_slug)
+
+
+@public_router.get("/malls/{mall_slug}/stores/{store_slug}/reviews")
+async def store_public_reviews(
+    mall_slug: str,
+    store_slug: str,
+    response: Response,
+    svc: Reviews,
+    limit: Annotated[int, Query(ge=1, le=50)] = 20,
+) -> list[StoreReviewOut]:
+    """A store's latest written reviews (first names only)."""
+    response.headers["Cache-Control"] = "public, max-age=60"
+    return await svc.public_store_reviews(mall_slug, store_slug, limit)

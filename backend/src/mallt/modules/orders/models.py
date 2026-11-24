@@ -30,6 +30,12 @@ class Cart(IdMixin, TimestampMixin, Base):
     customer_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("customers.id"), index=True)
     organization_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("organizations.id"), index=True)
     mall_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("malls.id"), index=True)
+    # A store coupon the customer typed in (upper-case); checked again on every price.
+    coupon_code: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Set while this cart is the customer's share of a group order.
+    group_order_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("group_orders.id", ondelete="SET NULL"), index=True, nullable=True
+    )
 
     lines: Mapped[list["CartLine"]] = relationship(
         order_by="CartLine.created_at", cascade="all, delete-orphan", lazy="raise"
@@ -80,6 +86,12 @@ class CustomerOrder(IdMixin, TimestampMixin, Base):
     payment_ref: Mapped[str | None] = mapped_column(Text, nullable=True, index=True)
     # An unpaid order is given up (stock returned) after this.
     pay_by: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    # When the customer wants to collect (None = as soon as it's ready).
+    pickup_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    discount_paise: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
+    group_order_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("group_orders.id"), index=True, nullable=True
+    )
 
     store_orders: Mapped[list["StoreOrder"]] = relationship(
         back_populates="customer_order", order_by="StoreOrder.id", lazy="raise"
@@ -109,6 +121,16 @@ class StoreOrder(IdMixin, TimestampMixin, Base):
     pickup_code: Mapped[str] = mapped_column(Text)
     subtotal_paise: Mapped[int] = mapped_column(BigInteger)  # GST-inclusive prices
     tax_paise: Mapped[int] = mapped_column(BigInteger)  # the GST contained in the total
+    # Offers and combos, borne by the store: total = subtotal - discount.
+    discount_paise: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
+    # A snapshot of what was taken off: [{"kind", "name", "amount_paise", "offer_id"?}].
+    discounts: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSON, default=list, server_default=text("'[]'")
+    )
+    # The store offer used, if any (for per-customer limits).
+    offer_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("offers.id"), index=True, nullable=True
+    )
     total_paise: Mapped[int] = mapped_column(BigInteger)
     # Retired 2026-11-23 (MallT keeps no money). Never read or written; dropped later.
     commission_bps: Mapped[int | None] = mapped_column(Integer, nullable=True)
@@ -120,6 +142,7 @@ class StoreOrder(IdMixin, TimestampMixin, Base):
     customer_phone: Mapped[str | None] = mapped_column(Text, nullable=True)  # masked
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
     reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    pickup_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     accept_by: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     accepted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     ready_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
@@ -138,6 +161,39 @@ Index(
     StoreOrder.accept_by,
     postgresql_where=text("status = 'paid'"),
 )
+
+
+class GroupOrder(IdMixin, TimestampMixin, Base):
+    """Friends order together: each member fills their own cart and pays their own share."""
+
+    __tablename__ = "group_orders"
+
+    organization_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("organizations.id"), index=True)
+    mall_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("malls.id"), index=True)
+    host_customer_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("customers.id"), index=True)
+    token: Mapped[str] = mapped_column(Text, unique=True)  # the share link's secret
+    name: Mapped[str | None] = mapped_column(Text, nullable=True)
+    status: Mapped[str] = mapped_column(Text, default="open")  # open | closed
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class Review(IdMixin, TimestampMixin, Base):
+    """A customer's rating of one collected store order (1-5 stars)."""
+
+    __tablename__ = "reviews"
+    __table_args__ = (CheckConstraint("rating BETWEEN 1 AND 5", name="rating_range"),)
+
+    organization_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("organizations.id"), index=True)
+    mall_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("malls.id"), index=True)
+    store_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("stores.id"), index=True)
+    store_order_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("store_orders.id", ondelete="CASCADE"), unique=True
+    )
+    customer_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("customers.id"), index=True)
+    rating: Mapped[int] = mapped_column(Integer)
+    comment: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # The store's one public reply.
+    reply: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 
 class StoreOrderLine(IdMixin, Base):

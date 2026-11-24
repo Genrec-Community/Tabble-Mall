@@ -1,5 +1,6 @@
 import uuid
 from dataclasses import dataclass
+from datetime import UTC, datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,17 +14,30 @@ from mallt.modules.catalog.service import (
     OrderableVariant,
     OrderingCatalog,
 )
-from mallt.modules.orders.models import Cart, CartLine
+from mallt.modules.offers.pricing import Quote, QuoteLine
+from mallt.modules.offers.service import OffersService
+from mallt.modules.orders import schedule
+from mallt.modules.orders.models import Cart, CartLine, GroupOrder
 from mallt.modules.orders.repository import OrdersRepository
 from mallt.modules.orders.schemas import (
+    CartGroupOut,
     CartLineIn,
     CartLineOut,
     CartLineUpdate,
     CartOut,
     CartStoreOut,
+    CouponOut,
+    DiscountOut,
     LineProblem,
+    PickupSlotsOut,
     ReorderOut,
 )
+from mallt.modules.platform.service import FeatureService
+
+
+def group_live(group: GroupOrder, now: datetime | None = None) -> bool:
+    return group.expires_at > (now or datetime.now(UTC))
+
 
 MAX_LINE_QUANTITY = 20
 MAX_CART_LINES = 50
@@ -66,6 +80,8 @@ class CartService:
         self.session = session
         self.repo = OrdersRepository(session)
         self.catalog = OrderingCatalog(session, kv)
+        self.offers = OffersService(session, kv)
+        self.features = FeatureService(session)
 
     async def mall(self, mall_slug: str) -> OrderableMall:
         return await self.catalog.mall_stores(mall_slug)
@@ -105,9 +121,34 @@ class CartService:
     async def view(self, customer_id: uuid.UUID, mall_slug: str) -> CartOut:
         mall = await self.mall(mall_slug)
         cart = await self.repo.get_cart(customer_id, mall.id)
-        return await self._view(mall, await self.priced(cart, mall) if cart else [])
+        if cart is None:
+            return await self._view(mall, [], None)
+        return await self._view(mall, await self.priced(cart, mall), cart)
 
-    async def _view(self, mall: OrderableMall, priced: list[PricedLine]) -> CartOut:
+    async def quote(self, cart: Cart, mall: OrderableMall, priced: list[PricedLine]) -> Quote:
+        """The cart's offers and combos. Lines with a problem are left out of the sums."""
+        lines = [
+            QuoteLine(p.line.store_id, p.line.product_id, p.line.quantity, p.unit_price_paise)
+            for p in priced
+            if p.problem is None
+        ]
+        customer_id = cart.customer_id
+
+        async def uses(offer_ids: list[uuid.UUID]) -> dict[uuid.UUID, int]:
+            return await self.repo.offer_uses(customer_id, offer_ids)
+
+        return await self.offers.quote(
+            mall,
+            lines,
+            code=cart.coupon_code,
+            uses=uses,
+            enabled=await self.features.is_enabled("offers"),
+        )
+
+    async def _view(
+        self, mall: OrderableMall, priced: list[PricedLine], cart: Cart | None
+    ) -> CartOut:
+        q = await self.quote(cart, mall, priced) if cart is not None else None
         grouped: dict[uuid.UUID, list[PricedLine]] = {}
         for p in priced:
             grouped.setdefault(p.line.store_id, []).append(p)
@@ -132,12 +173,21 @@ class CartService:
                 )
                 for r in rows
             ]
+            sq = q.stores.get(store_id) if q else None
+            subtotal = sum(x.line_total_paise for x in lines)
+            discount = sq.discount_paise if sq else 0
             stores.append(
                 CartStoreOut(
                     store_slug=store.slug,
                     store_name=store.name,
                     accepting_orders=store.accepting,
-                    subtotal_paise=sum(x.line_total_paise for x in lines),
+                    subtotal_paise=subtotal,
+                    discount_paise=discount,
+                    total_paise=subtotal - discount,
+                    discounts=[
+                        DiscountOut(kind=d.kind, name=d.name, amount_paise=d.amount_paise)
+                        for d in (sq.discounts if sq else [])
+                    ],
                     prep_minutes=max(
                         (r.product.prep_minutes for r in rows if r.product), default=0
                     ),
@@ -145,12 +195,66 @@ class CartService:
                 )
             )
         stores.sort(key=lambda s: s.store_name)
+        coupon = None
+        if q is not None and q.coupon_code and q.coupon_status != "none":
+            coupon = CouponOut(
+                code=q.coupon_code,
+                status=q.coupon_status,
+                message=q.coupon_message,
+            )
         return CartOut(
             mall_slug=mall.slug,
             stores=stores,
-            total_paise=sum(s.subtotal_paise for s in stores),
+            items_total_paise=sum(s.subtotal_paise for s in stores),
+            discount_paise=sum(s.discount_paise for s in stores),
+            total_paise=sum(s.total_paise for s in stores),
             can_checkout=bool(stores) and all(x.problem is None for s in stores for x in s.lines),
+            coupon=coupon,
+            group=await self.group_view(cart) if cart is not None else None,
         )
+
+    async def group_view(self, cart: Cart) -> CartGroupOut | None:
+        """The group this cart belongs to, while that group still runs."""
+        if cart.group_order_id is None:
+            return None
+        group = await self.repo.group(cart.group_order_id)
+        if group is None or not group_live(group):
+            return None
+        return CartGroupOut(
+            id=group.id,
+            token=group.token,
+            name=group.name,
+            is_host=group.host_customer_id == cart.customer_id,
+        )
+
+    async def mall_by_id(self, mall_id: uuid.UUID) -> OrderableMall | None:
+        slugs = await self.catalog.tenancy.mall_slugs([mall_id])
+        if mall_id not in slugs:
+            return None
+        try:
+            return await self.mall(slugs[mall_id])
+        except NotFound:
+            return None
+
+    async def pickup_slots(self, customer_id: uuid.UUID, mall_slug: str) -> PickupSlotsOut:
+        mall = await self.mall(mall_slug)
+        cart = await self.repo.get_cart(customer_id, mall.id)
+        priced = await self.priced(cart, mall) if cart else []
+        prep = max((p.product.prep_minutes for p in priced if p.product), default=10)
+        enabled = await self.features.is_enabled("schedule_ahead")
+        stores = [mall.stores[s] for s in {p.line.store_id for p in priced} if s in mall.stores]
+        return PickupSlotsOut(
+            enabled=enabled,
+            asap_minutes=prep,
+            slots=schedule.slots(datetime.now(UTC), prep, stores) if enabled and stores else [],
+        )
+
+    async def set_coupon(self, customer_id: uuid.UUID, mall_slug: str, code: str | None) -> CartOut:
+        mall = await self.mall(mall_slug)
+        cart = await self._cart(customer_id, mall)
+        cart.coupon_code = code.strip().upper() if code else None
+        await self.session.flush()
+        return await self._view(mall, await self.priced(cart, mall), cart)
 
     async def reorder(
         self, customer_id: uuid.UUID, mall_slug: str, order_id: uuid.UUID
@@ -242,7 +346,7 @@ class CartService:
                 )
             )
         await self.session.flush()
-        return await self._view(mall, await self.priced(cart, mall))
+        return await self._view(mall, await self.priced(cart, mall), cart)
 
     @staticmethod
     def _validate_options(product: OrderableProduct, data: CartLineIn) -> list[OrderableOption]:
@@ -284,7 +388,7 @@ class CartService:
         if "note" in fields:
             line.note = data.note or None
         await self.session.flush()
-        return await self._view(mall, await self.priced(cart, mall))
+        return await self._view(mall, await self.priced(cart, mall), cart)
 
     async def clear(self, customer_id: uuid.UUID, mall_slug: str) -> None:
         mall = await self.mall(mall_slug)

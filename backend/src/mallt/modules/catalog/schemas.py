@@ -374,6 +374,8 @@ class PublicItemsOut(BaseModel):
 
 class PopularItemOut(PublicItemOut):
     orders: int  # how many were paid for in this mall lately
+    rating: float | None = None  # customers' average stars for this dish, when rated
+    rating_count: int = 0
 
 
 class PopularOut(BaseModel):

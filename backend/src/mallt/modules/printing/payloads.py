@@ -33,6 +33,9 @@ def ticket_payload(
         "store": order.store_name,
         "time": _local(order, prefs).strftime("%H:%M"),
         "eta_minutes": order.prep_minutes,
+        "collect_at": order.pickup_at.astimezone(ZoneInfo(prefs.timezone)).strftime("%H:%M")
+        if order.pickup_at
+        else None,
         "customer_name": order.customer_name,
         "note": order.note,
         "revision": revision,
@@ -64,6 +67,13 @@ def bill_payload(
     groups: dict[int, int] = {}
     for ln in order.lines:
         groups[ln.tax_bps] = groups.get(ln.tax_bps, 0) + ln.line_total_paise
+    if order.subtotal_paise > 0 and order.total_paise < order.subtotal_paise:
+        # A discount lowers the taxable value: spread what was paid over the tax rates.
+        scaled = {b: v * order.total_paise // order.subtotal_paise for b, v in groups.items()}
+        rest = order.total_paise - sum(scaled.values())
+        for b in sorted(groups, key=lambda b: -groups[b])[:rest]:
+            scaled[b] += 1
+        groups = scaled
     tax_lines = []
     for bps in sorted(groups):
         tax = tax_split(groups[bps], bps)
@@ -99,6 +109,7 @@ def bill_payload(
             for ln in order.lines
         ],
         "subtotal": money(order.subtotal_paise),
+        "discounts": [{"name": name, "amount": money(paise)} for name, paise in order.discounts],
         "tax_lines": tax_lines,
         "prices_include_tax": True,
         "total": money(order.total_paise),

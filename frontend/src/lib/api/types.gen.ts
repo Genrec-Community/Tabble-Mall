@@ -228,6 +228,30 @@ export type BestSellerOut = {
 };
 
 /**
+ * CartGroupOut
+ *
+ * Set while this cart is the customer's share of a group order.
+ */
+export type CartGroupOut = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Is Host
+     */
+    is_host: boolean;
+    /**
+     * Name
+     */
+    name: string | null;
+    /**
+     * Token
+     */
+    token: string;
+};
+
+/**
  * CartLineIn
  */
 export type CartLineIn = {
@@ -325,6 +349,16 @@ export type CartOut = {
      * Can Checkout
      */
     can_checkout: boolean;
+    coupon?: CouponOut | null;
+    /**
+     * Discount Paise
+     */
+    discount_paise?: number;
+    group?: CartGroupOut | null;
+    /**
+     * Items Total Paise
+     */
+    items_total_paise?: number;
     /**
      * Mall Slug
      */
@@ -348,6 +382,14 @@ export type CartStoreOut = {
      */
     accepting_orders: boolean;
     /**
+     * Discount Paise
+     */
+    discount_paise?: number;
+    /**
+     * Discounts
+     */
+    discounts?: Array<DiscountOut>;
+    /**
      * Lines
      */
     lines: Array<CartLineOut>;
@@ -367,6 +409,10 @@ export type CartStoreOut = {
      * Subtotal Paise
      */
     subtotal_paise: number;
+    /**
+     * Total Paise
+     */
+    total_paise?: number;
 };
 
 /**
@@ -423,6 +469,200 @@ export type CheckoutIn = {
      * Note
      */
     note?: string | null;
+    /**
+     * Pickup At
+     */
+    pickup_at?: string | null;
+};
+
+/**
+ * ComboCreate
+ */
+export type ComboCreate = {
+    /**
+     * Description
+     */
+    description?: string | null;
+    /**
+     * Ends At
+     */
+    ends_at?: string | null;
+    /**
+     * Is Active
+     */
+    is_active?: boolean;
+    /**
+     * Items
+     */
+    items: Array<ComboItemIn>;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Price Paise
+     */
+    price_paise: number;
+    /**
+     * Starts At
+     */
+    starts_at?: string | null;
+};
+
+/**
+ * ComboItemIn
+ */
+export type ComboItemIn = {
+    /**
+     * Product Id
+     */
+    product_id: string;
+    /**
+     * Quantity
+     */
+    quantity?: number;
+};
+
+/**
+ * ComboItemOut
+ */
+export type ComboItemOut = {
+    /**
+     * Product Id
+     */
+    product_id: string;
+    /**
+     * Product Name
+     */
+    product_name: string;
+    /**
+     * Quantity
+     */
+    quantity: number;
+    /**
+     * Regular Price Paise
+     */
+    regular_price_paise: number;
+    /**
+     * Store Id
+     */
+    store_id: string;
+    /**
+     * Store Name
+     */
+    store_name: string;
+    /**
+     * Store Slug
+     */
+    store_slug: string;
+};
+
+/**
+ * ComboOut
+ */
+export type ComboOut = {
+    /**
+     * Description
+     */
+    description: string | null;
+    /**
+     * Ends At
+     */
+    ends_at: string | null;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Is Active
+     */
+    is_active: boolean;
+    /**
+     * Items
+     */
+    items: Array<ComboItemOut>;
+    /**
+     * Mall Id
+     */
+    mall_id: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Price Paise
+     */
+    price_paise: number;
+    /**
+     * Regular Price Paise
+     */
+    regular_price_paise: number;
+    /**
+     * Starts At
+     */
+    starts_at: string | null;
+};
+
+/**
+ * ComboUpdate
+ */
+export type ComboUpdate = {
+    /**
+     * Description
+     */
+    description?: string | null;
+    /**
+     * Ends At
+     */
+    ends_at?: string | null;
+    /**
+     * Is Active
+     */
+    is_active?: boolean;
+    /**
+     * Items
+     */
+    items: Array<ComboItemIn>;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Price Paise
+     */
+    price_paise: number;
+    /**
+     * Starts At
+     */
+    starts_at?: string | null;
+};
+
+/**
+ * CouponIn
+ */
+export type CouponIn = {
+    /**
+     * Code
+     */
+    code: string;
+};
+
+/**
+ * CouponOut
+ */
+export type CouponOut = {
+    /**
+     * Code
+     */
+    code: string;
+    /**
+     * Message
+     */
+    message: string | null;
+    /**
+     * Status
+     */
+    status: 'applied' | 'invalid' | 'not_eligible' | 'better_offer';
 };
 
 /**
@@ -460,6 +700,14 @@ export type CustomerOrderOut = {
      */
     created_at: string;
     /**
+     * Discount Paise
+     */
+    discount_paise?: number;
+    /**
+     * Group Order Id
+     */
+    group_order_id?: string | null;
+    /**
      * Id
      */
     id: string;
@@ -468,6 +716,10 @@ export type CustomerOrderOut = {
      */
     mall_slug?: string | null;
     payment?: OrderPaymentOut | null;
+    /**
+     * Pickup At
+     */
+    pickup_at?: string | null;
     status: CustomerOrderStatus;
     /**
      * Stores
@@ -497,6 +749,14 @@ export type CustomerStoreOrderOut = {
      */
     created_at: string;
     /**
+     * Discount Paise
+     */
+    discount_paise?: number;
+    /**
+     * Discounts
+     */
+    discounts?: Array<DiscountOut>;
+    /**
      * Id
      */
     id: string;
@@ -513,6 +773,10 @@ export type CustomerStoreOrderOut = {
      */
     order_no: number;
     /**
+     * Pickup At
+     */
+    pickup_at?: string | null;
+    /**
      * Pickup Code
      */
     pickup_code: string;
@@ -524,6 +788,7 @@ export type CustomerStoreOrderOut = {
      * Reason
      */
     reason: string | null;
+    review?: ReviewOut | null;
     status: StoreOrderStatus;
     /**
      * Steps
@@ -537,6 +802,10 @@ export type CustomerStoreOrderOut = {
      * Store Slug
      */
     store_slug: string;
+    /**
+     * Subtotal Paise
+     */
+    subtotal_paise?: number;
     /**
      * Tax Paise
      */
@@ -761,6 +1030,24 @@ export type DirectoryStoreOut = {
 };
 
 /**
+ * DiscountOut
+ */
+export type DiscountOut = {
+    /**
+     * Amount Paise
+     */
+    amount_paise: number;
+    /**
+     * Kind
+     */
+    kind: 'combo' | 'offer';
+    /**
+     * Name
+     */
+    name: string;
+};
+
+/**
  * FeatureOut
  */
 export type FeatureOut = {
@@ -929,6 +1216,116 @@ export type GrantOut = {
      * Store Id
      */
     store_id: string | null;
+};
+
+/**
+ * GroupCreate
+ */
+export type GroupCreate = {
+    /**
+     * Name
+     */
+    name?: string | null;
+};
+
+/**
+ * GroupLineOut
+ */
+export type GroupLineOut = {
+    /**
+     * Product Name
+     */
+    product_name: string;
+    /**
+     * Quantity
+     */
+    quantity: number;
+    /**
+     * Store Name
+     */
+    store_name: string;
+    /**
+     * Variant Name
+     */
+    variant_name: string;
+};
+
+/**
+ * GroupMemberOut
+ *
+ * What friends see of each other: a first name and what they picked. Never a phone.
+ */
+export type GroupMemberOut = {
+    /**
+     * Is Host
+     */
+    is_host: boolean;
+    /**
+     * Is You
+     */
+    is_you: boolean;
+    /**
+     * Item Count
+     */
+    item_count: number;
+    /**
+     * Lines
+     */
+    lines: Array<GroupLineOut>;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Paid Paise
+     */
+    paid_paise: number;
+    /**
+     * Total Paise
+     */
+    total_paise: number;
+};
+
+/**
+ * GroupOrderOut
+ */
+export type GroupOrderOut = {
+    /**
+     * Expires At
+     */
+    expires_at: string;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Is Host
+     */
+    is_host: boolean;
+    /**
+     * Joined
+     */
+    joined: boolean;
+    /**
+     * Mall Slug
+     */
+    mall_slug: string;
+    /**
+     * Members
+     */
+    members: Array<GroupMemberOut>;
+    /**
+     * Name
+     */
+    name: string | null;
+    /**
+     * Status
+     */
+    status: 'open' | 'closed' | 'expired';
+    /**
+     * Token
+     */
+    token: string;
 };
 
 /**
@@ -1227,6 +1624,26 @@ export type MallOut = {
 };
 
 /**
+ * MallRatingsOut
+ *
+ * Ratings for a mall's stores (by slug) and dishes (by product id).
+ */
+export type MallRatingsOut = {
+    /**
+     * Products
+     */
+    products: {
+        [key: string]: RatingOut;
+    };
+    /**
+     * Stores
+     */
+    stores: {
+        [key: string]: RatingOut;
+    };
+};
+
+/**
  * MallUpdate
  */
 export type MallUpdate = {
@@ -1242,6 +1659,206 @@ export type MallUpdate = {
      * Name
      */
     name?: string | null;
+};
+
+/**
+ * NotifyConfigOut
+ *
+ * Public: what the browser needs to offer notifications.
+ */
+export type NotifyConfigOut = {
+    /**
+     * Push Public Key
+     */
+    push_public_key: string | null;
+    /**
+     * Whatsapp Available
+     */
+    whatsapp_available: boolean;
+};
+
+/**
+ * NotifyPrefsOut
+ */
+export type NotifyPrefsOut = {
+    /**
+     * Push Devices
+     */
+    push_devices: number;
+    /**
+     * Whatsapp
+     */
+    whatsapp: boolean;
+};
+
+/**
+ * NotifyPrefsUpdate
+ */
+export type NotifyPrefsUpdate = {
+    /**
+     * Whatsapp
+     */
+    whatsapp: boolean;
+};
+
+/**
+ * OfferActiveUpdate
+ */
+export type OfferActiveUpdate = {
+    /**
+     * Is Active
+     */
+    is_active: boolean;
+};
+
+/**
+ * OfferCreate
+ */
+export type OfferCreate = {
+    /**
+     * Code
+     */
+    code?: string | null;
+    /**
+     * Ends At
+     */
+    ends_at?: string | null;
+    /**
+     * Is Active
+     */
+    is_active?: boolean;
+    /**
+     * Kind
+     */
+    kind: 'percent' | 'flat';
+    /**
+     * Max Discount Paise
+     */
+    max_discount_paise?: number | null;
+    /**
+     * Min Subtotal Paise
+     */
+    min_subtotal_paise?: number;
+    /**
+     * Per Customer Limit
+     */
+    per_customer_limit?: number | null;
+    /**
+     * Starts At
+     */
+    starts_at?: string | null;
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Value
+     */
+    value: number;
+};
+
+/**
+ * OfferOut
+ */
+export type OfferOut = {
+    /**
+     * Code
+     */
+    code: string | null;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Ends At
+     */
+    ends_at: string | null;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Is Active
+     */
+    is_active: boolean;
+    /**
+     * Kind
+     */
+    kind: string;
+    /**
+     * Max Discount Paise
+     */
+    max_discount_paise: number | null;
+    /**
+     * Min Subtotal Paise
+     */
+    min_subtotal_paise: number;
+    /**
+     * Per Customer Limit
+     */
+    per_customer_limit: number | null;
+    /**
+     * Starts At
+     */
+    starts_at: string | null;
+    /**
+     * Store Id
+     */
+    store_id: string;
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Value
+     */
+    value: number;
+};
+
+/**
+ * OfferUpdate
+ */
+export type OfferUpdate = {
+    /**
+     * Code
+     */
+    code?: string | null;
+    /**
+     * Ends At
+     */
+    ends_at?: string | null;
+    /**
+     * Is Active
+     */
+    is_active?: boolean;
+    /**
+     * Kind
+     */
+    kind: 'percent' | 'flat';
+    /**
+     * Max Discount Paise
+     */
+    max_discount_paise?: number | null;
+    /**
+     * Min Subtotal Paise
+     */
+    min_subtotal_paise?: number;
+    /**
+     * Per Customer Limit
+     */
+    per_customer_limit?: number | null;
+    /**
+     * Starts At
+     */
+    starts_at?: string | null;
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Value
+     */
+    value: number;
 };
 
 /**
@@ -1572,6 +2189,20 @@ export type PageStoreOrderOut = {
 };
 
 /**
+ * Page[StoreReviewOut]
+ */
+export type PageStoreReviewOut = {
+    /**
+     * Items
+     */
+    items: Array<StoreReviewOut>;
+    /**
+     * Next Cursor
+     */
+    next_cursor?: string | null;
+};
+
+/**
  * PasswordChange
  */
 export type PasswordChange = {
@@ -1779,6 +2410,26 @@ export type PickupIn = {
 };
 
 /**
+ * PickupSlotsOut
+ *
+ * When this cart can be collected: as soon as possible, or one of these times.
+ */
+export type PickupSlotsOut = {
+    /**
+     * Asap Minutes
+     */
+    asap_minutes: number;
+    /**
+     * Enabled
+     */
+    enabled: boolean;
+    /**
+     * Slots
+     */
+    slots: Array<string>;
+};
+
+/**
  * PopularItemOut
  */
 export type PopularItemOut = {
@@ -1791,6 +2442,14 @@ export type PopularItemOut = {
      */
     orders: number;
     product: PublicProductOut;
+    /**
+     * Rating
+     */
+    rating?: number | null;
+    /**
+     * Rating Count
+     */
+    rating_count?: number;
     /**
      * Store Name
      */
@@ -2230,6 +2889,68 @@ export type PublicMenuOut = {
 };
 
 /**
+ * PublicOfferOut
+ *
+ * An offer a customer may see: automatic ones and coupons alike.
+ */
+export type PublicOfferOut = {
+    /**
+     * Code
+     */
+    code: string | null;
+    /**
+     * Ends At
+     */
+    ends_at: string | null;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Kind
+     */
+    kind: string;
+    /**
+     * Max Discount Paise
+     */
+    max_discount_paise: number | null;
+    /**
+     * Min Subtotal Paise
+     */
+    min_subtotal_paise: number;
+    /**
+     * Store Name
+     */
+    store_name: string;
+    /**
+     * Store Slug
+     */
+    store_slug: string;
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Value
+     */
+    value: number;
+};
+
+/**
+ * PublicOffersOut
+ */
+export type PublicOffersOut = {
+    /**
+     * Combos
+     */
+    combos: Array<ComboOut>;
+    /**
+     * Offers
+     */
+    offers: Array<PublicOfferOut>;
+};
+
+/**
  * PublicOptionGroupOut
  */
 export type PublicOptionGroupOut = {
@@ -2401,6 +3122,57 @@ export type PublicVariantOut = {
 };
 
 /**
+ * PushKeys
+ */
+export type PushKeys = {
+    /**
+     * Auth
+     */
+    auth: string;
+    /**
+     * P256Dh
+     */
+    p256dh: string;
+};
+
+/**
+ * PushSubscriptionIn
+ *
+ * What the browser's PushManager.subscribe() returns (subscription.toJSON()).
+ */
+export type PushSubscriptionIn = {
+    /**
+     * Endpoint
+     */
+    endpoint: string;
+    keys: PushKeys;
+};
+
+/**
+ * PushUnsubscribeIn
+ */
+export type PushUnsubscribeIn = {
+    /**
+     * Endpoint
+     */
+    endpoint: string;
+};
+
+/**
+ * RatingOut
+ */
+export type RatingOut = {
+    /**
+     * Average
+     */
+    average: number;
+    /**
+     * Count
+     */
+    count: number;
+};
+
+/**
  * ReasonIn
  */
 export type ReasonIn = {
@@ -2499,6 +3271,52 @@ export type ReprintOut = {
      * Queued
      */
     queued: number;
+};
+
+/**
+ * ReviewIn
+ */
+export type ReviewIn = {
+    /**
+     * Comment
+     */
+    comment?: string | null;
+    /**
+     * Rating
+     */
+    rating: number;
+};
+
+/**
+ * ReviewOut
+ */
+export type ReviewOut = {
+    /**
+     * Comment
+     */
+    comment: string | null;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Rating
+     */
+    rating: number;
+    /**
+     * Reply
+     */
+    reply: string | null;
+};
+
+/**
+ * ReviewReplyIn
+ */
+export type ReviewReplyIn = {
+    /**
+     * Reply
+     */
+    reply: string;
 };
 
 /**
@@ -3023,6 +3841,14 @@ export type StoreOrderOut = {
      */
     customer_phone: string | null;
     /**
+     * Discount Paise
+     */
+    discount_paise?: number;
+    /**
+     * Discounts
+     */
+    discounts?: Array<DiscountOut>;
+    /**
      * Id
      */
     id: string;
@@ -3042,6 +3868,10 @@ export type StoreOrderOut = {
      * Picked Up At
      */
     picked_up_at: string | null;
+    /**
+     * Pickup At
+     */
+    pickup_at?: string | null;
     /**
      * Prep Minutes
      */
@@ -3063,6 +3893,10 @@ export type StoreOrderOut = {
      * Store Id
      */
     store_id: string;
+    /**
+     * Subtotal Paise
+     */
+    subtotal_paise?: number;
     /**
      * Tax Paise
      */
@@ -3194,6 +4028,50 @@ export type StorePayoutsOut = {
      */
     next_cursor?: string | null;
     summary: StorePayoutSummaryOut;
+};
+
+/**
+ * StoreReviewOut
+ *
+ * A review as the store and other customers see it: a first name, never a phone.
+ */
+export type StoreReviewOut = {
+    /**
+     * Comment
+     */
+    comment: string | null;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Customer Name
+     */
+    customer_name: string;
+    /**
+     * Dishes
+     */
+    dishes: Array<string>;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Order No
+     */
+    order_no?: number | null;
+    /**
+     * Rating
+     */
+    rating: number;
+    /**
+     * Reply
+     */
+    reply: string | null;
+    /**
+     * Store Order Id
+     */
+    store_order_id?: string | null;
 };
 
 /**
@@ -4108,6 +4986,126 @@ export type FeaturesGetFeaturesResponses = {
 
 export type FeaturesGetFeaturesResponse = FeaturesGetFeaturesResponses[keyof FeaturesGetFeaturesResponses];
 
+export type OrdersGetGroupData = {
+    body?: never;
+    path: {
+        /**
+         * Token
+         */
+        token: string;
+    };
+    query?: never;
+    url: '/api/v1/groups/{token}';
+};
+
+export type OrdersGetGroupErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type OrdersGetGroupError = OrdersGetGroupErrors[keyof OrdersGetGroupErrors];
+
+export type OrdersGetGroupResponses = {
+    /**
+     * Successful Response
+     */
+    200: GroupOrderOut;
+};
+
+export type OrdersGetGroupResponse = OrdersGetGroupResponses[keyof OrdersGetGroupResponses];
+
+export type OrdersCloseGroupData = {
+    body?: never;
+    path: {
+        /**
+         * Token
+         */
+        token: string;
+    };
+    query?: never;
+    url: '/api/v1/groups/{token}/close';
+};
+
+export type OrdersCloseGroupErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type OrdersCloseGroupError = OrdersCloseGroupErrors[keyof OrdersCloseGroupErrors];
+
+export type OrdersCloseGroupResponses = {
+    /**
+     * Successful Response
+     */
+    200: GroupOrderOut;
+};
+
+export type OrdersCloseGroupResponse = OrdersCloseGroupResponses[keyof OrdersCloseGroupResponses];
+
+export type OrdersJoinGroupData = {
+    body?: never;
+    path: {
+        /**
+         * Token
+         */
+        token: string;
+    };
+    query?: never;
+    url: '/api/v1/groups/{token}/join';
+};
+
+export type OrdersJoinGroupErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type OrdersJoinGroupError = OrdersJoinGroupErrors[keyof OrdersJoinGroupErrors];
+
+export type OrdersJoinGroupResponses = {
+    /**
+     * Successful Response
+     */
+    200: GroupOrderOut;
+};
+
+export type OrdersJoinGroupResponse = OrdersJoinGroupResponses[keyof OrdersJoinGroupResponses];
+
+export type OrdersLeaveGroupData = {
+    body?: never;
+    path: {
+        /**
+         * Token
+         */
+        token: string;
+    };
+    query?: never;
+    url: '/api/v1/groups/{token}/leave';
+};
+
+export type OrdersLeaveGroupErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type OrdersLeaveGroupError = OrdersLeaveGroupErrors[keyof OrdersLeaveGroupErrors];
+
+export type OrdersLeaveGroupResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type OrdersLeaveGroupResponse = OrdersLeaveGroupResponses[keyof OrdersLeaveGroupResponses];
+
 export type HealthGetHealthData = {
     body?: never;
     path?: never;
@@ -4213,6 +5211,170 @@ export type MallsActivateMallResponses = {
 };
 
 export type MallsActivateMallResponse = MallsActivateMallResponses[keyof MallsActivateMallResponses];
+
+export type OffersListCombosData = {
+    body?: never;
+    path: {
+        /**
+         * Mall Id
+         */
+        mall_id: string;
+    };
+    query?: never;
+    url: '/api/v1/malls/{mall_id}/combos';
+};
+
+export type OffersListCombosErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type OffersListCombosError = OffersListCombosErrors[keyof OffersListCombosErrors];
+
+export type OffersListCombosResponses = {
+    /**
+     * Response Offers List Combos
+     *
+     * Successful Response
+     */
+    200: Array<ComboOut>;
+};
+
+export type OffersListCombosResponse = OffersListCombosResponses[keyof OffersListCombosResponses];
+
+export type OffersCreateComboData = {
+    body: ComboCreate;
+    path: {
+        /**
+         * Mall Id
+         */
+        mall_id: string;
+    };
+    query?: never;
+    url: '/api/v1/malls/{mall_id}/combos';
+};
+
+export type OffersCreateComboErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type OffersCreateComboError = OffersCreateComboErrors[keyof OffersCreateComboErrors];
+
+export type OffersCreateComboResponses = {
+    /**
+     * Successful Response
+     */
+    201: ComboOut;
+};
+
+export type OffersCreateComboResponse = OffersCreateComboResponses[keyof OffersCreateComboResponses];
+
+export type OffersDeleteComboData = {
+    body?: never;
+    path: {
+        /**
+         * Mall Id
+         */
+        mall_id: string;
+        /**
+         * Combo Id
+         */
+        combo_id: string;
+    };
+    query?: never;
+    url: '/api/v1/malls/{mall_id}/combos/{combo_id}';
+};
+
+export type OffersDeleteComboErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type OffersDeleteComboError = OffersDeleteComboErrors[keyof OffersDeleteComboErrors];
+
+export type OffersDeleteComboResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type OffersDeleteComboResponse = OffersDeleteComboResponses[keyof OffersDeleteComboResponses];
+
+export type OffersUpdateComboData = {
+    body: ComboUpdate;
+    path: {
+        /**
+         * Mall Id
+         */
+        mall_id: string;
+        /**
+         * Combo Id
+         */
+        combo_id: string;
+    };
+    query?: never;
+    url: '/api/v1/malls/{mall_id}/combos/{combo_id}';
+};
+
+export type OffersUpdateComboErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type OffersUpdateComboError = OffersUpdateComboErrors[keyof OffersUpdateComboErrors];
+
+export type OffersUpdateComboResponses = {
+    /**
+     * Successful Response
+     */
+    200: ComboOut;
+};
+
+export type OffersUpdateComboResponse = OffersUpdateComboResponses[keyof OffersUpdateComboResponses];
+
+export type OffersSetComboActiveData = {
+    body: OfferActiveUpdate;
+    path: {
+        /**
+         * Mall Id
+         */
+        mall_id: string;
+        /**
+         * Combo Id
+         */
+        combo_id: string;
+    };
+    query?: never;
+    url: '/api/v1/malls/{mall_id}/combos/{combo_id}/active';
+};
+
+export type OffersSetComboActiveErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type OffersSetComboActiveError = OffersSetComboActiveErrors[keyof OffersSetComboActiveErrors];
+
+export type OffersSetComboActiveResponses = {
+    /**
+     * Successful Response
+     */
+    200: ComboOut;
+};
+
+export type OffersSetComboActiveResponse = OffersSetComboActiveResponses[keyof OffersSetComboActiveResponses];
 
 export type StoreOrdersListMallOrdersData = {
     body?: never;
@@ -4510,6 +5672,66 @@ export type CartGetCartResponses = {
 
 export type CartGetCartResponse = CartGetCartResponses[keyof CartGetCartResponses];
 
+export type CartRemoveCouponData = {
+    body?: never;
+    path: {
+        /**
+         * Mall Slug
+         */
+        mall_slug: string;
+    };
+    query?: never;
+    url: '/api/v1/malls/{mall_slug}/cart/coupon';
+};
+
+export type CartRemoveCouponErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CartRemoveCouponError = CartRemoveCouponErrors[keyof CartRemoveCouponErrors];
+
+export type CartRemoveCouponResponses = {
+    /**
+     * Successful Response
+     */
+    200: CartOut;
+};
+
+export type CartRemoveCouponResponse = CartRemoveCouponResponses[keyof CartRemoveCouponResponses];
+
+export type CartApplyCouponData = {
+    body: CouponIn;
+    path: {
+        /**
+         * Mall Slug
+         */
+        mall_slug: string;
+    };
+    query?: never;
+    url: '/api/v1/malls/{mall_slug}/cart/coupon';
+};
+
+export type CartApplyCouponErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CartApplyCouponError = CartApplyCouponErrors[keyof CartApplyCouponErrors];
+
+export type CartApplyCouponResponses = {
+    /**
+     * Successful Response
+     */
+    200: CartOut;
+};
+
+export type CartApplyCouponResponse = CartApplyCouponResponses[keyof CartApplyCouponResponses];
+
 export type CartAddLineData = {
     body: CartLineIn;
     path: {
@@ -4573,6 +5795,36 @@ export type CartUpdateLineResponses = {
 };
 
 export type CartUpdateLineResponse = CartUpdateLineResponses[keyof CartUpdateLineResponses];
+
+export type CartPickupSlotsData = {
+    body?: never;
+    path: {
+        /**
+         * Mall Slug
+         */
+        mall_slug: string;
+    };
+    query?: never;
+    url: '/api/v1/malls/{mall_slug}/cart/pickup-slots';
+};
+
+export type CartPickupSlotsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CartPickupSlotsError = CartPickupSlotsErrors[keyof CartPickupSlotsErrors];
+
+export type CartPickupSlotsResponses = {
+    /**
+     * Successful Response
+     */
+    200: PickupSlotsOut;
+};
+
+export type CartPickupSlotsResponse = CartPickupSlotsResponses[keyof CartPickupSlotsResponses];
 
 export type CartReorderData = {
     body: ReorderIn;
@@ -4640,6 +5892,143 @@ export type OrdersCheckoutResponses = {
 
 export type OrdersCheckoutResponse = OrdersCheckoutResponses[keyof OrdersCheckoutResponses];
 
+export type OrdersStartGroupData = {
+    body: GroupCreate;
+    path: {
+        /**
+         * Mall Slug
+         */
+        mall_slug: string;
+    };
+    query?: never;
+    url: '/api/v1/malls/{mall_slug}/groups';
+};
+
+export type OrdersStartGroupErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type OrdersStartGroupError = OrdersStartGroupErrors[keyof OrdersStartGroupErrors];
+
+export type OrdersStartGroupResponses = {
+    /**
+     * Successful Response
+     */
+    201: GroupOrderOut;
+};
+
+export type OrdersStartGroupResponse = OrdersStartGroupResponses[keyof OrdersStartGroupResponses];
+
+export type NotifyNotifyConfigData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/notify/config';
+};
+
+export type NotifyNotifyConfigResponses = {
+    /**
+     * Successful Response
+     */
+    200: NotifyConfigOut;
+};
+
+export type NotifyNotifyConfigResponse = NotifyNotifyConfigResponses[keyof NotifyNotifyConfigResponses];
+
+export type NotifyGetNotifyPrefsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/notify/prefs';
+};
+
+export type NotifyGetNotifyPrefsResponses = {
+    /**
+     * Successful Response
+     */
+    200: NotifyPrefsOut;
+};
+
+export type NotifyGetNotifyPrefsResponse = NotifyGetNotifyPrefsResponses[keyof NotifyGetNotifyPrefsResponses];
+
+export type NotifySetNotifyPrefsData = {
+    body: NotifyPrefsUpdate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/notify/prefs';
+};
+
+export type NotifySetNotifyPrefsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type NotifySetNotifyPrefsError = NotifySetNotifyPrefsErrors[keyof NotifySetNotifyPrefsErrors];
+
+export type NotifySetNotifyPrefsResponses = {
+    /**
+     * Successful Response
+     */
+    200: NotifyPrefsOut;
+};
+
+export type NotifySetNotifyPrefsResponse = NotifySetNotifyPrefsResponses[keyof NotifySetNotifyPrefsResponses];
+
+export type NotifyPushSubscribeData = {
+    body: PushSubscriptionIn;
+    path?: never;
+    query?: never;
+    url: '/api/v1/notify/push';
+};
+
+export type NotifyPushSubscribeErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type NotifyPushSubscribeError = NotifyPushSubscribeErrors[keyof NotifyPushSubscribeErrors];
+
+export type NotifyPushSubscribeResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type NotifyPushSubscribeResponse = NotifyPushSubscribeResponses[keyof NotifyPushSubscribeResponses];
+
+export type NotifyPushUnsubscribeData = {
+    body: PushUnsubscribeIn;
+    path?: never;
+    query?: never;
+    url: '/api/v1/notify/push/remove';
+};
+
+export type NotifyPushUnsubscribeErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type NotifyPushUnsubscribeError = NotifyPushUnsubscribeErrors[keyof NotifyPushUnsubscribeErrors];
+
+export type NotifyPushUnsubscribeResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type NotifyPushUnsubscribeResponse = NotifyPushUnsubscribeResponses[keyof NotifyPushUnsubscribeResponses];
+
 export type OrdersListMyOrdersData = {
     body?: never;
     path?: never;
@@ -4703,6 +6092,36 @@ export type OrdersCancelMyOrderResponses = {
 };
 
 export type OrdersCancelMyOrderResponse = OrdersCancelMyOrderResponses[keyof OrdersCancelMyOrderResponses];
+
+export type OrdersRateMyOrderData = {
+    body: ReviewIn;
+    path: {
+        /**
+         * Store Order Id
+         */
+        store_order_id: string;
+    };
+    query?: never;
+    url: '/api/v1/orders/stores/{store_order_id}/review';
+};
+
+export type OrdersRateMyOrderErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type OrdersRateMyOrderError = OrdersRateMyOrderErrors[keyof OrdersRateMyOrderErrors];
+
+export type OrdersRateMyOrderResponses = {
+    /**
+     * Successful Response
+     */
+    200: ReviewOut;
+};
+
+export type OrdersRateMyOrderResponse = OrdersRateMyOrderResponses[keyof OrdersRateMyOrderResponses];
 
 export type OrdersGetMyOrderData = {
     body?: never;
@@ -5204,6 +6623,36 @@ export type PublicPublicItemsResponses = {
 
 export type PublicPublicItemsResponse = PublicPublicItemsResponses[keyof PublicPublicItemsResponses];
 
+export type PublicPublicOffersData = {
+    body?: never;
+    path: {
+        /**
+         * Mall Slug
+         */
+        mall_slug: string;
+    };
+    query?: never;
+    url: '/api/v1/public/malls/{mall_slug}/offers';
+};
+
+export type PublicPublicOffersErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PublicPublicOffersError = PublicPublicOffersErrors[keyof PublicPublicOffersErrors];
+
+export type PublicPublicOffersResponses = {
+    /**
+     * Successful Response
+     */
+    200: PublicOffersOut;
+};
+
+export type PublicPublicOffersResponse = PublicPublicOffersResponses[keyof PublicPublicOffersResponses];
+
 export type PublicPopularData = {
     body?: never;
     path: {
@@ -5238,6 +6687,36 @@ export type PublicPopularResponses = {
 };
 
 export type PublicPopularResponse = PublicPopularResponses[keyof PublicPopularResponses];
+
+export type PublicMallRatingsData = {
+    body?: never;
+    path: {
+        /**
+         * Mall Slug
+         */
+        mall_slug: string;
+    };
+    query?: never;
+    url: '/api/v1/public/malls/{mall_slug}/ratings';
+};
+
+export type PublicMallRatingsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PublicMallRatingsError = PublicMallRatingsErrors[keyof PublicMallRatingsErrors];
+
+export type PublicMallRatingsResponses = {
+    /**
+     * Successful Response
+     */
+    200: MallRatingsOut;
+};
+
+export type PublicMallRatingsResponse = PublicMallRatingsResponses[keyof PublicMallRatingsResponses];
 
 export type PublicPublicStoresData = {
     body?: never;
@@ -5304,6 +6783,47 @@ export type PublicPublicMenuResponses = {
 };
 
 export type PublicPublicMenuResponse = PublicPublicMenuResponses[keyof PublicPublicMenuResponses];
+
+export type PublicStorePublicReviewsData = {
+    body?: never;
+    path: {
+        /**
+         * Mall Slug
+         */
+        mall_slug: string;
+        /**
+         * Store Slug
+         */
+        store_slug: string;
+    };
+    query?: {
+        /**
+         * Limit
+         */
+        limit?: number;
+    };
+    url: '/api/v1/public/malls/{mall_slug}/stores/{store_slug}/reviews';
+};
+
+export type PublicStorePublicReviewsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PublicStorePublicReviewsError = PublicStorePublicReviewsErrors[keyof PublicStorePublicReviewsErrors];
+
+export type PublicStorePublicReviewsResponses = {
+    /**
+     * Response Public Store Public Reviews
+     *
+     * Successful Response
+     */
+    200: Array<StoreReviewOut>;
+};
+
+export type PublicStorePublicReviewsResponse = PublicStorePublicReviewsResponses[keyof PublicStorePublicReviewsResponses];
 
 export type PublicGetPublicMallData = {
     body?: never;
@@ -5804,6 +7324,170 @@ export type CatalogPresignImageResponses = {
 };
 
 export type CatalogPresignImageResponse = CatalogPresignImageResponses[keyof CatalogPresignImageResponses];
+
+export type OffersListOffersData = {
+    body?: never;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/offers';
+};
+
+export type OffersListOffersErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type OffersListOffersError = OffersListOffersErrors[keyof OffersListOffersErrors];
+
+export type OffersListOffersResponses = {
+    /**
+     * Response Offers List Offers
+     *
+     * Successful Response
+     */
+    200: Array<OfferOut>;
+};
+
+export type OffersListOffersResponse = OffersListOffersResponses[keyof OffersListOffersResponses];
+
+export type OffersCreateOfferData = {
+    body: OfferCreate;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/offers';
+};
+
+export type OffersCreateOfferErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type OffersCreateOfferError = OffersCreateOfferErrors[keyof OffersCreateOfferErrors];
+
+export type OffersCreateOfferResponses = {
+    /**
+     * Successful Response
+     */
+    201: OfferOut;
+};
+
+export type OffersCreateOfferResponse = OffersCreateOfferResponses[keyof OffersCreateOfferResponses];
+
+export type OffersDeleteOfferData = {
+    body?: never;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+        /**
+         * Offer Id
+         */
+        offer_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/offers/{offer_id}';
+};
+
+export type OffersDeleteOfferErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type OffersDeleteOfferError = OffersDeleteOfferErrors[keyof OffersDeleteOfferErrors];
+
+export type OffersDeleteOfferResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type OffersDeleteOfferResponse = OffersDeleteOfferResponses[keyof OffersDeleteOfferResponses];
+
+export type OffersUpdateOfferData = {
+    body: OfferUpdate;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+        /**
+         * Offer Id
+         */
+        offer_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/offers/{offer_id}';
+};
+
+export type OffersUpdateOfferErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type OffersUpdateOfferError = OffersUpdateOfferErrors[keyof OffersUpdateOfferErrors];
+
+export type OffersUpdateOfferResponses = {
+    /**
+     * Successful Response
+     */
+    200: OfferOut;
+};
+
+export type OffersUpdateOfferResponse = OffersUpdateOfferResponses[keyof OffersUpdateOfferResponses];
+
+export type OffersSetOfferActiveData = {
+    body: OfferActiveUpdate;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+        /**
+         * Offer Id
+         */
+        offer_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/offers/{offer_id}/active';
+};
+
+export type OffersSetOfferActiveErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type OffersSetOfferActiveError = OffersSetOfferActiveErrors[keyof OffersSetOfferActiveErrors];
+
+export type OffersSetOfferActiveResponses = {
+    /**
+     * Successful Response
+     */
+    200: OfferOut;
+};
+
+export type OffersSetOfferActiveResponse = OffersSetOfferActiveResponses[keyof OffersSetOfferActiveResponses];
 
 export type StoreOrdersListStoreOrdersData = {
     body?: never;
@@ -7005,6 +8689,79 @@ export type StoreOrdersStoreSalesReportResponses = {
 };
 
 export type StoreOrdersStoreSalesReportResponse = StoreOrdersStoreSalesReportResponses[keyof StoreOrdersStoreSalesReportResponses];
+
+export type StoreOrdersListStoreReviewsData = {
+    body?: never;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+    };
+    query?: {
+        /**
+         * Before
+         */
+        before?: string | null;
+        /**
+         * Limit
+         */
+        limit?: number;
+    };
+    url: '/api/v1/stores/{store_id}/reviews';
+};
+
+export type StoreOrdersListStoreReviewsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type StoreOrdersListStoreReviewsError = StoreOrdersListStoreReviewsErrors[keyof StoreOrdersListStoreReviewsErrors];
+
+export type StoreOrdersListStoreReviewsResponses = {
+    /**
+     * Successful Response
+     */
+    200: PageStoreReviewOut;
+};
+
+export type StoreOrdersListStoreReviewsResponse = StoreOrdersListStoreReviewsResponses[keyof StoreOrdersListStoreReviewsResponses];
+
+export type StoreOrdersReplyToReviewData = {
+    body: ReviewReplyIn;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+        /**
+         * Review Id
+         */
+        review_id: string;
+    };
+    query?: never;
+    url: '/api/v1/stores/{store_id}/reviews/{review_id}/reply';
+};
+
+export type StoreOrdersReplyToReviewErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type StoreOrdersReplyToReviewError = StoreOrdersReplyToReviewErrors[keyof StoreOrdersReplyToReviewErrors];
+
+export type StoreOrdersReplyToReviewResponses = {
+    /**
+     * Successful Response
+     */
+    200: StoreReviewOut;
+};
+
+export type StoreOrdersReplyToReviewResponse = StoreOrdersReplyToReviewResponses[keyof StoreOrdersReplyToReviewResponses];
 
 export type CatalogGetSettingsData = {
     body?: never;

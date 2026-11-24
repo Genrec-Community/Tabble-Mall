@@ -10,6 +10,8 @@ from mallt.modules.orders.schemas import (
     CartLineIn,
     CartLineUpdate,
     CartOut,
+    CouponIn,
+    PickupSlotsOut,
     ReorderIn,
     ReorderOut,
 )
@@ -51,3 +53,22 @@ async def update_line(
 async def clear_cart(mall_slug: str, customer_id: CustomerId, svc: Svc) -> Response:
     await svc.clear(customer_id, mall_slug)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.get("/pickup-slots")
+async def pickup_slots(mall_slug: str, customer_id: CustomerId, svc: Svc) -> PickupSlotsOut:
+    """Schedule ahead: the times this cart can be collected."""
+    return await svc.pickup_slots(customer_id, mall_slug)
+
+
+@router.put("/coupon")
+async def apply_coupon(
+    mall_slug: str, body: CouponIn, customer_id: CustomerId, svc: Svc
+) -> CartOut:
+    """Keep a store coupon on the cart; the cart says whether it applies."""
+    return await svc.set_coupon(customer_id, mall_slug, body.code)
+
+
+@router.delete("/coupon")
+async def remove_coupon(mall_slug: str, customer_id: CustomerId, svc: Svc) -> CartOut:
+    return await svc.set_coupon(customer_id, mall_slug, None)

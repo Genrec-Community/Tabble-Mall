@@ -47,20 +47,55 @@ class CartLineOut(BaseModel):
     problem: LineProblem | None
 
 
+class DiscountOut(BaseModel):
+    kind: Literal["combo", "offer"]
+    name: str
+    amount_paise: int
+
+
 class CartStoreOut(BaseModel):
     store_slug: str
     store_name: str
     accepting_orders: bool
-    subtotal_paise: int
+    subtotal_paise: int  # the items at menu prices
+    discount_paise: int = 0  # offers and combos, borne by this store
+    total_paise: int = 0  # subtotal - discount
+    discounts: list[DiscountOut] = Field(default_factory=list)
     prep_minutes: int
     lines: list[CartLineOut]
+
+
+CouponStatus = Literal["applied", "invalid", "not_eligible", "better_offer"]
+
+
+class CouponOut(BaseModel):
+    code: str
+    status: CouponStatus
+    message: str | None
+
+
+class CartGroupOut(BaseModel):
+    """Set while this cart is the customer's share of a group order."""
+
+    id: uuid.UUID
+    token: str
+    name: str | None
+    is_host: bool
 
 
 class CartOut(BaseModel):
     mall_slug: str
     stores: list[CartStoreOut]
-    total_paise: int
+    items_total_paise: int = 0  # before offers
+    discount_paise: int = 0
+    total_paise: int  # what the customer pays
     can_checkout: bool
+    coupon: CouponOut | None = None
+    group: CartGroupOut | None = None
+
+
+class CouponIn(BaseModel):
+    code: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=20)]
 
 
 class ReorderIn(BaseModel):
@@ -75,6 +110,16 @@ class ReorderOut(BaseModel):
 
 class CheckoutIn(BaseModel):
     note: Note | None = None
+    # Schedule ahead: when to collect (None = as soon as it's ready).
+    pickup_at: datetime | None = None
+
+
+class PickupSlotsOut(BaseModel):
+    """When this cart can be collected: as soon as possible, or one of these times."""
+
+    enabled: bool
+    asap_minutes: int
+    slots: list[datetime]
 
 
 # ---- orders ----
@@ -103,15 +148,20 @@ class CustomerStoreOrderOut(BaseModel):
     status: StoreOrderStatus
     order_no: int
     pickup_code: str
+    subtotal_paise: int = 0
+    discount_paise: int = 0
+    discounts: list[DiscountOut] = Field(default_factory=list)
     total_paise: int
     tax_paise: int
     prep_minutes: int
+    pickup_at: datetime | None = None
     accept_by: datetime | None
     reason: str | None
     note: str | None
     created_at: datetime
     lines: list[OrderLineOut]
     steps: list[OrderStepOut]
+    review: "ReviewOut | None" = None
 
 
 class ZohoCheckoutOut(BaseModel):
@@ -143,6 +193,9 @@ class CustomerOrderOut(BaseModel):
     id: uuid.UUID
     status: CustomerOrderStatus
     total_paise: int
+    discount_paise: int = 0
+    pickup_at: datetime | None = None
+    group_order_id: uuid.UUID | None = None
     created_at: datetime
     mall_slug: str | None = None
     # Present while the order still has to be paid.
@@ -159,9 +212,13 @@ class StoreOrderOut(BaseModel):
     status: StoreOrderStatus
     customer_name: str | None
     customer_phone: str | None
+    subtotal_paise: int = 0
+    discount_paise: int = 0
+    discounts: list[DiscountOut] = Field(default_factory=list)
     total_paise: int
     tax_paise: int
     prep_minutes: int
+    pickup_at: datetime | None = None
     accept_by: datetime | None
     accepted_at: datetime | None
     ready_at: datetime | None
@@ -275,3 +332,91 @@ class InvoiceOut(BaseModel):
     cgst_paise: int
     sgst_paise: int
     total_paise: int
+
+
+# ---- group orders ----
+
+
+class GroupCreate(BaseModel):
+    name: Annotated[str, StringConstraints(strip_whitespace=True, max_length=40)] | None = None
+
+
+class GroupLineOut(BaseModel):
+    store_name: str
+    product_name: str
+    variant_name: str
+    quantity: int
+
+
+class GroupMemberOut(BaseModel):
+    """What friends see of each other: a first name and what they picked. Never a phone."""
+
+    name: str
+    is_you: bool
+    is_host: bool
+    item_count: int
+    total_paise: int  # still in their cart
+    paid_paise: int  # already paid for, in orders of this group
+    lines: list[GroupLineOut]
+
+
+class GroupOrderOut(BaseModel):
+    id: uuid.UUID
+    token: str
+    name: str | None
+    mall_slug: str
+    status: Literal["open", "closed", "expired"]
+    expires_at: datetime
+    is_host: bool
+    joined: bool
+    members: list[GroupMemberOut]
+
+
+# ---- reviews ----
+
+Comment = Annotated[str, StringConstraints(strip_whitespace=True, max_length=500)]
+
+
+class ReviewIn(BaseModel):
+    rating: int = Field(ge=1, le=5)
+    comment: Comment | None = None
+
+
+class ReviewOut(BaseModel):
+    rating: int
+    comment: str | None
+    reply: str | None
+    created_at: datetime
+
+
+class StoreReviewOut(BaseModel):
+    """A review as the store and other customers see it: a first name, never a phone."""
+
+    id: uuid.UUID
+    store_order_id: uuid.UUID | None = None  # only for the store itself
+    order_no: int | None = None
+    rating: int
+    comment: str | None
+    reply: str | None
+    customer_name: str
+    dishes: list[str]
+    created_at: datetime
+
+
+class ReviewReplyIn(BaseModel):
+    reply: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=500)]
+
+
+class RatingOut(BaseModel):
+    average: float  # 1.0-5.0, one decimal
+    count: int
+
+
+class MallRatingsOut(BaseModel):
+    """Ratings for a mall's stores (by slug) and dishes (by product id)."""
+
+    stores: dict[str, RatingOut]
+    products: dict[str, RatingOut]
+
+
+CustomerStoreOrderOut.model_rebuild()

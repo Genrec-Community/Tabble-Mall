@@ -11,8 +11,10 @@ from mallt.modules.orders.models import (
     Cart,
     CartLine,
     CustomerOrder,
+    GroupOrder,
     OrderCounter,
     OrderEvent,
+    Review,
     StoreOrder,
     StoreOrderLine,
 )
@@ -109,6 +111,122 @@ class OrdersRepository:
             .execution_options(populate_existing=True)
         )
         return (await self.session.execute(stmt)).scalar_one_or_none()
+
+    # ---- reviews ----
+
+    async def review(self, review_id: uuid.UUID) -> Review | None:
+        return await self.session.get(Review, review_id)
+
+    async def review_for(self, store_order_id: uuid.UUID) -> Review | None:
+        stmt = select(Review).where(Review.store_order_id == store_order_id)
+        return (await self.session.execute(stmt)).scalar_one_or_none()
+
+    async def reviews_for(self, store_order_ids: list[uuid.UUID]) -> list[Review]:
+        if not store_order_ids:
+            return []
+        stmt = select(Review).where(Review.store_order_id.in_(store_order_ids))
+        return list((await self.session.execute(stmt)).scalars())
+
+    async def store_reviews(
+        self,
+        store_id: uuid.UUID,
+        *,
+        before: uuid.UUID | None,
+        limit: int,
+        with_text: bool = False,
+    ) -> list[Review]:
+        stmt = select(Review).where(Review.store_id == store_id)
+        if with_text:
+            stmt = stmt.where(Review.comment.is_not(None))
+        if before is not None:
+            stmt = stmt.where(Review.id < before)
+        stmt = stmt.order_by(Review.id.desc()).limit(limit)
+        return list((await self.session.execute(stmt)).scalars())
+
+    async def store_orders_by_ids(self, ids: list[uuid.UUID]) -> dict[uuid.UUID, StoreOrder]:
+        if not ids:
+            return {}
+        stmt = select(StoreOrder).where(StoreOrder.id.in_(ids)).options(*_ORDER_LOAD)
+        return {o.id: o for o in (await self.session.execute(stmt)).scalars()}
+
+    async def store_ratings(self, mall_id: uuid.UUID) -> dict[uuid.UUID, tuple[float, int]]:
+        stmt = (
+            select(Review.store_id, func.avg(Review.rating), func.count())
+            .where(Review.mall_id == mall_id)
+            .group_by(Review.store_id)
+        )
+        return {sid: (float(a), int(n)) for sid, a, n in (await self.session.execute(stmt)).all()}
+
+    async def product_ratings(self, mall_id: uuid.UUID) -> dict[uuid.UUID, tuple[float, int]]:
+        """Each dish's average stars: a store order's rating counts for every dish in it."""
+        stmt = (
+            select(
+                StoreOrderLine.product_id,
+                func.avg(Review.rating),
+                func.count(func.distinct(Review.id)),
+            )
+            .join(StoreOrderLine, StoreOrderLine.store_order_id == Review.store_order_id)
+            .where(Review.mall_id == mall_id, StoreOrderLine.product_id.is_not(None))
+            .group_by(StoreOrderLine.product_id)
+        )
+        return {
+            pid: (float(a), int(n)) for pid, a, n in (await self.session.execute(stmt)).all() if pid
+        }
+
+    # ---- group orders ----
+
+    async def group(self, group_id: uuid.UUID) -> GroupOrder | None:
+        return await self.session.get(GroupOrder, group_id)
+
+    async def group_by_token(self, token: str) -> GroupOrder | None:
+        stmt = select(GroupOrder).where(GroupOrder.token == token)
+        return (await self.session.execute(stmt)).scalar_one_or_none()
+
+    async def group_carts(self, group_id: uuid.UUID) -> list[Cart]:
+        stmt = (
+            select(Cart)
+            .where(Cart.group_order_id == group_id)
+            .options(selectinload(Cart.lines))
+            .order_by(Cart.created_at)
+        )
+        return list((await self.session.execute(stmt)).scalars())
+
+    async def group_paid(self, group_id: uuid.UUID) -> dict[uuid.UUID, int]:
+        """What each member already paid in this group's orders."""
+        stmt = (
+            select(CustomerOrder.customer_id, func.sum(CustomerOrder.total_paise))
+            .where(
+                CustomerOrder.group_order_id == group_id,
+                CustomerOrder.status == CustomerOrderStatus.PAID,
+            )
+            .group_by(CustomerOrder.customer_id)
+        )
+        return {cid: int(n) for cid, n in (await self.session.execute(stmt)).all()}
+
+    async def offer_uses(
+        self, customer_id: uuid.UUID, offer_ids: list[uuid.UUID]
+    ) -> dict[uuid.UUID, int]:
+        """How many live or completed orders of this customer used each offer."""
+        if not offer_ids:
+            return {}
+        counted = [
+            StoreOrderStatus.PENDING_PAYMENT,
+            StoreOrderStatus.PAID,
+            StoreOrderStatus.ACCEPTED,
+            StoreOrderStatus.PREPARING,
+            StoreOrderStatus.READY,
+            StoreOrderStatus.PICKED_UP,
+        ]
+        stmt = (
+            select(StoreOrder.offer_id, func.count())
+            .where(
+                StoreOrder.customer_id == customer_id,
+                StoreOrder.offer_id.in_(offer_ids),
+                StoreOrder.status.in_(counted),
+            )
+            .group_by(StoreOrder.offer_id)
+        )
+        return {oid: int(n) for oid, n in (await self.session.execute(stmt)).all() if oid}
 
     async def popular_products(
         self, mall_id: uuid.UUID, since: datetime, limit: int

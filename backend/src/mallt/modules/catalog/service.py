@@ -1,5 +1,6 @@
 import uuid
 from dataclasses import dataclass
+from dataclasses import field as dc_field
 from datetime import UTC, datetime
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -557,7 +558,7 @@ class CatalogService:
     async def public_items_by_ids(
         self, mall_slug: str, counts: list[tuple[uuid.UUID, int]], *, fill_to: int
     ) -> PopularOut:
-        """Dishes in the given order (most ordered first), topped up with each open store's first
+        """Dishes in the given order (the caller ranks them), topped up with each open store's first
         dishes so the rail is never empty in a new mall. Unavailable dishes are left out."""
         _, stores = await self.tenancy.public_directory(mall_slug)
         by_store = {s.id: s for s in stores}
@@ -589,7 +590,7 @@ class CatalogService:
             products += await self.repo.products_by_ids(mall_id, extra_ids)
             ranked += extra_ids
         order = {pid: i for i, pid in enumerate(ranked)}
-        products.sort(key=lambda p: (-wanted.get(p.id, 0), order.get(p.id, len(order))))
+        products.sort(key=lambda p: order.get(p.id, len(order)))  # callers pass the ranking
         items: list[PopularItemOut] = []
         seen: set[uuid.UUID] = set()
         for product in products:
@@ -788,6 +789,12 @@ class OrderableStore:
     timezone: str
     accepting: bool
     gstin: str | None
+    # Opening hours ([{"days", "open", "close"}], local time; empty = always open).
+    hours: list[dict[str, Any]] = dc_field(default_factory=list, hash=False, compare=False)
+
+    def open_at(self, when: datetime) -> bool:
+        """Whether the store's hours cover ``when`` (it may still be paused or closed now)."""
+        return in_hours(self.hours, when.astimezone(ZoneInfo(self.timezone)), "open", "close")
 
 
 @dataclass(frozen=True)
@@ -839,6 +846,7 @@ class OrderingCatalog:
                 if row
                 else True,
                 gstin=row.gstin if row else None,
+                hours=list(row.hours or []) if row else [],
             )
         return OrderableMall(mall.id, mall.organization_id, mall.slug, out)
 

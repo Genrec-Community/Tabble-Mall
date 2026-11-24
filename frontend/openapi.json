@@ -417,6 +417,43 @@
         "title": "BestSellerOut",
         "type": "object"
       },
+      "CartGroupOut": {
+        "description": "Set while this cart is the customer's share of a group order.",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_host": {
+            "title": "Is Host",
+            "type": "boolean"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "token": {
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "token",
+          "name",
+          "is_host"
+        ],
+        "title": "CartGroupOut",
+        "type": "object"
+      },
       "CartLineIn": {
         "properties": {
           "note": {
@@ -589,6 +626,36 @@
             "title": "Can Checkout",
             "type": "boolean"
           },
+          "coupon": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CouponOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "discount_paise": {
+            "default": 0,
+            "title": "Discount Paise",
+            "type": "integer"
+          },
+          "group": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CartGroupOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "items_total_paise": {
+            "default": 0,
+            "title": "Items Total Paise",
+            "type": "integer"
+          },
           "mall_slug": {
             "title": "Mall Slug",
             "type": "string"
@@ -620,6 +687,18 @@
             "title": "Accepting Orders",
             "type": "boolean"
           },
+          "discount_paise": {
+            "default": 0,
+            "title": "Discount Paise",
+            "type": "integer"
+          },
+          "discounts": {
+            "items": {
+              "$ref": "#/components/schemas/DiscountOut"
+            },
+            "title": "Discounts",
+            "type": "array"
+          },
           "lines": {
             "items": {
               "$ref": "#/components/schemas/CartLineOut"
@@ -641,6 +720,11 @@
           },
           "subtotal_paise": {
             "title": "Subtotal Paise",
+            "type": "integer"
+          },
+          "total_paise": {
+            "default": 0,
+            "title": "Total Paise",
             "type": "integer"
           }
         },
@@ -746,9 +830,368 @@
               }
             ],
             "title": "Note"
+          },
+          "pickup_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pickup At"
           }
         },
         "title": "CheckoutIn",
+        "type": "object"
+      },
+      "ComboCreate": {
+        "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At"
+          },
+          "is_active": {
+            "default": true,
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ComboItemIn"
+            },
+            "maxItems": 8,
+            "minItems": 2,
+            "title": "Items",
+            "type": "array"
+          },
+          "name": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "price_paise": {
+            "exclusiveMinimum": 0.0,
+            "title": "Price Paise",
+            "type": "integer"
+          },
+          "starts_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts At"
+          }
+        },
+        "required": [
+          "name",
+          "price_paise",
+          "items"
+        ],
+        "title": "ComboCreate",
+        "type": "object"
+      },
+      "ComboItemIn": {
+        "properties": {
+          "product_id": {
+            "format": "uuid",
+            "title": "Product Id",
+            "type": "string"
+          },
+          "quantity": {
+            "default": 1,
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Quantity",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "product_id"
+        ],
+        "title": "ComboItemIn",
+        "type": "object"
+      },
+      "ComboItemOut": {
+        "properties": {
+          "product_id": {
+            "format": "uuid",
+            "title": "Product Id",
+            "type": "string"
+          },
+          "product_name": {
+            "title": "Product Name",
+            "type": "string"
+          },
+          "quantity": {
+            "title": "Quantity",
+            "type": "integer"
+          },
+          "regular_price_paise": {
+            "title": "Regular Price Paise",
+            "type": "integer"
+          },
+          "store_id": {
+            "format": "uuid",
+            "title": "Store Id",
+            "type": "string"
+          },
+          "store_name": {
+            "title": "Store Name",
+            "type": "string"
+          },
+          "store_slug": {
+            "title": "Store Slug",
+            "type": "string"
+          }
+        },
+        "required": [
+          "product_id",
+          "product_name",
+          "store_id",
+          "store_slug",
+          "store_name",
+          "quantity",
+          "regular_price_paise"
+        ],
+        "title": "ComboItemOut",
+        "type": "object"
+      },
+      "ComboOut": {
+        "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_active": {
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ComboItemOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "mall_id": {
+            "format": "uuid",
+            "title": "Mall Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "price_paise": {
+            "title": "Price Paise",
+            "type": "integer"
+          },
+          "regular_price_paise": {
+            "title": "Regular Price Paise",
+            "type": "integer"
+          },
+          "starts_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts At"
+          }
+        },
+        "required": [
+          "id",
+          "mall_id",
+          "name",
+          "description",
+          "price_paise",
+          "regular_price_paise",
+          "starts_at",
+          "ends_at",
+          "is_active",
+          "items"
+        ],
+        "title": "ComboOut",
+        "type": "object"
+      },
+      "ComboUpdate": {
+        "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At"
+          },
+          "is_active": {
+            "default": true,
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ComboItemIn"
+            },
+            "maxItems": 8,
+            "minItems": 2,
+            "title": "Items",
+            "type": "array"
+          },
+          "name": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "price_paise": {
+            "exclusiveMinimum": 0.0,
+            "title": "Price Paise",
+            "type": "integer"
+          },
+          "starts_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts At"
+          }
+        },
+        "required": [
+          "name",
+          "price_paise",
+          "items"
+        ],
+        "title": "ComboUpdate",
+        "type": "object"
+      },
+      "CouponIn": {
+        "properties": {
+          "code": {
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "title": "CouponIn",
+        "type": "object"
+      },
+      "CouponOut": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "status": {
+            "enum": [
+              "applied",
+              "invalid",
+              "not_eligible",
+              "better_offer"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "status",
+          "message"
+        ],
+        "title": "CouponOut",
         "type": "object"
       },
       "CustomerMe": {
@@ -813,6 +1256,23 @@
             "title": "Created At",
             "type": "string"
           },
+          "discount_paise": {
+            "default": 0,
+            "title": "Discount Paise",
+            "type": "integer"
+          },
+          "group_order_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Order Id"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -838,6 +1298,18 @@
                 "type": "null"
               }
             ]
+          },
+          "pickup_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pickup At"
           },
           "status": {
             "$ref": "#/components/schemas/CustomerOrderStatus"
@@ -892,6 +1364,18 @@
             "title": "Created At",
             "type": "string"
           },
+          "discount_paise": {
+            "default": 0,
+            "title": "Discount Paise",
+            "type": "integer"
+          },
+          "discounts": {
+            "items": {
+              "$ref": "#/components/schemas/DiscountOut"
+            },
+            "title": "Discounts",
+            "type": "array"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -919,6 +1403,18 @@
             "title": "Order No",
             "type": "integer"
           },
+          "pickup_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pickup At"
+          },
           "pickup_code": {
             "title": "Pickup Code",
             "type": "string"
@@ -938,6 +1434,16 @@
             ],
             "title": "Reason"
           },
+          "review": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReviewOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "status": {
             "$ref": "#/components/schemas/StoreOrderStatus"
           },
@@ -955,6 +1461,11 @@
           "store_slug": {
             "title": "Store Slug",
             "type": "string"
+          },
+          "subtotal_paise": {
+            "default": 0,
+            "title": "Subtotal Paise",
+            "type": "integer"
           },
           "tax_paise": {
             "title": "Tax Paise",
@@ -1379,6 +1890,33 @@
         "title": "DirectoryStoreOut",
         "type": "object"
       },
+      "DiscountOut": {
+        "properties": {
+          "amount_paise": {
+            "title": "Amount Paise",
+            "type": "integer"
+          },
+          "kind": {
+            "enum": [
+              "combo",
+              "offer"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "name",
+          "amount_paise"
+        ],
+        "title": "DiscountOut",
+        "type": "object"
+      },
       "FeatureOut": {
         "properties": {
           "default": {
@@ -1677,6 +2215,169 @@
           "permissions"
         ],
         "title": "GrantOut",
+        "type": "object"
+      },
+      "GroupCreate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 40,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "title": "GroupCreate",
+        "type": "object"
+      },
+      "GroupLineOut": {
+        "properties": {
+          "product_name": {
+            "title": "Product Name",
+            "type": "string"
+          },
+          "quantity": {
+            "title": "Quantity",
+            "type": "integer"
+          },
+          "store_name": {
+            "title": "Store Name",
+            "type": "string"
+          },
+          "variant_name": {
+            "title": "Variant Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "store_name",
+          "product_name",
+          "variant_name",
+          "quantity"
+        ],
+        "title": "GroupLineOut",
+        "type": "object"
+      },
+      "GroupMemberOut": {
+        "description": "What friends see of each other: a first name and what they picked. Never a phone.",
+        "properties": {
+          "is_host": {
+            "title": "Is Host",
+            "type": "boolean"
+          },
+          "is_you": {
+            "title": "Is You",
+            "type": "boolean"
+          },
+          "item_count": {
+            "title": "Item Count",
+            "type": "integer"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/GroupLineOut"
+            },
+            "title": "Lines",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "paid_paise": {
+            "title": "Paid Paise",
+            "type": "integer"
+          },
+          "total_paise": {
+            "title": "Total Paise",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name",
+          "is_you",
+          "is_host",
+          "item_count",
+          "total_paise",
+          "paid_paise",
+          "lines"
+        ],
+        "title": "GroupMemberOut",
+        "type": "object"
+      },
+      "GroupOrderOut": {
+        "properties": {
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_host": {
+            "title": "Is Host",
+            "type": "boolean"
+          },
+          "joined": {
+            "title": "Joined",
+            "type": "boolean"
+          },
+          "mall_slug": {
+            "title": "Mall Slug",
+            "type": "string"
+          },
+          "members": {
+            "items": {
+              "$ref": "#/components/schemas/GroupMemberOut"
+            },
+            "title": "Members",
+            "type": "array"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "status": {
+            "enum": [
+              "open",
+              "closed",
+              "expired"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "token": {
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "token",
+          "name",
+          "mall_slug",
+          "status",
+          "expires_at",
+          "is_host",
+          "joined",
+          "members"
+        ],
+        "title": "GroupOrderOut",
         "type": "object"
       },
       "GstRateOut": {
@@ -2141,6 +2842,31 @@
         "title": "MallOut",
         "type": "object"
       },
+      "MallRatingsOut": {
+        "description": "Ratings for a mall's stores (by slug) and dishes (by product id).",
+        "properties": {
+          "products": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/RatingOut"
+            },
+            "title": "Products",
+            "type": "object"
+          },
+          "stores": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/RatingOut"
+            },
+            "title": "Stores",
+            "type": "object"
+          }
+        },
+        "required": [
+          "stores",
+          "products"
+        ],
+        "title": "MallRatingsOut",
+        "type": "object"
+      },
       "MallUpdate": {
         "properties": {
           "address": {
@@ -2183,6 +2909,395 @@
           }
         },
         "title": "MallUpdate",
+        "type": "object"
+      },
+      "NotifyConfigOut": {
+        "description": "Public: what the browser needs to offer notifications.",
+        "properties": {
+          "push_public_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Push Public Key"
+          },
+          "whatsapp_available": {
+            "title": "Whatsapp Available",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "push_public_key",
+          "whatsapp_available"
+        ],
+        "title": "NotifyConfigOut",
+        "type": "object"
+      },
+      "NotifyPrefsOut": {
+        "properties": {
+          "push_devices": {
+            "title": "Push Devices",
+            "type": "integer"
+          },
+          "whatsapp": {
+            "title": "Whatsapp",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "whatsapp",
+          "push_devices"
+        ],
+        "title": "NotifyPrefsOut",
+        "type": "object"
+      },
+      "NotifyPrefsUpdate": {
+        "properties": {
+          "whatsapp": {
+            "title": "Whatsapp",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "whatsapp"
+        ],
+        "title": "NotifyPrefsUpdate",
+        "type": "object"
+      },
+      "OfferActiveUpdate": {
+        "properties": {
+          "is_active": {
+            "title": "Is Active",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "is_active"
+        ],
+        "title": "OfferActiveUpdate",
+        "type": "object"
+      },
+      "OfferCreate": {
+        "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9]{3,20}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At"
+          },
+          "is_active": {
+            "default": true,
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "kind": {
+            "enum": [
+              "percent",
+              "flat"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "max_discount_paise": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Discount Paise"
+          },
+          "min_subtotal_paise": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Min Subtotal Paise",
+            "type": "integer"
+          },
+          "per_customer_limit": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Per Customer Limit"
+          },
+          "starts_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts At"
+          },
+          "title": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "value": {
+            "exclusiveMinimum": 0.0,
+            "maximum": 10000000.0,
+            "title": "Value",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "title",
+          "kind",
+          "value"
+        ],
+        "title": "OfferCreate",
+        "type": "object"
+      },
+      "OfferOut": {
+        "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_active": {
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "max_discount_paise": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Discount Paise"
+          },
+          "min_subtotal_paise": {
+            "title": "Min Subtotal Paise",
+            "type": "integer"
+          },
+          "per_customer_limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Per Customer Limit"
+          },
+          "starts_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts At"
+          },
+          "store_id": {
+            "format": "uuid",
+            "title": "Store Id",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "store_id",
+          "title",
+          "code",
+          "kind",
+          "value",
+          "max_discount_paise",
+          "min_subtotal_paise",
+          "per_customer_limit",
+          "starts_at",
+          "ends_at",
+          "is_active",
+          "created_at"
+        ],
+        "title": "OfferOut",
+        "type": "object"
+      },
+      "OfferUpdate": {
+        "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9]{3,20}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At"
+          },
+          "is_active": {
+            "default": true,
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "kind": {
+            "enum": [
+              "percent",
+              "flat"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "max_discount_paise": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Discount Paise"
+          },
+          "min_subtotal_paise": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Min Subtotal Paise",
+            "type": "integer"
+          },
+          "per_customer_limit": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Per Customer Limit"
+          },
+          "starts_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts At"
+          },
+          "title": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "value": {
+            "exclusiveMinimum": 0.0,
+            "maximum": 10000000.0,
+            "title": "Value",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "title",
+          "kind",
+          "value"
+        ],
+        "title": "OfferUpdate",
         "type": "object"
       },
       "OptionGroupIn": {
@@ -2738,6 +3853,34 @@
         "title": "Page[StoreOrderOut]",
         "type": "object"
       },
+      "Page_StoreReviewOut_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/StoreReviewOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "Page[StoreReviewOut]",
+        "type": "object"
+      },
       "PasswordChange": {
         "properties": {
           "current_password": {
@@ -3069,6 +4212,34 @@
         "title": "PickupIn",
         "type": "object"
       },
+      "PickupSlotsOut": {
+        "description": "When this cart can be collected: as soon as possible, or one of these times.",
+        "properties": {
+          "asap_minutes": {
+            "title": "Asap Minutes",
+            "type": "integer"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "slots": {
+            "items": {
+              "format": "date-time",
+              "type": "string"
+            },
+            "title": "Slots",
+            "type": "array"
+          }
+        },
+        "required": [
+          "enabled",
+          "asap_minutes",
+          "slots"
+        ],
+        "title": "PickupSlotsOut",
+        "type": "object"
+      },
       "PopularItemOut": {
         "properties": {
           "accepting_orders": {
@@ -3081,6 +4252,22 @@
           },
           "product": {
             "$ref": "#/components/schemas/PublicProductOut"
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating"
+          },
+          "rating_count": {
+            "default": 0,
+            "title": "Rating Count",
+            "type": "integer"
           },
           "store_name": {
             "title": "Store Name",
@@ -4076,6 +5263,112 @@
         "title": "PublicMenuOut",
         "type": "object"
       },
+      "PublicOfferOut": {
+        "description": "An offer a customer may see: automatic ones and coupons alike.",
+        "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "max_discount_paise": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Discount Paise"
+          },
+          "min_subtotal_paise": {
+            "title": "Min Subtotal Paise",
+            "type": "integer"
+          },
+          "store_name": {
+            "title": "Store Name",
+            "type": "string"
+          },
+          "store_slug": {
+            "title": "Store Slug",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "store_slug",
+          "store_name",
+          "title",
+          "code",
+          "kind",
+          "value",
+          "max_discount_paise",
+          "min_subtotal_paise",
+          "ends_at"
+        ],
+        "title": "PublicOfferOut",
+        "type": "object"
+      },
+      "PublicOffersOut": {
+        "properties": {
+          "combos": {
+            "items": {
+              "$ref": "#/components/schemas/ComboOut"
+            },
+            "title": "Combos",
+            "type": "array"
+          },
+          "offers": {
+            "items": {
+              "$ref": "#/components/schemas/PublicOfferOut"
+            },
+            "title": "Offers",
+            "type": "array"
+          }
+        },
+        "required": [
+          "offers",
+          "combos"
+        ],
+        "title": "PublicOffersOut",
+        "type": "object"
+      },
       "PublicOptionGroupOut": {
         "properties": {
           "id": {
@@ -4387,6 +5680,82 @@
         "title": "PublicVariantOut",
         "type": "object"
       },
+      "PushKeys": {
+        "properties": {
+          "auth": {
+            "maxLength": 200,
+            "minLength": 8,
+            "pattern": "^[A-Za-z0-9_\\-=]+$",
+            "title": "Auth",
+            "type": "string"
+          },
+          "p256dh": {
+            "maxLength": 200,
+            "minLength": 8,
+            "pattern": "^[A-Za-z0-9_\\-=]+$",
+            "title": "P256Dh",
+            "type": "string"
+          }
+        },
+        "required": [
+          "p256dh",
+          "auth"
+        ],
+        "title": "PushKeys",
+        "type": "object"
+      },
+      "PushSubscriptionIn": {
+        "description": "What the browser's PushManager.subscribe() returns (subscription.toJSON()).",
+        "properties": {
+          "endpoint": {
+            "maxLength": 1000,
+            "pattern": "^https://",
+            "title": "Endpoint",
+            "type": "string"
+          },
+          "keys": {
+            "$ref": "#/components/schemas/PushKeys"
+          }
+        },
+        "required": [
+          "endpoint",
+          "keys"
+        ],
+        "title": "PushSubscriptionIn",
+        "type": "object"
+      },
+      "PushUnsubscribeIn": {
+        "properties": {
+          "endpoint": {
+            "maxLength": 1000,
+            "title": "Endpoint",
+            "type": "string"
+          }
+        },
+        "required": [
+          "endpoint"
+        ],
+        "title": "PushUnsubscribeIn",
+        "type": "object"
+      },
+      "RatingOut": {
+        "properties": {
+          "average": {
+            "title": "Average",
+            "type": "number"
+          },
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "average",
+          "count"
+        ],
+        "title": "RatingOut",
+        "type": "object"
+      },
       "ReasonIn": {
         "properties": {
           "reason": {
@@ -4528,6 +5897,91 @@
           "queued"
         ],
         "title": "ReprintOut",
+        "type": "object"
+      },
+      "ReviewIn": {
+        "properties": {
+          "comment": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "rating": {
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Rating",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "rating"
+        ],
+        "title": "ReviewIn",
+        "type": "object"
+      },
+      "ReviewOut": {
+        "properties": {
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "rating": {
+            "title": "Rating",
+            "type": "integer"
+          },
+          "reply": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reply"
+          }
+        },
+        "required": [
+          "rating",
+          "comment",
+          "reply",
+          "created_at"
+        ],
+        "title": "ReviewOut",
+        "type": "object"
+      },
+      "ReviewReplyIn": {
+        "properties": {
+          "reply": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Reply",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reply"
+        ],
+        "title": "ReviewReplyIn",
         "type": "object"
       },
       "RoleAssign": {
@@ -5614,6 +7068,18 @@
             ],
             "title": "Customer Phone"
           },
+          "discount_paise": {
+            "default": 0,
+            "title": "Discount Paise",
+            "type": "integer"
+          },
+          "discounts": {
+            "items": {
+              "$ref": "#/components/schemas/DiscountOut"
+            },
+            "title": "Discounts",
+            "type": "array"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -5652,6 +7118,18 @@
               }
             ],
             "title": "Picked Up At"
+          },
+          "pickup_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pickup At"
           },
           "prep_minutes": {
             "title": "Prep Minutes",
@@ -5694,6 +7172,11 @@
             "format": "uuid",
             "title": "Store Id",
             "type": "string"
+          },
+          "subtotal_paise": {
+            "default": 0,
+            "title": "Subtotal Paise",
+            "type": "integer"
           },
           "tax_paise": {
             "title": "Tax Paise",
@@ -5942,6 +7425,92 @@
           "items"
         ],
         "title": "StorePayoutsOut",
+        "type": "object"
+      },
+      "StoreReviewOut": {
+        "description": "A review as the store and other customers see it: a first name, never a phone.",
+        "properties": {
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "customer_name": {
+            "title": "Customer Name",
+            "type": "string"
+          },
+          "dishes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Dishes",
+            "type": "array"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "order_no": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order No"
+          },
+          "rating": {
+            "title": "Rating",
+            "type": "integer"
+          },
+          "reply": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reply"
+          },
+          "store_order_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Store Order Id"
+          }
+        },
+        "required": [
+          "id",
+          "rating",
+          "comment",
+          "reply",
+          "customer_name",
+          "dishes",
+          "created_at"
+        ],
+        "title": "StoreReviewOut",
         "type": "object"
       },
       "StoreTotalsOut": {
@@ -7365,6 +8934,169 @@
         ]
       }
     },
+    "/api/v1/groups/{token}": {
+      "get": {
+        "operationId": "orders_get_group",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupOrderOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Group",
+        "tags": [
+          "orders"
+        ]
+      }
+    },
+    "/api/v1/groups/{token}/close": {
+      "post": {
+        "description": "The host stops new people joining. Members can still pay for their share.",
+        "operationId": "orders_close_group",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupOrderOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Close Group",
+        "tags": [
+          "orders"
+        ]
+      }
+    },
+    "/api/v1/groups/{token}/join": {
+      "post": {
+        "description": "Your cart in the group's mall becomes your share; you pay for it yourself.",
+        "operationId": "orders_join_group",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupOrderOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Join Group",
+        "tags": [
+          "orders"
+        ]
+      }
+    },
+    "/api/v1/groups/{token}/leave": {
+      "post": {
+        "operationId": "orders_leave_group",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Leave Group",
+        "tags": [
+          "orders"
+        ]
+      }
+    },
     "/api/v1/health": {
       "get": {
         "operationId": "health_get_health",
@@ -7520,6 +9252,274 @@
         "summary": "Activate Mall",
         "tags": [
           "malls"
+        ]
+      }
+    },
+    "/api/v1/malls/{mall_id}/combos": {
+      "get": {
+        "operationId": "offers_list_combos",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mall_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Mall Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ComboOut"
+                  },
+                  "title": "Response Offers List Combos",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Combos",
+        "tags": [
+          "offers"
+        ]
+      },
+      "post": {
+        "operationId": "offers_create_combo",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mall_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Mall Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ComboCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComboOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Combo",
+        "tags": [
+          "offers"
+        ]
+      }
+    },
+    "/api/v1/malls/{mall_id}/combos/{combo_id}": {
+      "delete": {
+        "operationId": "offers_delete_combo",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mall_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Mall Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "combo_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Combo Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Combo",
+        "tags": [
+          "offers"
+        ]
+      },
+      "put": {
+        "operationId": "offers_update_combo",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mall_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Mall Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "combo_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Combo Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ComboUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComboOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Combo",
+        "tags": [
+          "offers"
+        ]
+      }
+    },
+    "/api/v1/malls/{mall_id}/combos/{combo_id}/active": {
+      "patch": {
+        "operationId": "offers_set_combo_active",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mall_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Mall Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "combo_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Combo Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OfferActiveUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComboOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Combo Active",
+        "tags": [
+          "offers"
         ]
       }
     },
@@ -7998,6 +9998,99 @@
         ]
       }
     },
+    "/api/v1/malls/{mall_slug}/cart/coupon": {
+      "delete": {
+        "operationId": "cart_remove_coupon",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mall_slug",
+            "required": true,
+            "schema": {
+              "title": "Mall Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove Coupon",
+        "tags": [
+          "cart"
+        ]
+      },
+      "put": {
+        "description": "Keep a store coupon on the cart; the cart says whether it applies.",
+        "operationId": "cart_apply_coupon",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mall_slug",
+            "required": true,
+            "schema": {
+              "title": "Mall Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CouponIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Apply Coupon",
+        "tags": [
+          "cart"
+        ]
+      }
+    },
     "/api/v1/malls/{mall_slug}/cart/lines": {
       "post": {
         "operationId": "cart_add_line",
@@ -8107,6 +10200,49 @@
           }
         },
         "summary": "Update Line",
+        "tags": [
+          "cart"
+        ]
+      }
+    },
+    "/api/v1/malls/{mall_slug}/cart/pickup-slots": {
+      "get": {
+        "description": "Schedule ahead: the times this cart can be collected.",
+        "operationId": "cart_pickup_slots",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mall_slug",
+            "required": true,
+            "schema": {
+              "title": "Mall Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PickupSlotsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Pickup Slots",
         "tags": [
           "cart"
         ]
@@ -8234,6 +10370,209 @@
         ]
       }
     },
+    "/api/v1/malls/{mall_slug}/groups": {
+      "post": {
+        "description": "Start a group order; your cart in this mall becomes your share. Share the link.",
+        "operationId": "orders_start_group",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mall_slug",
+            "required": true,
+            "schema": {
+              "title": "Mall Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroupCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupOrderOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Start Group",
+        "tags": [
+          "orders"
+        ]
+      }
+    },
+    "/api/v1/notify/config": {
+      "get": {
+        "description": "Public: the push key the browser subscribes with, and whether WhatsApp is offered.",
+        "operationId": "notify_notify_config",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotifyConfigOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Notify Config",
+        "tags": [
+          "notify"
+        ]
+      }
+    },
+    "/api/v1/notify/prefs": {
+      "get": {
+        "operationId": "notify_get_notify_prefs",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotifyPrefsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Notify Prefs",
+        "tags": [
+          "notify"
+        ]
+      },
+      "put": {
+        "operationId": "notify_set_notify_prefs",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NotifyPrefsUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotifyPrefsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Notify Prefs",
+        "tags": [
+          "notify"
+        ]
+      }
+    },
+    "/api/v1/notify/push": {
+      "post": {
+        "operationId": "notify_push_subscribe",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushSubscriptionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Push Subscribe",
+        "tags": [
+          "notify"
+        ]
+      }
+    },
+    "/api/v1/notify/push/remove": {
+      "post": {
+        "operationId": "notify_push_unsubscribe",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushUnsubscribeIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Push Unsubscribe",
+        "tags": [
+          "notify"
+        ]
+      }
+    },
     "/api/v1/orders": {
       "get": {
         "operationId": "orders_list_my_orders",
@@ -8334,6 +10673,60 @@
           }
         },
         "summary": "Cancel My Order",
+        "tags": [
+          "orders"
+        ]
+      }
+    },
+    "/api/v1/orders/stores/{store_order_id}/review": {
+      "put": {
+        "description": "Rate a collected order (1-5 stars, optional words). Can be changed for 7 days.",
+        "operationId": "orders_rate_my_order",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "store_order_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Store Order Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Rate My Order",
         "tags": [
           "orders"
         ]
@@ -9223,6 +11616,49 @@
         ]
       }
     },
+    "/api/v1/public/malls/{mall_slug}/offers": {
+      "get": {
+        "description": "Live offers, coupons and combos in a mall, for the mall page and cart.",
+        "operationId": "public_public_offers",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mall_slug",
+            "required": true,
+            "schema": {
+              "title": "Mall Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicOffersOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Public Offers",
+        "tags": [
+          "public"
+        ]
+      }
+    },
     "/api/v1/public/malls/{mall_slug}/popular": {
       "get": {
         "description": "The mall's most ordered dishes lately, topped up so a new mall still shows some.",
@@ -9273,6 +11709,49 @@
           }
         },
         "summary": "Popular",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/api/v1/public/malls/{mall_slug}/ratings": {
+      "get": {
+        "description": "Average stars of every rated store (by slug) and dish (by id) in the mall.",
+        "operationId": "public_mall_ratings",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mall_slug",
+            "required": true,
+            "schema": {
+              "title": "Mall Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MallRatingsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Mall Ratings",
         "tags": [
           "public"
         ]
@@ -9370,6 +11849,74 @@
           }
         },
         "summary": "Public Menu",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/api/v1/public/malls/{mall_slug}/stores/{store_slug}/reviews": {
+      "get": {
+        "description": "A store's latest written reviews (first names only).",
+        "operationId": "public_store_public_reviews",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mall_slug",
+            "required": true,
+            "schema": {
+              "title": "Mall Slug",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "store_slug",
+            "required": true,
+            "schema": {
+              "title": "Store Slug",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 50,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/StoreReviewOut"
+                  },
+                  "title": "Response Public Store Public Reviews",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Store Public Reviews",
         "tags": [
           "public"
         ]
@@ -10130,6 +12677,274 @@
         "summary": "Presign Image",
         "tags": [
           "catalog"
+        ]
+      }
+    },
+    "/api/v1/stores/{store_id}/offers": {
+      "get": {
+        "operationId": "offers_list_offers",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "store_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Store Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/OfferOut"
+                  },
+                  "title": "Response Offers List Offers",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Offers",
+        "tags": [
+          "offers"
+        ]
+      },
+      "post": {
+        "operationId": "offers_create_offer",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "store_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Store Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OfferCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Offer",
+        "tags": [
+          "offers"
+        ]
+      }
+    },
+    "/api/v1/stores/{store_id}/offers/{offer_id}": {
+      "delete": {
+        "operationId": "offers_delete_offer",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "store_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Store Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "offer_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Offer Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Offer",
+        "tags": [
+          "offers"
+        ]
+      },
+      "put": {
+        "operationId": "offers_update_offer",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "store_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Store Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "offer_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Offer Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OfferUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Offer",
+        "tags": [
+          "offers"
+        ]
+      }
+    },
+    "/api/v1/stores/{store_id}/offers/{offer_id}/active": {
+      "patch": {
+        "operationId": "offers_set_offer_active",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "store_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Store Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "offer_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Offer Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OfferActiveUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Offer Active",
+        "tags": [
+          "offers"
         ]
       }
     },
@@ -12110,6 +14925,141 @@
         "tags": [
           "store-orders",
           "reports"
+        ]
+      }
+    },
+    "/api/v1/stores/{store_id}/reviews": {
+      "get": {
+        "operationId": "store-orders_list_store_reviews",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "store_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Store Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "before",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Before"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 30,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_StoreReviewOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Store Reviews",
+        "tags": [
+          "store-orders"
+        ]
+      }
+    },
+    "/api/v1/stores/{store_id}/reviews/{review_id}/reply": {
+      "put": {
+        "operationId": "store-orders_reply_to_review",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "store_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Store Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "review_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Review Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewReplyIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoreReviewOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reply To Review",
+        "tags": [
+          "store-orders"
         ]
       }
     },

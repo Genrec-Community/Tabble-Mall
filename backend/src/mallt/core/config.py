@@ -57,6 +57,21 @@ class Settings(BaseSettings):
     zoho_webhook_signing_key: str = ""
     zoho_sandbox: bool = True
 
+    # The customer site, for links in notifications (no trailing slash).
+    public_site_url: str = "http://localhost:8080"
+
+    # Web Push (installable app). Generate a pair with `python -m mallt.cli vapid-keys`.
+    # Empty = push notifications are off (the app still installs and works offline).
+    vapid_public_key: str = ""
+    vapid_private_key: str = ""
+    vapid_subject: str = "https://tabble-mall.vercel.app"
+
+    # WhatsApp: "off" (default), "log" (dev: logs what it would send) or "meta" (Cloud API).
+    whatsapp_provider: Literal["off", "log", "meta"] = "off"
+    whatsapp_meta_token: str = ""
+    whatsapp_meta_phone_number_id: str = ""
+    whatsapp_template_language: str = "en"
+
     @model_validator(mode="after")
     def _prod_must_be_safe(self) -> "Settings":
         if self.env != "prod":

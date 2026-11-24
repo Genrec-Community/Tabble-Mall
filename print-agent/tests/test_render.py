@@ -405,3 +405,16 @@ def test_options_object_reads_leniently() -> None:
     assert o.label("label", "x") == "Hello World" and o.label("none", "dflt") == "dflt"
     assert o.money("5.00") == "₹5.00"
     assert Options.from_payload({"options": 5}).raw == {}
+
+
+def test_scheduled_ticket_shows_the_pickup_time_instead_of_the_eta() -> None:
+    text = paper("ticket", ticket(collect_at="13:30"))
+    assert "PICKUP 13:30" in text and "Ready in about" not in text
+    assert "PICKUP" not in paper("ticket", ticket())
+
+
+def test_bill_lists_each_discount_below_the_subtotal() -> None:
+    text = paper("bill", bill(discounts=[{"name": "20% off", "amount": "40.00"}]))
+    assert "20% off" in text and "-40.00" in text
+    assert text.index("Subtotal") < text.index("20% off") < text.index("TOTAL")
+    assert "-0.00" not in paper("bill", bill(discounts=[{"name": "x", "amount": "0.00"}]))

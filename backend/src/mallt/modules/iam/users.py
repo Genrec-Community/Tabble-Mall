@@ -202,6 +202,14 @@ class IamCustomers:
             name=customer.name, phone_masked=mask_phone(customer.phone) if customer.phone else None
         )
 
+    async def first_names(self, ids: list[uuid.UUID]) -> dict[uuid.UUID, str]:
+        """What other customers may see of someone: a first name, or a neutral word."""
+        out: dict[uuid.UUID, str] = {}
+        for c in await self.repo.by_ids(ids):
+            name = (c.name or "").strip().split(" ")[0]
+            out[c.id] = name[:20] if name else "Guest"
+        return out
+
     async def own_phone(self, customer_id: uuid.UUID) -> str | None:
         """The customer's full 10-digit number, ONLY for showing back to that same customer.
 

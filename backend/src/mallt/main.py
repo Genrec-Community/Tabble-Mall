@@ -22,6 +22,11 @@ from mallt.modules.iam.customer_router import customer_router
 from mallt.modules.iam.google import make_google_verifier
 from mallt.modules.iam.router import staff_router
 from mallt.modules.iam.sms import make_sms_sender
+from mallt.modules.notify.router import router as notify_router
+from mallt.modules.notify.service import Channels
+from mallt.modules.notify.whatsapp import make_whatsapp
+from mallt.modules.offers.router import public_router as offers_public_router
+from mallt.modules.offers.router import router as offers_router
 from mallt.modules.orders.cart_router import router as cart_router
 from mallt.modules.orders.router import customer_router as orders_customer_router
 from mallt.modules.orders.router import public_router as orders_public_router
@@ -92,6 +97,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.payments = make_payment_provider(settings, kv)
     app.state.sms = make_sms_sender(settings)
     app.state.google = make_google_verifier(settings)
+    app.state.notify = Channels(settings, make_whatsapp(settings))
     app.state.session_factory = async_sessionmaker(engine, expire_on_commit=False)
     app.add_middleware(
         CORSMiddleware,
@@ -111,6 +117,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(catalog_router)
     app.include_router(catalog_public_router)
     app.include_router(cart_router)
+    app.include_router(offers_router)
+    app.include_router(offers_public_router)
+    app.include_router(notify_router)
     app.include_router(printing_router)
     app.include_router(orders_customer_router)
     app.include_router(orders_public_router)
