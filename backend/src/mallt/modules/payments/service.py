@@ -31,10 +31,15 @@ from mallt.modules.payments.schemas import (
     PaymentTaskOut,
     PayoutAccountCreate,
     PayoutAccountOut,
+    StorePayoutRowOut,
+    StorePayoutsOut,
+    StorePayoutSummaryOut,
 )
 from mallt.modules.tenancy.service import TenancyService
 
 log = logging.getLogger(__name__)
+
+PROVIDER_REPORTED_FAILED = "Reported failed by the provider"
 
 Kick = Callable[[], Awaitable[None]]
 MAX_ATTEMPTS = 12
@@ -51,6 +56,7 @@ class Owner:
     organization_id: uuid.UUID
     mall_id: uuid.UUID
     store_id: uuid.UUID
+    order_label: str | None = None  # shown on the payouts and admin screens
 
 
 def _mask(value: str) -> str:
@@ -129,6 +135,7 @@ class PaymentsService:
             amount_paise=amount_paise,
             payment_ref=payment_ref,
             account_ref=account_ref,
+            order_label=owner.order_label,
             attempts=0,
             next_attempt_at=datetime.now(UTC),
         )
@@ -309,7 +316,7 @@ class PaymentsService:
         if task is None or task.status is not TaskStatus.DONE:
             return
         task.status = TaskStatus.FAILED
-        task.last_error = f"Reported failed by the provider: {error}"[:500]
+        task.last_error = f"{PROVIDER_REPORTED_FAILED}: {error}"[:500]
         kind, sign = {
             TaskKind.TRANSFER: (LedgerKind.TRANSFER, -1),
             TaskKind.REVERSAL: (LedgerKind.TRANSFER_REVERSAL, 1),
@@ -471,7 +478,101 @@ class PaymentsService:
         )
         accounts = await self.repo.list_accounts(limit)
         failed = await self.repo.failed_tasks(limit)
+        retrying = await self.repo.retrying_tasks(limit)
+        stores = await TenancyService(self.session, self.kv).stores_by_ids(
+            list({t.store_id for t in failed + retrying})
+        )
+
+        def out(t: PaymentTask) -> PaymentTaskOut:
+            row = PaymentTaskOut.model_validate(t)
+            store = stores.get(t.store_id)
+            return row.model_copy(update={"store_name": store.name if store else None})
+
         return PaymentsOverviewOut(
             accounts=[self._out(a) for a in accounts],
-            failed_tasks=[PaymentTaskOut.model_validate(t) for t in failed],
+            failed_tasks=[out(t) for t in failed],
+            retrying_tasks=[out(t) for t in retrying],
+        )
+
+    async def retry_task(self, principal: Principal, task_id: uuid.UUID) -> PaymentTaskOut:
+        """A person sorted out the cause (e.g. topped up a store's Zoho balance): try again."""
+        AuthzService(self.session, self.kv).require(
+            principal, P.PLATFORM_KYC_APPROVE, Scope.platform()
+        )
+        task = await self.repo.task_for_update(task_id)
+        if task is None:
+            raise NotFound("not_found", "Not found.")
+        if task.status is not TaskStatus.FAILED:
+            raise Conflict("not_failed", "Only a failed money task can be retried.")
+        before = {"status": task.status.value, "attempts": task.attempts}
+        if (task.last_error or "").startswith(PROVIDER_REPORTED_FAILED):
+            # The provider said this movement failed, so a fresh one is needed.
+            task.attempts = 0
+            task.provider_ref = None
+        else:
+            # Keep attempts > 0 when there were some: the worker first checks whether an earlier
+            # attempt went through, so money never moves twice. Allow a full set of retries.
+            task.attempts = min(task.attempts, 1)
+        task.status = TaskStatus.PENDING
+        task.next_attempt_at = datetime.now(UTC)
+        await AuditService(self.session).record(
+            actor=Actor(ActorType.STAFF, principal.staff_id),
+            action="payment_task.retry",
+            target_type="payment_task",
+            target_id=task.id,
+            scope=Scope.platform(),
+            before=before,
+            after={"status": task.status.value, "attempts": task.attempts},
+        )
+        await self.session.flush()
+        await self.session.refresh(task)
+        self._schedule_kick()
+        return PaymentTaskOut.model_validate(task)
+
+    async def store_payouts(
+        self, principal: Principal, store_id: uuid.UUID, before: uuid.UUID | None, limit: int
+    ) -> StorePayoutsOut:
+        """What the store was paid, order by order, and the fees on it."""
+        await self._store_scope(principal, store_id, P.STORE_KYC_SUBMIT)
+        transfers = await self.repo.store_transfers(store_id, before, limit + 1)
+        page = transfers[:limit]
+        ids = [t.store_order_id for t in page]
+        fees = await self.repo.fees_for(ids)
+        refunds: dict[uuid.UUID, PaymentTask] = {}
+        for t in await self.repo.tasks_for_store_orders(ids):
+            if t.kind is TaskKind.REFUND:
+                refunds[t.store_order_id] = t
+        items = []
+        for t in page:
+            fee = fees.get(t.store_order_id, 0)
+            refund = refunds.get(t.store_order_id)
+            items.append(
+                StorePayoutRowOut(
+                    store_order_id=t.store_order_id,
+                    order_label=t.order_label,
+                    created_at=t.created_at,
+                    order_total_paise=t.amount_paise + fee,
+                    fee_paise=fee,
+                    payout_paise=t.amount_paise,
+                    transfer_status=t.status,
+                    refund_paise=refund.amount_paise if refund else None,
+                    refund_status=refund.status if refund else None,
+                )
+            )
+        ledger = await self.repo.store_ledger_totals(store_id)
+        tasks = await self.repo.store_task_totals(store_id)
+        transfer_total = sum(v for (k, _), v in tasks.items() if k is TaskKind.TRANSFER)
+        summary = StorePayoutSummaryOut(
+            sales_paise=transfer_total + ledger.get(LedgerKind.GATEWAY_FEE, 0),
+            fees_paise=ledger.get(LedgerKind.GATEWAY_FEE, 0),
+            paid_out_paise=ledger.get(LedgerKind.TRANSFER, 0),
+            on_the_way_paise=tasks.get((TaskKind.TRANSFER, TaskStatus.PENDING), 0),
+            failed_paise=tasks.get((TaskKind.TRANSFER, TaskStatus.FAILED), 0),
+            taken_back_paise=-ledger.get(LedgerKind.TRANSFER_REVERSAL, 0),
+            refunded_paise=-ledger.get(LedgerKind.REFUND, 0),
+        )
+        return StorePayoutsOut(
+            summary=summary,
+            items=items,
+            next_cursor=page[-1].id if len(transfers) > limit else None,
         )

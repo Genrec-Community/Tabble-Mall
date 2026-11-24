@@ -1201,15 +1201,35 @@ export type PaymentTaskOut = {
      * Last Error
      */
     last_error: string | null;
+    /**
+     * Next Attempt At
+     */
+    next_attempt_at: string;
+    /**
+     * Order Label
+     */
+    order_label?: string | null;
+    /**
+     * Provider Ref
+     */
+    provider_ref?: string | null;
     status: TaskStatus;
     /**
      * Store Id
      */
     store_id: string;
     /**
+     * Store Name
+     */
+    store_name?: string | null;
+    /**
      * Store Order Id
      */
     store_order_id: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
 };
 
 /**
@@ -1224,6 +1244,10 @@ export type PaymentsOverviewOut = {
      * Failed Tasks
      */
     failed_tasks: Array<PaymentTaskOut>;
+    /**
+     * Retrying Tasks
+     */
+    retrying_tasks?: Array<PaymentTaskOut>;
 };
 
 /**
@@ -2484,6 +2508,93 @@ export type StoreOut = {
 };
 
 /**
+ * StorePayoutRowOut
+ */
+export type StorePayoutRowOut = {
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Fee Paise
+     */
+    fee_paise: number;
+    /**
+     * Order Label
+     */
+    order_label: string | null;
+    /**
+     * Order Total Paise
+     */
+    order_total_paise: number;
+    /**
+     * Payout Paise
+     */
+    payout_paise: number;
+    /**
+     * Refund Paise
+     */
+    refund_paise?: number | null;
+    refund_status?: TaskStatus | null;
+    /**
+     * Store Order Id
+     */
+    store_order_id: string;
+    transfer_status: TaskStatus;
+};
+
+/**
+ * StorePayoutSummaryOut
+ *
+ * All amounts in paise, over the store's whole history.
+ */
+export type StorePayoutSummaryOut = {
+    /**
+     * Failed Paise
+     */
+    failed_paise: number;
+    /**
+     * Fees Paise
+     */
+    fees_paise: number;
+    /**
+     * On The Way Paise
+     */
+    on_the_way_paise: number;
+    /**
+     * Paid Out Paise
+     */
+    paid_out_paise: number;
+    /**
+     * Refunded Paise
+     */
+    refunded_paise: number;
+    /**
+     * Sales Paise
+     */
+    sales_paise: number;
+    /**
+     * Taken Back Paise
+     */
+    taken_back_paise: number;
+};
+
+/**
+ * StorePayoutsOut
+ */
+export type StorePayoutsOut = {
+    /**
+     * Items
+     */
+    items: Array<StorePayoutRowOut>;
+    /**
+     * Next Cursor
+     */
+    next_cursor?: string | null;
+    summary: StorePayoutSummaryOut;
+};
+
+/**
  * StoreUpdate
  */
 export type StoreUpdate = {
@@ -2709,9 +2820,17 @@ export type ZohoCheckoutOut = {
      */
     is_test_mode: boolean;
     /**
+     * Name
+     */
+    name?: string | null;
+    /**
      * Payments Session Id
      */
     payments_session_id: string;
+    /**
+     * Phone
+     */
+    phone?: string | null;
 };
 
 /**
@@ -2824,6 +2943,36 @@ export type PaymentsPaymentsOverviewResponses = {
 };
 
 export type PaymentsPaymentsOverviewResponse = PaymentsPaymentsOverviewResponses[keyof PaymentsPaymentsOverviewResponses];
+
+export type PaymentsRetryPaymentTaskData = {
+    body?: never;
+    path: {
+        /**
+         * Task Id
+         */
+        task_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/payments/tasks/{task_id}/retry';
+};
+
+export type PaymentsRetryPaymentTaskErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PaymentsRetryPaymentTaskError = PaymentsRetryPaymentTaskErrors[keyof PaymentsRetryPaymentTaskErrors];
+
+export type PaymentsRetryPaymentTaskResponses = {
+    /**
+     * Successful Response
+     */
+    200: PaymentTaskOut;
+};
+
+export type PaymentsRetryPaymentTaskResponse = PaymentsRetryPaymentTaskResponses[keyof PaymentsRetryPaymentTaskResponses];
 
 export type AuthCustomerGoogleLoginData = {
     body: GoogleLogin;
@@ -5168,6 +5317,45 @@ export type PaymentsRefreshPayoutAccountResponses = {
 };
 
 export type PaymentsRefreshPayoutAccountResponse = PaymentsRefreshPayoutAccountResponses[keyof PaymentsRefreshPayoutAccountResponses];
+
+export type PaymentsStorePayoutsData = {
+    body?: never;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+    };
+    query?: {
+        /**
+         * Cursor
+         */
+        cursor?: string | null;
+        /**
+         * Limit
+         */
+        limit?: number;
+    };
+    url: '/api/v1/stores/{store_id}/payouts';
+};
+
+export type PaymentsStorePayoutsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PaymentsStorePayoutsError = PaymentsStorePayoutsErrors[keyof PaymentsStorePayoutsErrors];
+
+export type PaymentsStorePayoutsResponses = {
+    /**
+     * Successful Response
+     */
+    200: StorePayoutsOut;
+};
+
+export type PaymentsStorePayoutsResponse = PaymentsStorePayoutsResponses[keyof PaymentsStorePayoutsResponses];
 
 export type PrintingListAgentsData = {
     body?: never;

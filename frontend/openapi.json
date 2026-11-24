@@ -2175,6 +2175,33 @@
             ],
             "title": "Last Error"
           },
+          "next_attempt_at": {
+            "format": "date-time",
+            "title": "Next Attempt At",
+            "type": "string"
+          },
+          "order_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Label"
+          },
+          "provider_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider Ref"
+          },
           "status": {
             "$ref": "#/components/schemas/TaskStatus"
           },
@@ -2183,9 +2210,25 @@
             "title": "Store Id",
             "type": "string"
           },
+          "store_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Store Name"
+          },
           "store_order_id": {
             "format": "uuid",
             "title": "Store Order Id",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
             "type": "string"
           }
         },
@@ -2199,7 +2242,9 @@
           "amount_paise",
           "attempts",
           "last_error",
-          "created_at"
+          "created_at",
+          "updated_at",
+          "next_attempt_at"
         ],
         "title": "PaymentTaskOut",
         "type": "object"
@@ -2218,6 +2263,13 @@
               "$ref": "#/components/schemas/PaymentTaskOut"
             },
             "title": "Failed Tasks",
+            "type": "array"
+          },
+          "retrying_tasks": {
+            "items": {
+              "$ref": "#/components/schemas/PaymentTaskOut"
+            },
+            "title": "Retrying Tasks",
             "type": "array"
           }
         },
@@ -4795,6 +4847,154 @@
         "title": "StoreOut",
         "type": "object"
       },
+      "StorePayoutRowOut": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "fee_paise": {
+            "title": "Fee Paise",
+            "type": "integer"
+          },
+          "order_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Label"
+          },
+          "order_total_paise": {
+            "title": "Order Total Paise",
+            "type": "integer"
+          },
+          "payout_paise": {
+            "title": "Payout Paise",
+            "type": "integer"
+          },
+          "refund_paise": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Refund Paise"
+          },
+          "refund_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TaskStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "store_order_id": {
+            "format": "uuid",
+            "title": "Store Order Id",
+            "type": "string"
+          },
+          "transfer_status": {
+            "$ref": "#/components/schemas/TaskStatus"
+          }
+        },
+        "required": [
+          "store_order_id",
+          "order_label",
+          "created_at",
+          "order_total_paise",
+          "fee_paise",
+          "payout_paise",
+          "transfer_status"
+        ],
+        "title": "StorePayoutRowOut",
+        "type": "object"
+      },
+      "StorePayoutSummaryOut": {
+        "description": "All amounts in paise, over the store's whole history.",
+        "properties": {
+          "failed_paise": {
+            "title": "Failed Paise",
+            "type": "integer"
+          },
+          "fees_paise": {
+            "title": "Fees Paise",
+            "type": "integer"
+          },
+          "on_the_way_paise": {
+            "title": "On The Way Paise",
+            "type": "integer"
+          },
+          "paid_out_paise": {
+            "title": "Paid Out Paise",
+            "type": "integer"
+          },
+          "refunded_paise": {
+            "title": "Refunded Paise",
+            "type": "integer"
+          },
+          "sales_paise": {
+            "title": "Sales Paise",
+            "type": "integer"
+          },
+          "taken_back_paise": {
+            "title": "Taken Back Paise",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "sales_paise",
+          "fees_paise",
+          "paid_out_paise",
+          "on_the_way_paise",
+          "failed_paise",
+          "taken_back_paise",
+          "refunded_paise"
+        ],
+        "title": "StorePayoutSummaryOut",
+        "type": "object"
+      },
+      "StorePayoutsOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/StorePayoutRowOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/StorePayoutSummaryOut"
+          }
+        },
+        "required": [
+          "summary",
+          "items"
+        ],
+        "title": "StorePayoutsOut",
+        "type": "object"
+      },
       "StoreUpdate": {
         "properties": {
           "description": {
@@ -5141,9 +5341,31 @@
             "title": "Is Test Mode",
             "type": "boolean"
           },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
           "payments_session_id": {
             "title": "Payments Session Id",
             "type": "string"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
           }
         },
         "required": [
@@ -5372,6 +5594,49 @@
           }
         },
         "summary": "Payments Overview",
+        "tags": [
+          "payments"
+        ]
+      }
+    },
+    "/api/v1/admin/payments/tasks/{task_id}/retry": {
+      "post": {
+        "operationId": "payments_retry_payment_task",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Task Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentTaskOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Retry Payment Task",
         "tags": [
           "payments"
         ]
@@ -9122,6 +9387,78 @@
           }
         },
         "summary": "Refresh Payout Account",
+        "tags": [
+          "payments"
+        ]
+      }
+    },
+    "/api/v1/stores/{store_id}/payouts": {
+      "get": {
+        "operationId": "payments_store_payouts",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "store_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Store Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorePayoutsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Store Payouts",
         "tags": [
           "payments"
         ]

@@ -115,6 +115,10 @@ class ZohoCheckoutOut(BaseModel):
     amount: str
     currency_code: str
     description: str
+    # Prefills Zoho's checkout so the customer doesn't type it again. Only ever sent to the
+    # customer who owns the order.
+    phone: str | None = None
+    name: str | None = None
 
 
 class OrderPaymentOut(BaseModel):

@@ -508,3 +508,158 @@ async def test_admin_overview_is_platform_only(
     r = await client.get("/api/v1/admin/payments", headers=root)
     assert r.status_code == 200 and len(r.json()["accounts"]) == 1
     assert (await client.get("/api/v1/admin/payments", headers=world.org_owner)).status_code == 403
+
+
+async def _root(client: httpx.AsyncClient, db_session: AsyncSession) -> dict:
+    import pyotp
+
+    secret = pyotp.random_base32()
+    await make_staff(db_session, "root", [("platform_admin", Scope.platform())], totp_secret=secret)
+    return await staff_headers(client, "root", totp_secret=secret)
+
+
+async def _paid_order(
+    client: httpx.AsyncClient, alice: dict, menu: Menu, gateway: FakePaymentProvider
+) -> dict:
+    order = await start_checkout(client, alice, menu)
+    paid = gateway.pay(session_of(gateway))
+    await client.post(
+        f"/api/v1/orders/{order['id']}/payment",
+        json={"payment_id": paid.payment_ref},
+        headers=alice,
+    )
+    return order
+
+
+async def test_a_failed_reversal_holds_the_refund_until_an_admin_retries(
+    client: httpx.AsyncClient,
+    app: FastAPI,
+    alice: dict,
+    menu: Menu,
+    world: World,
+    gateway: FakePaymentProvider,
+    db_session: AsyncSession,
+) -> None:
+    from mallt.modules.payments.runner import run_money_tasks
+
+    await onboard(client, world)
+    order = await _paid_order(client, alice, menu, gateway)
+    burger = next(s for s in order["stores"] if s["store_slug"] == "burger-hub")
+    gateway.fail_next = True  # the store's Zoho balance is too low to take the transfer back
+    r = await client.post(
+        f"/api/v1/stores/{world.store.id}/orders/{burger['id']}/reject",
+        json={"reason": "closed"},
+        headers=world.owner,
+    )
+    assert r.status_code == 200
+    await run_money_tasks(app)
+    # the refund must not come out of the platform account while the reversal is stuck
+    assert gateway.reversals == [] and gateway.refunds == []
+
+    root = await _root(client, db_session)
+    overview = (await client.get("/api/v1/admin/payments", headers=root)).json()
+    failed = overview["failed_tasks"]
+    assert [(t["kind"], t["store_name"]) for t in failed] == [("reversal", world.store.name)]
+    assert failed[0]["order_label"].startswith("#1 · ")
+    url = f"/api/v1/admin/payments/tasks/{failed[0]['id']}/retry"
+    assert (await client.post(url, headers=world.org_owner)).status_code == 403
+    retried = await client.post(url, headers=root)
+    assert retried.status_code == 200 and retried.json()["status"] == "pending"
+    assert (await client.post(url, headers=root)).status_code == 409  # not failed any more
+    await run_money_tasks(app)
+    assert [r[0] for r in gateway.reversals] == [11940]
+    assert gateway.refunds == [(11940, f"so:{burger['id']}")]
+    actions = (await db_session.execute(text("SELECT action FROM audit_logs"))).scalars().all()
+    assert "payment_task.retry" in actions
+
+
+async def test_store_sees_its_payouts_fees_and_refunds(
+    client: httpx.AsyncClient,
+    app: FastAPI,
+    alice: dict,
+    menu: Menu,
+    world: World,
+    gateway: FakePaymentProvider,
+) -> None:
+    from mallt.modules.payments.runner import run_money_tasks
+
+    await onboard(client, world)
+    first = await _paid_order(client, alice, menu, gateway)
+    burger = next(s for s in first["stores"] if s["store_slug"] == "burger-hub")
+    await client.post(
+        f"/api/v1/stores/{world.store.id}/orders/{burger['id']}/reject",
+        json={"reason": "closed"},
+        headers=world.owner,
+    )
+    second = await start_checkout(client, alice, menu, key="k2")
+    session = [s for s, (_, ref) in gateway._sessions.items() if ref == second["id"]][0]
+    paid = gateway.pay(session)
+    await client.post(
+        f"/api/v1/orders/{second['id']}/payment",
+        json={"payment_id": paid.payment_ref},
+        headers=alice,
+    )
+    await run_money_tasks(app)
+
+    url = f"/api/v1/stores/{world.store.id}/payouts"
+    r = await client.get(url, headers=world.owner)
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["summary"] == {
+        "sales_paise": 24000,
+        "fees_paise": 120,
+        "paid_out_paise": 23880,
+        "on_the_way_paise": 0,
+        "failed_paise": 0,
+        "taken_back_paise": 11940,
+        "refunded_paise": 11940,
+    }
+    newest, oldest = body["items"]
+    assert (newest["order_total_paise"], newest["fee_paise"], newest["payout_paise"]) == (
+        12000,
+        60,
+        11940,
+    )
+    assert newest["transfer_status"] == "done" and newest["refund_status"] is None
+    assert oldest["refund_paise"] == 11940 and oldest["refund_status"] == "done"
+    assert newest["order_label"].startswith("#2 · ")
+    # one per page, with a cursor
+    page = (await client.get(url, params={"limit": 1}, headers=world.owner)).json()
+    assert len(page["items"]) == 1 and page["next_cursor"]
+    rest = await client.get(
+        url, params={"limit": 1, "cursor": page["next_cursor"]}, headers=world.owner
+    )
+    assert rest.json()["items"][0]["store_order_id"] == oldest["store_order_id"]
+    # another organization's staff get 404; the store's own counter staff may not see the money
+    assert (await client.get(url, headers=world.outsider)).status_code == 404
+    assert (await client.get(url, headers=world.staff)).status_code == 403
+    assert (await client.get(url, headers=world.org_owner)).status_code == 200
+
+
+async def test_zoho_checkout_is_prefilled_with_the_customers_own_phone(
+    client: httpx.AsyncClient,
+    alice: dict,
+    menu: Menu,
+    world: World,
+    gateway: FakePaymentProvider,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def zoho_like(*, session_ref: str, amount_paise: int, description: str) -> dict:
+        return {
+            "account_id": "1",
+            "api_key": "pub",
+            "domain": "IN",
+            "is_test_mode": True,
+            "payments_session_id": session_ref,
+            "amount": "180.00",
+            "currency_code": "INR",
+            "description": description,
+        }
+
+    monkeypatch.setattr(gateway, "client_params", zoho_like)
+    await onboard(client, world)
+    order = await start_checkout(client, alice, menu)
+    zoho = order["payment"]["zoho"]
+    me = (await client.get("/api/v1/auth/customer/me", headers=alice)).json()
+    assert zoho["phone"] and zoho["phone"].endswith(me["phone_masked"][-4:])
+    assert len(zoho["phone"]) == 10 and "*" not in zoho["phone"]

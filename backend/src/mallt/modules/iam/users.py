@@ -201,3 +201,12 @@ class IamCustomers:
         return CustomerContact(
             name=customer.name, phone_masked=mask_phone(customer.phone) if customer.phone else None
         )
+
+    async def own_phone(self, customer_id: uuid.UUID) -> str | None:
+        """The customer's full 10-digit number, ONLY for showing back to that same customer.
+
+        Used to prefill their own payment checkout. Never store it elsewhere, log it or send it
+        to staff.
+        """
+        customer = await self.repo.get(customer_id)
+        return customer.phone if customer else None

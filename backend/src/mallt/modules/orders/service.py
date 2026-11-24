@@ -171,7 +171,12 @@ class OrderService:
 
     @staticmethod
     def _owner(order: StoreOrder) -> Owner:
-        return Owner(order.organization_id, order.mall_id, order.store_id)
+        return Owner(
+            order.organization_id,
+            order.mall_id,
+            order.store_id,
+            f"#{order.order_no} · {order.order_date.isoformat()}",
+        )
 
     async def _payment_ref(self, order: StoreOrder) -> str:
         parent = await self.session.get(CustomerOrder, order.customer_order_id)
@@ -530,6 +535,11 @@ class OrderService:
         store_orders = [so for o in orders for so in o.store_orders]
         stores = await self.tenancy.stores_by_ids(list({so.store_id for so in store_orders}))
         events = await self.repo.events_for([so.id for so in store_orders])
+        payer: tuple[str | None, str | None] = (None, None)
+        if any(o.status is CustomerOrderStatus.PLACED and o.payment_session_ref for o in orders):
+            customer_id = orders[0].customer_id  # a customer only ever reads their own orders
+            contact = await self.customers.contact(customer_id)
+            payer = (await self.customers.own_phone(customer_id), contact.name)
         out: list[CustomerOrderOut] = []
         for o in orders:
             views = []
@@ -561,13 +571,15 @@ class OrderService:
                     status=o.status,
                     total_paise=o.total_paise,
                     created_at=o.created_at,
-                    payment=self._payment_view(o),
+                    payment=self._payment_view(o, payer),
                     stores=views,
                 )
             )
         return out
 
-    def _payment_view(self, order: CustomerOrder) -> OrderPaymentOut | None:
+    def _payment_view(
+        self, order: CustomerOrder, payer: tuple[str | None, str | None] = (None, None)
+    ) -> OrderPaymentOut | None:
         if order.status is not CustomerOrderStatus.PLACED or not order.payment_session_ref:
             return None
         params = None
@@ -577,6 +589,8 @@ class OrderService:
                 amount_paise=order.total_paise,
                 description=f"Order {str(order.id)[-8:]}",
             )
+        if params:
+            params = {**params, "phone": payer[0], "name": payer[1]}
         return OrderPaymentOut(
             provider=order.payment_provider or "",
             zoho=ZohoCheckoutOut.model_validate(params) if params else None,

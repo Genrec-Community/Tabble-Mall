@@ -65,11 +65,47 @@ class PaymentTaskOut(BaseModel):
     attempts: int
     last_error: str | None
     created_at: datetime
+    updated_at: datetime
+    next_attempt_at: datetime
+    order_label: str | None = None
+    store_name: str | None = None
+    provider_ref: str | None = None
 
 
 class PaymentsOverviewOut(BaseModel):
     accounts: list[PayoutAccountOut]
     failed_tasks: list[PaymentTaskOut]
+    retrying_tasks: list[PaymentTaskOut] = Field(default_factory=list)
+
+
+class StorePayoutSummaryOut(BaseModel):
+    """All amounts in paise, over the store's whole history."""
+
+    sales_paise: int  # what customers paid for this store's items (paid orders)
+    fees_paise: int  # the 0.50% gateway fee on those
+    paid_out_paise: int  # sent to the store's bank account
+    on_the_way_paise: int  # queued or being retried
+    failed_paise: int  # transfers that need a person (see the platform admin)
+    taken_back_paise: int  # transfers reversed because the order was refunded
+    refunded_paise: int  # returned to customers
+
+
+class StorePayoutRowOut(BaseModel):
+    store_order_id: uuid.UUID
+    order_label: str | None
+    created_at: datetime
+    order_total_paise: int
+    fee_paise: int
+    payout_paise: int
+    transfer_status: TaskStatus
+    refund_paise: int | None = None
+    refund_status: TaskStatus | None = None
+
+
+class StorePayoutsOut(BaseModel):
+    summary: StorePayoutSummaryOut
+    items: list[StorePayoutRowOut]
+    next_cursor: uuid.UUID | None = None
 
 
 class PaymentConfirmIn(BaseModel):

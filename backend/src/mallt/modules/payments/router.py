@@ -2,7 +2,7 @@ import json
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Query, Request
 
 from mallt.core.bus import Bus
 from mallt.core.db import SessionDep
@@ -11,8 +11,10 @@ from mallt.modules.iam.deps import KvDep, Staff
 from mallt.modules.payments.runner import money_kick
 from mallt.modules.payments.schemas import (
     PaymentsOverviewOut,
+    PaymentTaskOut,
     PayoutAccountCreate,
     PayoutAccountOut,
+    StorePayoutsOut,
     WebhookAckOut,
 )
 from mallt.modules.payments.service import PaymentsService
@@ -21,7 +23,7 @@ from mallt.modules.payments.zoho import ZohoPaymentProvider, verify_signature
 
 
 def _svc(session: SessionDep, kv: KvDep, request: Request) -> PaymentsService:
-    return PaymentsService(session, kv, request.app.state.payments)
+    return PaymentsService(session, kv, request.app.state.payments, money_kick(request.app))
 
 
 Svc = Annotated[PaymentsService, Depends(_svc, scope="function")]
@@ -48,9 +50,25 @@ async def refresh_payout_account(
     return await svc.refresh_payout_account(principal, store_id)
 
 
+@router.get("/stores/{store_id}/payouts")
+async def store_payouts(
+    store_id: uuid.UUID,
+    principal: Staff,
+    svc: Svc,
+    cursor: uuid.UUID | None = None,
+    limit: Annotated[int, Query(ge=1, le=100)] = 50,
+) -> StorePayoutsOut:
+    return await svc.store_payouts(principal, store_id, cursor, limit)
+
+
 @router.get("/admin/payments")
 async def payments_overview(principal: Staff, svc: Svc) -> PaymentsOverviewOut:
     return await svc.overview(principal)
+
+
+@router.post("/admin/payments/tasks/{task_id}/retry")
+async def retry_payment_task(task_id: uuid.UUID, principal: Staff, svc: Svc) -> PaymentTaskOut:
+    return await svc.retry_task(principal, task_id)
 
 
 @router.post("/payments/zoho/webhook", include_in_schema=False)

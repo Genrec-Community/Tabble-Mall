@@ -48,7 +48,10 @@ class PaymentTask(IdMixin, TimestampMixin, Base):
     Tasks of one customer order run strictly in creation order."""
 
     __tablename__ = "payment_tasks"
-    __table_args__ = (Index("ix_payment_tasks_due", "status", "next_attempt_at"),)
+    __table_args__ = (
+        Index("ix_payment_tasks_due", "status", "next_attempt_at"),
+        Index("ix_payment_tasks_store_id_id", "store_id", "id"),
+    )
 
     organization_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("organizations.id"), index=True)
     mall_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("malls.id"), index=True)
@@ -74,6 +77,8 @@ class PaymentTask(IdMixin, TimestampMixin, Base):
         DateTime(timezone=True), server_default=func.now()
     )
     last_error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # How people know the order: "#12 · 2026-11-24" (the store's daily order number).
+    order_label: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 
 class LedgerEntry(IdMixin, Base):
