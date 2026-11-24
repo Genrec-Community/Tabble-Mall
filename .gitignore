@@ -34,3 +34,8 @@ local/data/
 local/logs/
 local/tools/
 frontend-build/
+local/update/
+local/version.txt
+local/frontend.hash
+local/env.hash
+.env.latest

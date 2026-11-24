@@ -197,15 +197,27 @@ def stop_postgres(bin_dir: Path) -> None:
     pg_run([exe(bin_dir, "pg_ctl"), "-D", str(DATA), "-m", "fast", "-w", "stop"], timeout=60)
 
 
+DEMO_READY = LOCAL / "data" / "demo-ready"  # written once the demo mall is fully set up
+
+
 def ensure_database() -> None:
     import asyncpg  # the API's own driver
+
+    if not DEMO_READY.exists() and (ROOT / "demo-logins.txt").exists():
+        DEMO_READY.write_text("ok\n", encoding="utf-8")  # set up by an older start.bat
 
     async def go() -> None:
         conn = await asyncpg.connect(
             host="127.0.0.1", port=PG_PORT, user="mallt", database="postgres"
         )
         try:
-            if not await conn.fetchval("SELECT 1 FROM pg_database WHERE datname = 'mallt'"):
+            exists = await conn.fetchval("SELECT 1 FROM pg_database WHERE datname = 'mallt'")
+            if exists and not DEMO_READY.exists():
+                # An earlier start stopped half way through adding the demo. Start it afresh.
+                say("  an earlier first run did not finish; setting the demo up again")
+                await conn.execute("DROP DATABASE mallt WITH (FORCE)")
+                exists = None
+            if not exists:
                 await conn.execute("CREATE DATABASE mallt")
         finally:
             await conn.close()
@@ -398,7 +410,8 @@ def main() -> None:
         sys.path.insert(0, str(LOCAL))
         import seed_demo
 
-        seed_demo.main()
+        if seed_demo.main() == 0:
+            DEMO_READY.write_text("ok\n", encoding="utf-8")
 
         url = f"http://localhost:{PROXY_PORT}/m/{seed_demo.MALL_SLUG}"
         say(

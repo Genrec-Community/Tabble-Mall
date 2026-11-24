@@ -19,6 +19,7 @@ dependencies = [
     "boto3",
     "google-auth[urllib3]",  # the urllib3 transport needs this extra (packaging) at import time
     "pillow>=13.0.0",
+    "tzdata",  # time zones on Windows, which has no system zoneinfo database
 ]
 
 [dependency-groups]

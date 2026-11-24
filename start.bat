@@ -27,6 +27,14 @@ set MALLT_NODE=%TOOLS%\node-v%NODE_VERSION%-win-x64\node.exe
 set UV_CACHE_DIR=%TOOLS%\uv-cache
 set UV_PYTHON_INSTALL_DIR=%TOOLS%\python
 
+rem Get the latest MallT from GitHub first (skipped if offline, or with "start.bat --no-update").
+rem The block is read in full before it runs, so the update may replace this very file.
+if /i not "%~1"=="--no-update" if /i not "%~1"=="--updated" (
+  "%UV%" run -q --no-project --python 3.12 python local\update.py
+  call "%~f0" --updated
+  exit /b
+)
+
 echo Preparing Python and the API (first run downloads about 100 MB)...
 "%UV%" run --no-dev --project backend python local\run_local.py
 if errorlevel 1 goto :failed

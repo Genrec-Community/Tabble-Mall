@@ -1,0 +1,2 @@
+# Stored byte-for-byte: Windows needs CRLF in batch files, also in GitHub zip downloads.
+*.bat -text
