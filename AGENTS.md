@@ -220,7 +220,13 @@ by the same targets (`uv run --no-project`); its releases are built per OS with 
 
 ## 8. Frontend rules
 
-> **Current phase: functionality first.** Build plain, clean,
+> **Customer pages follow Tabble** (owner, 2026-11-24): the customer surface (`/m/...`, `/account/...`)
+> uses the "lux" look of the Genrec-Community/tabble diner screens: black canvas, orange and gold,
+> Montserrat, two-up dish cards with photo or plate, one-tap add, sticky section strip, floating
+> cart bar, top alerts. It is scoped to the `.lux` class (`components/customer/lux.tsx`,
+> `globals.css`); staff dashboards keep stock shadcn until they get their own pass.
+>
+> **Elsewhere, functionality first.** Build plain, clean,
 > functional screens with stock shadcn/ui components and default styling. No
 > custom visual design, animation or branding work until the owner supplies
 > design inspiration. UI polish is a separate later pass after everything is

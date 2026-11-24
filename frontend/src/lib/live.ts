@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { refreshAccess } from "@/lib/auth/refresh";
 import { tokenStore, type AuthKind } from "@/lib/auth/token-store";
 
@@ -10,6 +10,9 @@ export interface LiveMessage {
   status?: string;
   order_no?: number;
 }
+
+/** "reconnecting" once a live connection has dropped, until it is back. */
+export type LiveStatus = "connecting" | "open" | "reconnecting";
 
 export type LiveSubscription = { channel: "customer" } | { channel: "store"; store_id: string };
 
@@ -21,7 +24,8 @@ export function liveSocketUrl(): string {
 /**
  * Keeps a live order channel open and calls `onChange` whenever something happens, and again on
  * every (re)connect so nothing missed while offline stays missed. Events carry only ids and
- * statuses; the caller re-fetches over the normal authorised API. Reconnects with backoff.
+ * statuses; the caller re-fetches over the normal authorised API. Reconnects with backoff, and
+ * returns the connection's state so a screen can say when it is offline.
  */
 export function useLiveOrders(kind: AuthKind, subscription: LiveSubscription | null,
   onChange: (message: LiveMessage | null) => void,
@@ -31,6 +35,7 @@ export function useLiveOrders(kind: AuthKind, subscription: LiveSubscription | n
     handler.current = onChange;
   });
   const key = subscription ? JSON.stringify(subscription) : null;
+  const [status, setStatus] = useState<LiveStatus>("connecting");
 
   useEffect(() => {
     if (!key) return;
@@ -48,6 +53,7 @@ export function useLiveOrders(kind: AuthKind, subscription: LiveSubscription | n
         const message = JSON.parse(String(event.data)) as LiveMessage;
         if (message.type === "ready") {
           attempt = 0;
+          setStatus("open");
           handler.current(null); // (re)connected: catch up on anything missed
         } else if (message.type !== "ping") {
           handler.current(message);
@@ -55,6 +61,7 @@ export function useLiveOrders(kind: AuthKind, subscription: LiveSubscription | n
       };
       socket.onclose = (event) => {
         if (stopped) return;
+        setStatus("reconnecting");
         // 1008 = refused (usually an expired token): fetch a fresh one before trying again.
         const retry = () => void connect();
         const wait = Math.min(30_000, 1000 * 2 ** attempt++);
@@ -68,4 +75,5 @@ export function useLiveOrders(kind: AuthKind, subscription: LiveSubscription | n
       socket?.close();
     };
   }, [kind, key]);
+  return status;
 }
