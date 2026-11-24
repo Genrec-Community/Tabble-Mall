@@ -20,6 +20,7 @@ import signal
 import socket
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 import urllib.request
@@ -55,6 +56,15 @@ def port_busy(port: int) -> bool:
     with socket.socket() as s:
         s.settimeout(0.5)
         return s.connect_ex(("127.0.0.1", port)) == 0
+
+
+def wait_port(port: int, seconds: int) -> bool:
+    deadline = time.time() + seconds
+    while time.time() < deadline:
+        if port_busy(port):
+            return True
+        time.sleep(0.5)
+    return False
 
 
 def wait_http(url: str, what: str, seconds: int = 120) -> None:
@@ -102,12 +112,43 @@ def exe(bin_dir: Path, name: str) -> str:
     return str(bin_dir / (name + (".exe" if WIN else "")))
 
 
+def pg_run(args: list[str], timeout: int) -> tuple[int, str]:
+    """Run a Postgres tool and return (exit code, output).
+
+    Output goes to a temp file, never a pipe: on Windows `pg_ctl start` hands its pipes to the
+    server it launches, which keeps them open forever, so reading a pipe would wait forever.
+    """
+    with tempfile.TemporaryFile("w+", encoding="utf-8", errors="replace") as out:
+        try:
+            code = subprocess.run(
+                args, stdin=subprocess.DEVNULL, stdout=out, stderr=out, timeout=timeout
+            ).returncode
+        except subprocess.TimeoutExpired:
+            code = -1
+        out.seek(0)
+        return code, out.read()
+
+
+def pg_log_tail() -> str:
+    log = LOGS / "postgres.log"
+    return log.read_text(errors="replace")[-2000:] if log.exists() else ""
+
+
+READY = DATA / "mallt-ready"  # written once initdb and our settings are complete
+
+
 def start_postgres() -> Path:
     bin_dir = pg_bin()
-    if not (DATA / "PG_VERSION").exists():
-        say("  first run: creating the database")
+    conf = DATA / "postgresql.conf"
+    if not READY.exists() and conf.exists() and "# MallT local" in conf.read_text(errors="replace"):
+        READY.write_text("ok\n", encoding="utf-8")  # set up by an older start.bat
+    if DATA.exists() and not READY.exists() and not port_busy(PG_PORT):
+        # An earlier first run was interrupted half way. Start the database again from scratch.
+        shutil.rmtree(DATA, ignore_errors=True)
+    if not READY.exists():
+        say("  first run: creating the database (takes under a minute)")
         DATA.mkdir(parents=True, exist_ok=True)
-        r = subprocess.run(
+        code, out = pg_run(
             [
                 exe(bin_dir, "initdb"),
                 "-D",
@@ -120,33 +161,40 @@ def start_postgres() -> Path:
                 "UTF8",
                 "--locale=C",
             ],
-            capture_output=True,
-            text=True,
+            timeout=300,
         )
-        if r.returncode != 0:
-            fail("initdb failed:\n" + r.stdout + r.stderr)
-        with open(DATA / "postgresql.conf", "a", encoding="utf-8") as conf:
-            conf.write(
+        if code != 0:
+            fail("creating the database failed:\n" + out[-2000:])
+        with open(DATA / "postgresql.conf", "a", encoding="utf-8") as f:
+            f.write(
                 f"\n# MallT local\nport = {PG_PORT}\nlisten_addresses = '127.0.0.1'\n"
                 "unix_socket_directories = ''\nfsync = off\n"
             )
+        READY.write_text("ok\n", encoding="utf-8")
     if port_busy(PG_PORT):
         say("  database already running")
         return bin_dir
-    r = subprocess.run(
-        [exe(bin_dir, "pg_ctl"), "-D", str(DATA), "-l", str(LOGS / "postgres.log"), "-w", "start"],
-        capture_output=True,
-        text=True,
+    code, out = pg_run(
+        [
+            exe(bin_dir, "pg_ctl"),
+            "-D",
+            str(DATA),
+            "-l",
+            str(LOGS / "postgres.log"),
+            "-w",
+            "-t",
+            "90",
+            "start",
+        ],
+        timeout=120,
     )
-    if r.returncode != 0:
-        fail("Postgres did not start:\n" + r.stdout + r.stderr)
+    if not wait_port(PG_PORT, 30 if code == 0 else 3):
+        fail("the database did not start:\n" + out[-1000:] + "\n" + pg_log_tail())
     return bin_dir
 
 
 def stop_postgres(bin_dir: Path) -> None:
-    subprocess.run(
-        [exe(bin_dir, "pg_ctl"), "-D", str(DATA), "-m", "fast", "stop"], capture_output=True
-    )
+    pg_run([exe(bin_dir, "pg_ctl"), "-D", str(DATA), "-m", "fast", "-w", "stop"], timeout=60)
 
 
 def ensure_database() -> None:
@@ -376,7 +424,7 @@ def main() -> None:
 
 
 def stop_or_reset(reset: bool) -> None:
-    """stop.bat: stop a database left running (e.g. after the window was closed), optionally wipe."""
+    """stop.bat: stop a database left running (e.g. the window was closed); optionally wipe."""
     if (DATA / "postmaster.pid").exists():
         stop_postgres(pg_bin())
         say("Database stopped.")
