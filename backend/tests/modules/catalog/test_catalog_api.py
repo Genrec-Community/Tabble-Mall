@@ -353,8 +353,7 @@ async def test_public_store_cards_carry_logo_and_banner(
     )
     assert r.status_code == 200, r.text
     cards = {
-        x["slug"]: x
-        for x in (await client.get("/api/v1/public/malls/phoenix-pune/stores")).json()
+        x["slug"]: x for x in (await client.get("/api/v1/public/malls/phoenix-pune/stores")).json()
     }
     assert cards["burger-hub"]["logo_url"].endswith(prefix + "logo/l.webp")
     assert cards["burger-hub"]["banner_url"].endswith(prefix + "banner/b.webp")
