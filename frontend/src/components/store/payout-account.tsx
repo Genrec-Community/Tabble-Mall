@@ -65,7 +65,7 @@ export function PayoutAccount() {
         <h1 className="text-xl font-semibold">Payouts</h1>
         <p className="text-sm text-muted-foreground">
           Customers pay once for their whole cart. Your share (your items minus a 0.50% payment gateway fee on your part; MallT keeps nothing) is sent to this
-          bank account through Zoho Payments as soon as each order is paid. Your store can take orders once the account is active.
+          bank account through Zoho Payments as soon as each order is paid. If an order is refunded, your transfer for it is taken back and the customer gets that amount; the fee is not refunded. Your store can take orders once the account is active.
         </p>
       </div>
       {a && (

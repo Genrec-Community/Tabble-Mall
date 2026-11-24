@@ -165,8 +165,7 @@ class OrderService:
                 customer_order_id=order.customer_order_id,
                 store_order_id=order.id,
                 payment_ref=await self._payment_ref(order),
-                amount_paise=order.total_paise,
-                fee_paise=order.gateway_fee_paise,
+                amount_paise=store_payout(order.total_paise, order.gateway_fee_paise),
             )
             await self._transition(order, S.REFUNDED, ActorType.SYSTEM, None)
 
@@ -385,8 +384,7 @@ class OrderService:
                     customer_order_id=order.id,
                     store_order_id=so.id,
                     payment_ref=payment_ref,
-                    amount_paise=so.total_paise,
-                    fee_paise=so.gateway_fee_paise,
+                    amount_paise=store_payout(so.total_paise, so.gateway_fee_paise),
                 )
             await self.session.flush()
             return

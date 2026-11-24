@@ -225,7 +225,7 @@ function DeclineDialog({ order, kind, storeId, onClose }: { order: StoreOrderOut
         <form onSubmit={submit} className="space-y-4">
           <DialogHeader>
             <DialogTitle>{kind === "reject" ? "Reject" : "Cancel"} order #{order.order_no}?</DialogTitle>
-            <DialogDescription>The customer is refunded in full and sees your reason.</DialogDescription>
+            <DialogDescription>The customer is refunded what you received (the 0.5% payment fee is not refundable) and sees your reason.</DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
             <Label htmlFor="reason">Reason</Label>

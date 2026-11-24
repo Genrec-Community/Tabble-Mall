@@ -1,0 +1,15 @@
+# HTTPS on the instance for EDGE=caddy (infra/aws/deploy.sh), used when CloudFront is not
+# available. Caddy gets a Let's Encrypt certificate for SITE_DOMAIN and proxies to nginx.
+services:
+  nginx:
+    ports: !reset []
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    command: ["caddy", "reverse-proxy", "--from", "${SITE_DOMAIN}", "--to", "nginx:80"]
+    volumes: ["caddy_data:/data"]
+    depends_on: [nginx]
+
+volumes:
+  caddy_data:
