@@ -118,7 +118,7 @@ def exe(bin_dir: Path, name: str) -> str:
     return str(bin_dir / (name + (".exe" if WIN else "")))
 
 
-def pg_run(args: list[str], timeout: int) -> tuple[int, str]:
+def pg_run(args: list[str], timeout: int, detach: bool = False) -> tuple[int, str]:
     """Run a Postgres tool and return (exit code, output).
 
     Output goes to a temp file, never a pipe: on Windows `pg_ctl start` hands its pipes to the
@@ -126,8 +126,16 @@ def pg_run(args: list[str], timeout: int) -> tuple[int, str]:
     """
     with tempfile.TemporaryFile("w+", encoding="utf-8", errors="replace") as out:
         try:
+            # detach (Windows): no console, so Ctrl+C or closing the window cannot crash the
+            # database mid-write; MallT stops it cleanly itself.
+            flags = 0x00000008 | 0x00000200 if (detach and WIN) else 0  # DETACHED | NEW_GROUP
             code = subprocess.run(
-                args, stdin=subprocess.DEVNULL, stdout=out, stderr=out, timeout=timeout
+                args,
+                stdin=subprocess.DEVNULL,
+                stdout=out,
+                stderr=out,
+                timeout=timeout,
+                creationflags=flags,
             ).returncode
         except subprocess.TimeoutExpired:
             code = -1
@@ -178,8 +186,11 @@ def start_postgres() -> Path:
             )
         READY.write_text("ok\n", encoding="utf-8")
     if port_busy(PG_PORT):
-        say("  database already running")
-        return bin_dir
+        if pg_ready(bin_dir, seconds=20):
+            say("  database already running")
+            return bin_dir
+        say("  the database from an earlier run is stuck; restarting it")
+        force_stop_postgres(bin_dir)
     code, out = pg_run(
         [
             exe(bin_dir, "pg_ctl"),
@@ -193,10 +204,57 @@ def start_postgres() -> Path:
             "start",
         ],
         timeout=120,
+        detach=True,
     )
     if not wait_port(PG_PORT, 30 if code == 0 else 3):
         fail("the database did not start:\n" + out[-1000:] + "\n" + pg_log_tail())
     return bin_dir
+
+
+def pg_ready(bin_dir: Path, seconds: int) -> bool:
+    """True once the database accepts connections (it may still be recovering after a crash)."""
+    deadline = time.time() + seconds
+    while True:
+        code, _ = pg_run(
+            [exe(bin_dir, "pg_isready"), "-h", "127.0.0.1", "-p", str(PG_PORT), "-t", "3"],
+            timeout=10,
+        )
+        if code == 0:
+            return True
+        if time.time() >= deadline:
+            return False
+        time.sleep(1)
+
+
+def force_stop_postgres(bin_dir: Path) -> None:
+    """Stop a database that holds MallT's port but does not answer (crashed half way)."""
+    pg_run([exe(bin_dir, "pg_ctl"), "-D", str(DATA), "-m", "immediate", "-w", "stop"], timeout=30)
+    pid_file = DATA / "postmaster.pid"
+    if port_busy(PG_PORT) and pid_file.exists():
+        first = pid_file.read_text(errors="replace").split("\n", 1)[0].strip()
+        if first.isdigit():
+            if WIN:
+                pg_run(["taskkill", "/F", "/T", "/PID", first], timeout=30)
+            else:
+                try:
+                    os.kill(int(first), signal.SIGKILL)
+                except OSError:
+                    pass
+    if not wait_port_free(PG_PORT, 20):
+        fail(
+            f"the database from an earlier run is stuck and holds port {PG_PORT}. Restart the"
+            " computer, then run start.bat again."
+        )
+    pid_file.unlink(missing_ok=True)
+
+
+def wait_port_free(port: int, seconds: int) -> bool:
+    deadline = time.time() + seconds
+    while time.time() < deadline:
+        if not port_busy(port):
+            return True
+        time.sleep(0.5)
+    return not port_busy(port)
 
 
 def stop_postgres(bin_dir: Path) -> None:
