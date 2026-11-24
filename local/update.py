@@ -197,6 +197,9 @@ def main() -> int:
             )
             with zipfile.ZipFile(archive) as z:
                 z.extractall(WORK / "new")
+                for info in z.infolist():  # zipfile drops the executable bit (start.sh)
+                    if (info.external_attr >> 16) & 0o111:
+                        (WORK / "new" / info.filename).chmod(0o755)
             (new_root,) = [p for p in (WORK / "new").iterdir() if p.is_dir()]
         except Exception as exc:  # noqa: BLE001
             say(f"  The download failed ({exc}). Starting the version you have.")

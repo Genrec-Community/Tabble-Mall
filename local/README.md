@@ -22,6 +22,14 @@ You need Windows 10 or 11 and an internet connection for the first run. On macOS
 | `demo-logins.txt` | The demo logins. It's written on the first run. |
 | `local\logs\` | Logs for the API, website and database, if something looks wrong. |
 
+## Updates
+
+Every `start.bat` first fetches the latest code from GitHub (branch `jaisamyukth-changes`), so
+you never need a new zip. It keeps your database, logs, `demo-logins.txt` and an edited `.env`
+(the new one is saved as `.env.latest`). When the website's code changed it rebuilds the website,
+which takes a few minutes the first time. Offline, it just starts the version you have.
+`start.bat --no-update` skips the check.
+
 ## Try the whole journey
 
 Every staff password is `MallT-demo-2026`.
