@@ -274,6 +274,7 @@ class PublicStoreCardOut(BaseModel):
     description: str | None
     food_types: list[str]
     logo_url: str | None
+    banner_url: str | None
     accepting_orders: bool
 
 

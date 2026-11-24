@@ -1,72 +1,62 @@
-import Link from "next/link";
-import type { ReactNode } from "react";
 import type { PublicMallOut, PublicStoreCardOut } from "@/lib/api";
-import { SectionHeading } from "@/components/customer/lux";
-import { StoreLogo } from "@/components/customer/store-logo";
-import { Badge } from "@/components/ui/badge";
+import { MallBrowser } from "@/components/customer/mall-browser";
 
-export const FOOD_TYPE_LABELS: Record<string, string> = {
-  fast_food: "Fast food",
-  meals: "Meals",
-  snacks: "Snacks",
-  beverages: "Beverages",
-  desserts: "Desserts",
-  bakery: "Bakery",
-  healthy: "Healthy",
-  chinese: "Chinese",
-  south_indian: "South Indian",
-  north_indian: "North Indian",
-};
+export { FOOD_TYPE_LABELS } from "@/components/customer/restaurant-card";
 
-/** What a customer sees after scanning the mall's QR code: the mall, a strip of every food store
- * (open or closed), then the dishes from all of them (`children`). */
+/** Every store of the mall in the mall's order, with its public card (a store without one yet
+ * still shows, as open). */
+export function storeCards(
+  mall: PublicMallOut,
+  cards: PublicStoreCardOut[],
+): PublicStoreCardOut[] {
+  const bySlug = new Map(cards.map((c) => [c.slug, c]));
+  return mall.stores.map(
+    (s) =>
+      bySlug.get(s.slug) ?? {
+        slug: s.slug,
+        name: s.name,
+        description: s.description,
+        food_types: [],
+        logo_url: null,
+        banner_url: null,
+        accepting_orders: true,
+      },
+  );
+}
+
+/** What a customer sees after scanning the mall's QR code: the mall, then its restaurants. A
+ * restaurant opens its menu; the search finds restaurants and dishes. */
 export function MallView({
   mall,
   stores,
-  children,
 }: {
   mall: PublicMallOut;
   stores: PublicStoreCardOut[];
-  /** Rendered under the store strip (the dishes on the home page). */
-  children?: ReactNode;
 }) {
-  const cards = new Map(stores.map((s) => [s.slug, s]));
+  const list = storeCards(mall, stores);
+  const open = list.filter((s) => s.accepting_orders).length;
   return (
-    <main className="mx-auto w-full max-w-2xl space-y-6 px-4 pt-4 pb-32">
+    <main className="mx-auto w-full max-w-6xl space-y-5 px-4 pt-5 pb-32">
       <header>
-        <p className="text-xs font-semibold tracking-[0.2em] text-lux-orange uppercase">Order from every store · pay once</p>
-        <h1 className="font-display mt-1 text-3xl leading-tight font-semibold">{mall.name}</h1>
-        {mall.city && <p className="text-muted-foreground">{mall.city}</p>}
+        <p className="text-xs font-semibold tracking-[0.2em] text-lux-orange uppercase">
+          Order from every restaurant · pay once
+        </p>
+        <h1 className="font-display mt-1 text-3xl leading-tight font-semibold sm:text-4xl">
+          {mall.name}
+        </h1>
+        <p className="text-muted-foreground">
+          {mall.city ? `${mall.city} · ` : ""}
+          {list.length} {list.length === 1 ? "restaurant" : "restaurants"}
+          {list.length > 0 && `, ${open} taking orders now`}
+        </p>
       </header>
-      {mall.stores.length === 0 ? (
-        <p className="text-muted-foreground">No stores are open here yet. Please check back soon.</p>
+      {list.length === 0 ? (
+        <p className="text-muted-foreground">
+          No stores are open here yet. Please check back soon.
+        </p>
       ) : (
-        <section aria-label="Stores" className="space-y-3">
-          <SectionHeading>Stores</SectionHeading>
-          <ul className="no-scrollbar -mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-1">
-            {mall.stores.map((s) => {
-              const card = cards.get(s.slug);
-              const open = card?.accepting_orders ?? true;
-              return (
-                <li key={s.slug} className="w-44 shrink-0 snap-start">
-                  <Link href={`/m/${mall.slug}/s/${s.slug}`} className="lux-card flex h-full flex-col gap-2 rounded-2xl p-3 hover:border-[#ffa500]/40">
-                    <span className="flex items-center gap-2">
-                      <StoreLogo name={s.name} logoUrl={card?.logo_url ?? null} size="size-10" />
-                      {!open && <Badge variant="secondary" className="text-[0.625rem]">Not taking orders</Badge>}
-                    </span>
-                    <span className="font-display leading-tight font-semibold">{s.name}</span>
-                    {s.description && <span className="line-clamp-2 text-xs text-muted-foreground">{s.description}</span>}
-                    {card && card.food_types.length > 0 && (
-                      <span className="mt-auto text-[0.6875rem] text-lux-orange">{card.food_types.map((t) => FOOD_TYPE_LABELS[t] ?? t).join(" · ")}</span>
-                    )}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
+        <MallBrowser mallSlug={mall.slug} stores={list} />
       )}
-      {children}
     </main>
   );
 }

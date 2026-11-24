@@ -1873,6 +1873,10 @@ export type PublicStoreCardOut = {
      */
     accepting_orders: boolean;
     /**
+     * Banner Url
+     */
+    banner_url: string | null;
+    /**
      * Description
      */
     description: string | null;

@@ -153,19 +153,29 @@ test("customer orders from a store; the kitchen ticket and bill really print", a
     await kitchenRow.getByRole("button", { name: "Test print" }).click();
     await expect.poll(() => kitchen.text(), { timeout: 20_000 }).toContain("TEST PRINT");
 
-    // ── The mall home page shows dishes from every store, searchable ─────────────────────────
+    // ── The mall home lists restaurants; one search finds restaurants and dishes ─────────────
     const browse = await (await browser.newContext()).newPage();
     await browse.goto(`/m/${mallSlug}`);
     await expect(browse.getByRole("heading", { name: "Food Mall" })).toBeVisible();
-    await expect(browse.getByRole("button", { name: "Add Cheese Burger from Burger Hub" })).toBeVisible();
-    await browse.getByRole("searchbox", { name: "Search dishes" }).fill("pizza");
+    await expect(browse.getByRole("link", { name: /Burger Hub/ })).toBeVisible();
+    // Only restaurants until the customer searches: no dish is on the home page.
+    await expect(browse.getByRole("button", { name: "Add Cheese Burger from Burger Hub" })).toHaveCount(0);
+    const search = browse.getByRole("searchbox", { name: "Search restaurants and dishes" });
+    await search.fill("pizza");
     await expect(browse.getByText("Nothing matches")).toBeVisible();
-    await browse.getByRole("searchbox", { name: "Search dishes" }).fill("cheese");
+    await search.fill("cheese");
     await expect(browse.getByRole("button", { name: "Add Cheese Burger from Burger Hub" })).toBeVisible();
     await browse.getByRole("button", { name: "Veg only" }).click();
     await expect(browse.getByRole("button", { name: "Add Cheese Burger from Burger Hub" })).toBeVisible();
-    await browse.getByRole("link", { name: "Burger Hub" }).first().click();
+    await search.fill("");
+    await browse.getByRole("button", { name: "Veg only" }).click();
+    await browse.getByRole("link", { name: /Burger Hub/ }).first().click();
     await expect(browse).toHaveURL(new RegExp(`/m/${mallSlug}/s/${storeSlug}$`));
+    // Inside a restaurant: its own dish search, and back returns to the restaurant list.
+    await browse.getByRole("searchbox", { name: "Search Burger Hub's menu" }).fill("cheese");
+    await expect(browse.getByRole("button", { name: "Add Cheese Burger" })).toBeVisible();
+    await browse.getByRole("button", { name: "Back" }).click();
+    await expect(browse).toHaveURL(new RegExp(`/m/${mallSlug}$`));
 
     // ── A customer orders ───────────────────────────────────────────────────────────────────
     const customer = await (await browser.newContext()).newPage();

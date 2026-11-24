@@ -3549,6 +3549,17 @@
             "title": "Accepting Orders",
             "type": "boolean"
           },
+          "banner_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Banner Url"
+          },
           "description": {
             "anyOf": [
               {
@@ -3593,6 +3604,7 @@
           "description",
           "food_types",
           "logo_url",
+          "banner_url",
           "accepting_orders"
         ],
         "title": "PublicStoreCardOut",

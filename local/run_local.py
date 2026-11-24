@@ -8,12 +8,16 @@ It starts, in order:
   2. The API (uvicorn) on 127.0.0.1:8000, after `alembic upgrade head`.
   3. The website (the prebuilt Next.js server in frontend-build/, or frontend/.next/standalone).
   4. A small reverse proxy on http://localhost:8080 that plays nginx's part: /api and /ws go to
-     the API, everything else to the website.
-Then it adds the demo mall (first run only), opens the browser and runs until Ctrl+C or the
-window is closed. Logs go to local/logs/.
+     the API, /media serves the demo photos from local/data/media, everything else goes to the
+     website.
+Then it adds the demo mall (first run, or when the demo has a newer version), starts the demo
+kitchens (restaurants other than Burger Hub and Chai Kadai accept and cook orders on their own),
+opens the browser and runs until Ctrl+C or the window is closed. Logs go to local/logs/.
 """
 
 import asyncio
+import json
+import mimetypes
 import os
 import shutil
 import signal
@@ -23,6 +27,7 @@ import sys
 import tempfile
 import threading
 import time
+import urllib.parse
 import urllib.request
 import webbrowser
 from pathlib import Path
@@ -31,6 +36,7 @@ ROOT = Path(__file__).resolve().parents[1]
 LOCAL = ROOT / "local"
 DATA = LOCAL / "data" / "postgres"
 LOGS = LOCAL / "logs"
+MEDIA = LOCAL / "data" / "media"  # demo photos (seed_demo.py puts them here)
 WIN = os.name == "nt"
 
 PG_PORT = 55433
@@ -247,8 +253,24 @@ def api_env() -> dict[str, str]:
         SMS_BACKEND="console",  # sign-in codes are written to local/logs/api.log (show-otp.bat)
         COOKIE_SECURE="false",
         PYTHONUNBUFFERED="1",
+        # Images are served by the proxy below; anything not on disk falls back to the bucket.
+        S3_PUBLIC_BASE_URL="/media",
     )
     return env
+
+
+def bucket_base() -> str:
+    """The real bucket's public address from .env, for images uploaded from the dashboards."""
+    try:
+        for line in (ROOT / ".env").read_text(encoding="utf-8").splitlines():
+            if line.startswith("S3_PUBLIC_BASE_URL="):
+                return line.split("=", 1)[1].strip().rstrip("/")
+    except OSError:
+        pass
+    return ""
+
+
+BUCKET = bucket_base()
 
 
 def web_dir() -> Path:
@@ -294,6 +316,9 @@ async def _handle(client_r: asyncio.StreamReader, client_w: asyncio.StreamWriter
         return
     lines = head.decode("latin-1").split("\r\n")
     path = lines[0].split(" ")[1] if " " in lines[0] else "/"
+    if path.startswith("/media/"):
+        await _media(lines[0].split(" ")[0], path, client_w)
+        return
     port = API_PORT if path.startswith(("/api/", "/ws/")) else WEB_PORT
     peer = (client_w.get_extra_info("peername") or ("127.0.0.1",))[0]
     upgrade = any(ln.lower().startswith("upgrade:") for ln in lines)
@@ -325,6 +350,39 @@ async def _handle(client_r: asyncio.StreamReader, client_w: asyncio.StreamWriter
     await asyncio.gather(_pipe(client_r, up_w), _pipe(up_r, client_w))
 
 
+async def _media(method: str, path: str, client_w: asyncio.StreamWriter) -> None:
+    """/media/<key>: the demo photo on disk, or a redirect to the real bucket."""
+    raw = path[len("/media/") :].split("?", 1)[0]
+    key = urllib.parse.unquote(raw)
+    if any(ord(ch) < 32 or ch == "\x7f" for ch in key):  # no header injection via the key
+        client_w.write(
+            b"HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
+        )
+        await client_w.drain()
+        client_w.close()
+        return
+    file = (MEDIA / key).resolve()
+    if method in ("GET", "HEAD") and file.is_file() and file.is_relative_to(MEDIA.resolve()):
+        body = await asyncio.to_thread(file.read_bytes)
+        kind = mimetypes.guess_type(file.name)[0] or "application/octet-stream"
+        head = (
+            f"HTTP/1.1 200 OK\r\nContent-Type: {kind}\r\nContent-Length: {len(body)}\r\n"
+            "Cache-Control: public, max-age=86400\r\nConnection: close\r\n\r\n"
+        )
+        client_w.write(head.encode() + (body if method == "GET" else b""))
+    elif BUCKET:
+        client_w.write(
+            f"HTTP/1.1 302 Found\r\nLocation: {BUCKET}/{urllib.parse.quote(key)}\r\nContent-Length: 0\r\n"
+            "Connection: close\r\n\r\n".encode()
+        )
+    else:
+        client_w.write(b"HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n")
+    try:
+        await client_w.drain()
+    finally:
+        client_w.close()
+
+
 def start_proxy() -> None:
     async def serve() -> None:
         server = await asyncio.start_server(_handle, "127.0.0.1", PROXY_PORT, limit=1 << 20)
@@ -332,6 +390,68 @@ def start_proxy() -> None:
             await server.serve_forever()
 
     threading.Thread(target=lambda: asyncio.run(serve()), daemon=True).start()
+
+
+# ---- 5. Demo kitchens: make the demo feel live ----------------------------------------------------
+
+MANUAL_STORES = {"burger-hub", "chai-point"}  # these wait for a person, as in real life
+KITCHEN_STEPS = {"paid": ("accept", 6), "accepted": ("preparing", 5), "preparing": ("ready", 30)}
+
+
+def start_kitchens() -> None:
+    """Restaurants other than Burger Hub and Chai Kadai accept an order a few seconds after it
+    is paid, start cooking, and call it ready about half a minute later, so a customer sees the
+    progress, the live updates and the "ready" alert without a second person at a counter."""
+    import seed_demo
+
+    log = open(LOGS / "kitchen.log", "a", encoding="utf-8")  # noqa: SIM115 (lives with the app)
+
+    def note(msg: str) -> None:
+        log.write(time.strftime("%H:%M:%S ") + msg + "\n")
+        log.flush()
+
+    def run() -> None:
+        token = ""
+        stores: list[str] = []
+        seen: dict[tuple[str, str], float] = {}
+        while True:
+            time.sleep(4)
+            try:
+                if not token:
+                    token = seed_demo.login(seed_demo.ORG_OWNER, seed_demo.PASSWORD)
+                    mall = seed_demo.find_mall(token)
+                    if mall is None:
+                        return
+                    stores = [
+                        s["id"]
+                        for s in seed_demo.call("GET", f"/malls/{mall}/stores", token)
+                        if s["slug"] not in MANUAL_STORES
+                    ]
+                now = time.monotonic()
+                for sid in stores:
+                    page = seed_demo.call("GET", f"/stores/{sid}/orders?view=active", token)
+                    for order in page["items"]:
+                        step = KITCHEN_STEPS.get(order["status"].lower())
+                        if step is None:
+                            continue
+                        first = seen.setdefault((order["id"], order["status"]), now)
+                        if now - first >= step[1]:
+                            seed_demo.call(
+                                "POST", f"/stores/{sid}/orders/{order['id']}/{step[0]}", token
+                            )
+                            note(f"order #{order['order_no']}: {step[0]}")
+            except seed_demo.ApiFailed as exc:
+                if exc.status == 401:
+                    token = ""  # the 15-minute access token ran out; sign in again
+                elif exc.status == 403:
+                    note("the demo owner can no longer manage orders; kitchens stopped")
+                    return
+                else:
+                    note(f"skipped a step: {exc}")
+            except (OSError, ValueError, json.JSONDecodeError) as exc:
+                note(f"API not reachable: {exc}")
+
+    threading.Thread(target=run, daemon=True).start()
 
 
 # ---- orchestration -------------------------------------------------------------------------------
@@ -405,13 +525,14 @@ def main() -> None:
         start_proxy()
         wait_http(f"http://127.0.0.1:{PROXY_PORT}/login", "The website")
 
-        say("[4/4] Adding the demo mall (first run only)...")
+        say("[4/4] Getting the demo mall ready...")
         os.environ.update(env)
         sys.path.insert(0, str(LOCAL))
         import seed_demo
 
         if seed_demo.main() == 0:
             DEMO_READY.write_text("ok\n", encoding="utf-8")
+        start_kitchens()
 
         url = f"http://localhost:{PROXY_PORT}/m/{seed_demo.MALL_SLUG}"
         say(

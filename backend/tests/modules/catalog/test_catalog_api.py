@@ -342,6 +342,24 @@ async def test_public_directory_and_menu(client: httpx.AsyncClient, world: World
     assert "tax_bps" not in burger and "stock_count" not in burger["variants"][0]
 
 
+async def test_public_store_cards_carry_logo_and_banner(
+    client: httpx.AsyncClient, world: World
+) -> None:
+    prefix = f"org/{world.org.id}/store/{world.store.id}/"
+    r = await client.patch(
+        url(world, "/settings"),
+        json={"logo_key": prefix + "logo/l.webp", "banner_key": prefix + "banner/b.webp"},
+        headers=world.owner,
+    )
+    assert r.status_code == 200, r.text
+    cards = {
+        x["slug"]: x
+        for x in (await client.get("/api/v1/public/malls/phoenix-pune/stores")).json()
+    }
+    assert cards["burger-hub"]["logo_url"].endswith(prefix + "logo/l.webp")
+    assert cards["burger-hub"]["banner_url"].endswith(prefix + "banner/b.webp")
+
+
 async def test_public_menu_marks_sold_out_and_paused(
     client: httpx.AsyncClient, world: World
 ) -> None:

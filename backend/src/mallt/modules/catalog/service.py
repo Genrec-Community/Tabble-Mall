@@ -503,6 +503,9 @@ class CatalogService:
                     logo_url=self.storage.public_url(row.logo_key)
                     if row and row.logo_key
                     else None,
+                    banner_url=self.storage.public_url(row.banner_key)
+                    if row and row.banner_key
+                    else None,
                     accepting_orders=store_accepting(
                         row.is_open, row.is_paused, row.hours, row.timezone, now
                     )

@@ -40,7 +40,13 @@ export const DishCard = memo(function DishCard({
 }) {
   const from = Math.min(...product.variants.map((v) => v.price_paise));
   const blocked = !canOrder || !product.available;
-  const veil = !canOrder ? closedLabel : product.unavailable_reason ? REASON[product.unavailable_reason] : !product.available ? REASON.not_now : null;
+  const veil = !canOrder
+    ? closedLabel
+    : product.unavailable_reason
+      ? REASON[product.unavailable_reason]
+      : !product.available
+        ? REASON.not_now
+        : null;
   const choice = needsChoice(product);
   return (
     <div className="lux-card group relative flex h-full w-full flex-col overflow-hidden rounded-[1.25rem] text-left">
@@ -51,7 +57,11 @@ export const DishCard = memo(function DishCard({
         className="flex w-full cursor-pointer flex-col text-left active:opacity-90"
       >
         <span className="relative block">
-          <DishImage name={product.name} imageUrl={product.image_url} hint={hint} />
+          <DishImage
+            name={product.name}
+            imageUrl={product.image_url}
+            hint={hint}
+          />
           {veil && (
             <span className="absolute inset-0 flex items-center justify-center bg-black/80 backdrop-blur-[2px]">
               <span className="rounded-full border border-[#ffa500]/45 px-3 py-1 text-center text-[0.6875rem] font-semibold tracking-[0.12em] text-[#e0e0e0] uppercase">
@@ -67,21 +77,41 @@ export const DishCard = memo(function DishCard({
             </span>
             {product.name}
           </span>
-          {product.description && <span className="line-clamp-2 text-xs leading-snug text-muted-foreground">{product.description}</span>}
+          {storeName && (
+            <span className="truncate text-xs font-medium text-lux-orange">
+              {storeName}
+            </span>
+          )}
+          {product.description && (
+            <span className="line-clamp-2 text-xs leading-snug text-muted-foreground">
+              {product.description}
+            </span>
+          )}
         </span>
       </button>
       <div className="mt-auto flex min-h-14 flex-wrap items-end justify-between gap-x-2 gap-y-2 px-3.5 pt-2 pb-3.5">
-        <span className={cn("min-w-0 text-sm font-semibold text-lux-orange", blocked && "opacity-60")}>
+        <span
+          className={cn(
+            "min-w-0 text-sm font-semibold text-lux-orange",
+            blocked && "opacity-60",
+          )}
+        >
           {product.variants.length > 1 ? "From " : ""}
           {formatPaise(from)}
-          {choice && <span className="block text-[0.6875rem] font-normal text-muted-foreground">Customisable</span>}
+          {choice && (
+            <span className="block text-[0.6875rem] font-normal text-muted-foreground">
+              Customisable
+            </span>
+          )}
         </span>
         <QuickAdd
           name={storeName ? `${product.name} from ${storeName}` : product.name}
           quantity={choice ? 0 : quantity}
           busy={busy}
           disabled={blocked}
-          onChange={(next) => (choice ? onOpen(product) : onQuantity(product, next))}
+          onChange={(next) =>
+            choice ? onOpen(product) : onQuantity(product, next)
+          }
         />
       </div>
     </div>
