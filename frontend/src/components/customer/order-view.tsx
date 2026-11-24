@@ -62,7 +62,7 @@ export function OrderView({ orderId }: { orderId: string }) {
       )}
       {data.status === "payment_failed" && (
         <p role="alert" className="rounded-lg border p-4 text-sm">
-          This order was not paid in time, so it was not sent to the stores. If you were charged, the money is refunded automatically.
+          This order was not paid in time, so it was not sent to the stores. If you were charged, the money is refunded automatically, except the 0.5% payment gateway fee.
         </p>
       )}
       {data.stores.map((s) => (
@@ -100,7 +100,10 @@ function StoreOrderCard({ order, cancelling, onCancel }: { order: CustomerStoreO
       </ul>
       <p className="flex justify-between text-sm font-medium"><span>Total</span><span>{formatPaise(order.total_paise)}</span></p>
       {order.status === "paid" && (
-        <Button variant="outline" size="sm" onClick={onCancel} disabled={cancelling}>Cancel this order</Button>
+        <div className="space-y-1">
+          <Button variant="outline" size="sm" onClick={onCancel} disabled={cancelling}>Cancel this order</Button>
+          <p className="text-xs text-muted-foreground">You get your money back except the 0.5% payment gateway fee, which is not refundable.</p>
+        </div>
       )}
       <ol className="space-y-0.5 text-xs text-muted-foreground">
         {order.steps.filter((s) => s.status !== "pending_payment").map((s, i) => (

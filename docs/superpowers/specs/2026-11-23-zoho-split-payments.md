@@ -26,14 +26,14 @@ balance should net to zero.
   - Example: a ₹10,000 cart split ₹5,000 / ₹3,000 / ₹2,000 costs those stores ₹25, ₹15 and ₹10.
   - Zoho's own per-transfer platform fee, if any, is deducted by Zoho from the transfer (Zoho
     behaviour), so the store bears that too.
-- **Fees on refunds stay with the store.** The customer gets the full amount back, and the
-  store's transfer is reversed. The gateway fee, which Zoho does not return, is then recorded as
-  `fee_owed` and held back from that store's next transfer(s). The sum of `fee_owed` entries per
-  store is what it owes now.
+- **The gateway fee is not refunded** (owner decision, 2026-11-24). On a refund the customer
+  gets back what the store received, `total_paise − gateway_fee_paise`. Zoho keeps its fee, so
+  neither MallT nor the store pays anything for a refund. This replaces the earlier `fee_owed`
+  hold-back, which is no longer written (the ledger kind stays for old rows).
 - The M3 commission setting is removed from the API and screens. Its columns are retired
   (migration 0010 makes them nullable; nothing reads or writes them) and a later migration drops them.
-- **Refunds stay per StoreOrder.** Reject / expire / cancel refunds `total_paise` of that store
-  order. If the store's transfer already ran, it is **reversed first** (Zoho
+- **Refunds stay per StoreOrder.** Reject / expire / cancel refunds `total_paise − gateway_fee_paise`
+  of that store order. If the store's transfer already ran, it is **reversed first** (Zoho
   `POST /transferreversals`; this debits the store's Zoho balance and can fail when it is too
   low, in which case the task retries and then waits for a person), then the customer is
   refunded. A transfer that had not run yet is simply cancelled. Other stores in the cart are untouched.
@@ -53,7 +53,8 @@ balance should net to zero.
    is idempotent under a row lock).
 5. Unpaid orders are swept after the session expiry plus grace: the provider is asked once more
    (by reference); if still unpaid, the store orders become `payment_failed` and stock returns.
-6. A payment that succeeds for an order already failed is refunded in full automatically.
+6. A payment that succeeds for an order already failed is refunded automatically, minus the gateway
+   fee like any refund.
 
 The cart is cleared when payment settles, not when checkout starts.
 
@@ -72,7 +73,7 @@ the task and in the ledger.
 
 ## Ledger
 
-`ledger_entries` is append-only: `charge`, `gateway_fee`, `fee_owed`, `transfer`,
+`ledger_entries` is append-only: `charge`, `gateway_fee`, `transfer`,
 `transfer_reversal`, `refund`, each with amount in paise, provider reference and the store order it belongs to.
 
 ## Payout accounts (store onboarding)

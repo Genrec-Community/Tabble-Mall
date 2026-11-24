@@ -201,7 +201,8 @@ by the same targets (`uv run --no-project`); its releases are built per OS with 
   `FakePaymentProvider` in dev/tests via `PAYMENTS_PROVIDER`). An order is paid only on the
   provider's word (server-side check or signed webhook), never the browser's. Each store's share
   (minus its own fee; MallT keeps nothing) is transferred as soon as payment is confirmed; a
-  refund reverses that store's transfer first and the fee stays with the store (`fee_owed`).
+  refund reverses that store's transfer first and returns only what the store got (the gateway
+  fee is not refunded).
   Money movements go through the outbox (`payment_tasks`), never inline in a request; every
   movement is recorded in the append-only `ledger_entries`; webhooks are signature-checked and
   deduplicated by event id.

@@ -230,11 +230,12 @@ async def test_reject_after_split_reverses_then_refunds_only_that_store(
     )
     assert r.status_code == 200 and r.json()["status"] == "refunded"
     assert gateway.reversals == [(11940, gateway.reversals[0][1])]
-    assert gateway.refunds == [(12000, f"so:{burger['id']}")]
+    # the customer gets back what the store got: the 0.5% gateway fee is not refunded
+    assert gateway.refunds == [(11940, f"so:{burger['id']}")]
     assert len(gateway.transfers) == 2  # the chai store keeps its share
 
 
-async def test_fee_on_a_refunded_order_is_held_from_the_stores_next_payout(
+async def test_a_refund_never_touches_the_stores_next_payout(
     client: httpx.AsyncClient,
     alice: dict,
     menu: Menu,
@@ -256,8 +257,8 @@ async def test_fee_on_a_refunded_order_is_held_from_the_stores_next_payout(
         json={"reason": "closed"},
         headers=world.owner,
     )
-    assert gateway.refunds == [(12000, f"so:{burger['id']}")]  # the customer gets it all back
-    # next order: the burger store's 60 paise fee from the refunded order is held back
+    assert gateway.refunds == [(11940, f"so:{burger['id']}")]  # what the store had received
+    # the fee went with the refund, so the store's next order pays out in full
     gateway.transfers.clear()
     second = await start_checkout(client, alice, menu, key="k2")
     session = [s for s, (_, ref) in gateway._sessions.items() if ref == second["id"]][0]
@@ -267,19 +268,9 @@ async def test_fee_on_a_refunded_order_is_held_from_the_stores_next_payout(
         json={"payment_id": paid.payment_ref},
         headers=alice,
     )
-    assert sorted(t[0] for t in gateway.transfers) == [5970, 11940 - 60]
-    owed = (
-        (
-            await db_session.execute(
-                select(LedgerEntry.amount_paise).where(
-                    LedgerEntry.kind == "fee_owed", LedgerEntry.store_id == world.store.id
-                )
-            )
-        )
-        .scalars()
-        .all()
-    )
-    assert sorted(owed) == [-60, 60] and sum(owed) == 0
+    assert sorted(t[0] for t in gateway.transfers) == [5970, 11940]
+    owed = await db_session.execute(select(LedgerEntry.id).where(LedgerEntry.kind == "fee_owed"))
+    assert owed.first() is None
 
 
 async def test_flaky_provider_is_retried_without_paying_twice(
@@ -340,7 +331,8 @@ async def test_unpaid_orders_are_given_up_and_late_payments_refunded(
     paid = gateway.pay(session_of(gateway))
     await svc.on_provider_payment(paid)
     await run_money_tasks(app)
-    assert sorted(r[0] for r in gateway.refunds) == [6000, 12000]
+    # minus the gateway fee, as for any refund: MallT pays nothing
+    assert sorted(r[0] for r in gateway.refunds) == [5970, 11940]
     assert gateway.transfers == []
 
 
