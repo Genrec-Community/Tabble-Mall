@@ -80,7 +80,8 @@ export async function payWithZoho(params: ZohoCheckoutOut, payer: Payer = {}): P
       currency_code: params.currency_code,
       payments_session_id: params.payments_session_id,
       description: params.description,
-      address: { name: payer.name ?? undefined, phone: payer.phone ?? undefined },
+      // Prefilled from the customer's own account so they don't type their number again.
+      address: { name: params.name ?? payer.name ?? undefined, phone: params.phone ?? payer.phone ?? undefined },
     });
     if (!result.payment_id) throw new ZohoPaymentError("no_payment", result.message ?? "The payment did not complete.");
     return result.payment_id;

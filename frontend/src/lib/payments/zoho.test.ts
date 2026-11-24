@@ -42,6 +42,12 @@ describe("payWithZoho", () => {
     expect(z.close).toHaveBeenCalled();
   });
 
+  it("prefills the customer's own phone from the server so they don't type it again", async () => {
+    const z = install(async () => ({ payment_id: "1" }));
+    await payWithZoho({ ...params, phone: "9876543210", name: "Asha" });
+    expect(z.calls[0]).toMatchObject({ address: { name: "Asha", phone: "9876543210" } });
+  });
+
   it("reports a closed widget so the page can offer to pay again", async () => {
     install(async () => {
       throw { code: "widget_closed", message: "closed" };

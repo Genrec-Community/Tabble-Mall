@@ -3,6 +3,7 @@
 import hashlib
 import hmac
 import json
+from pathlib import Path
 
 import httpx
 import pytest
@@ -11,6 +12,8 @@ from mallt.core.kv import KV
 from mallt.modules.payments.money import to_paise, to_rupees
 from mallt.modules.payments.provider import PaymentState
 from mallt.modules.payments.zoho import TOKEN_KEY, ZohoPaymentProvider, dumps, verify_signature
+
+SCRIPT_PATH = Path(__file__).resolve().parents[3] / "scripts" / "zoho_sandbox_check.py"
 
 
 def test_paise_and_rupees_round_trip_without_floats() -> None:
@@ -173,3 +176,23 @@ async def test_money_movements_report_retryable_vs_final(
     down = await provider.reverse_transfer(transfer_ref="900", amount_paise=1, reference="so:1")
     assert not down.ok and down.retryable
     assert await provider.get_payment("not-a-number") is None
+
+
+async def test_sandbox_check_script_runs_the_whole_cycle(
+    zoho: tuple[ZohoPaymentProvider, Zoho], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """scripts/zoho_sandbox_check.py is what the owner runs against the real sandbox: it must at
+    least run every step end to end (this fake answers some steps with errors on purpose)."""
+    import importlib.util
+
+    path = SCRIPT_PATH
+    spec = importlib.util.spec_from_file_location("zoho_sandbox_check", path)
+    assert spec and spec.loader
+    script = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(script)
+    provider, api = zoho
+    monkeypatch.setattr(script, "provider", lambda: provider)
+    await script.split("777", ["acc-a", "acc-b"], 50)
+    posted = [c for c in api.calls if c.method == "POST" and c.url.path.endswith("/transfers")]
+    assert len(posted) == 2  # one transfer per store
+    assert script.failures > 0  # the fake refuses the reversal and refund
