@@ -739,7 +739,7 @@ def main() -> None:
         url = f"http://localhost:{PROXY_PORT}/m/{seed_demo.MALL_SLUG}"
         say(
             f"\nMallT is running.\n  Customer page : {url}\n  Staff sign-in : "
-            f"http://localhost:{PROXY_PORT}/login\n  Logins        : demo-logins.txt\n"
+            f"http://localhost:{PROXY_PORT}/login\n  Logins        : demo-logins.txt (your own admin: owner-login.txt)\n"
             "  Sign-in codes : show-otp.bat\n\nKeep this window open. Close it or press Ctrl+C"
             " to stop MallT."
         )
@@ -768,6 +768,7 @@ def stop_or_reset(reset: bool) -> None:
     if reset:
         shutil.rmtree(LOCAL / "data", ignore_errors=True)
         (ROOT / "demo-logins.txt").unlink(missing_ok=True)
+        (ROOT / "owner-login.txt").unlink(missing_ok=True)
         say("All local MallT data deleted. The next start.bat begins fresh with the demo mall.")
 
 

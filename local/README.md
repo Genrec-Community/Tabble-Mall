@@ -20,6 +20,7 @@ You need Windows 10 or 11 and an internet connection for the first run. On macOS
 | `stop.bat` | Only needed if MallT was closed abruptly and won't start again. |
 | `stop.bat reset` | Deletes all local data. The next start begins fresh with the demo mall. |
 | `demo-logins.txt` | The demo logins. It's written on the first run. |
+| `owner-login.txt` | Your own super-admin login (jaisamyukth@gmail.com): password and authenticator key, made on your computer on the first start after this update. Keep it private. |
 | `local\logs\` | Logs for the API, website and database, if something looks wrong. |
 
 ## Updates

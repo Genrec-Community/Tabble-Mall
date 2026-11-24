@@ -65,6 +65,7 @@ function Frame({ title, nav, children }: { title: string; nav: NavItem[]; childr
         </nav>
         <div className="ml-auto flex items-center gap-3 text-sm">
           <span>{me?.display_name}</span>
+          <Link href="/login/password" className="underline-offset-4 hover:underline">Change password</Link>
           <Button variant="outline" size="sm" onClick={signOut}>Sign out</Button>
         </div>
       </header>

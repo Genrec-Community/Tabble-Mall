@@ -15,6 +15,7 @@ key prefix (the API checks it), and the local proxy serves them at /media/.
 
 import asyncio
 import json
+import secrets
 import shutil
 import sys
 import urllib.error
@@ -32,6 +33,8 @@ from mallt.core.errors import Conflict
 API = "http://127.0.0.1:8000/api/v1"
 PASSWORD = "MallT-demo-2026"
 ADMIN = "admin"
+# The platform owner's own super-admin account (above every mall, restaurant and counter login).
+OWNER_ADMIN = "jaisamyukth@gmail.com"
 ORG_OWNER = "demo.owner"
 ORG_SLUG = "demo-foods"
 MALL_SLUG = "demo-mall"
@@ -40,6 +43,7 @@ DEMO_VERSION = 3  # bump whenever demo_menu.py or the photos change
 LOCAL = Path(__file__).resolve().parent
 ROOT = LOCAL.parent
 LOGINS = ROOT / "demo-logins.txt"
+OWNER_LOGIN = ROOT / "owner-login.txt"  # this computer only; never committed
 VERSION_FILE = LOCAL / "data" / "demo-version"
 PHOTOS = LOCAL / "demo-media" / "dishes"
 MEDIA = LOCAL / "data" / "media"  # served by run_local's proxy at /media/
@@ -320,7 +324,39 @@ def write_logins(secret: str | None, uri: str | None) -> None:
     print("\n".join(lines))
 
 
+def ensure_owner_admin() -> None:
+    """Create the owner's super-admin once, with a password and authenticator key made on this
+    computer, and keep them in owner-login.txt (the only place they are ever written)."""
+    if OWNER_LOGIN.exists():
+        return
+    password = "MallT-" + secrets.token_urlsafe(12)
+    try:
+        uri = asyncio.run(run_seed_admin(get_settings(), OWNER_ADMIN, "Samyukth", password))
+    except Conflict:
+        print(f"  {OWNER_ADMIN} already exists; its password is the one you set.")
+        return
+    secret = pyotp.parse_uri(uri).secret
+    text = "\n".join(
+        [
+            "MallT owner login (this computer only). Keep this file private.",
+            "",
+            "Sign in at:     http://localhost:8080/login",
+            f"Username:       {OWNER_ADMIN}",
+            f"Password:       {password}",
+            "Authenticator:  add this key to Google Authenticator or Authy (enter key manually):",
+            f"                {secret}",
+            f"                or open: {uri}",
+            "",
+            "Change the password any time: sign in, then 'Change password' at the top.",
+            "",
+        ]
+    )
+    OWNER_LOGIN.write_text(text, encoding="utf-8")
+    print(text)
+
+
 def main() -> int:
+    ensure_owner_admin()
     try:
         uri = asyncio.run(run_seed_admin(get_settings(), ADMIN, "Platform Admin", PASSWORD))
     except Conflict:

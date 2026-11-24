@@ -17,7 +17,8 @@ from mallt.core.security import hash_password
 from mallt.modules.iam.models import RoleAssignment, StaffUser
 from mallt.modules.iam.repository import CustomerRepository, GrantRow, IamRepository
 
-USERNAME = re.compile(r"[a-z0-9._-]{3,40}")
+# Letters, digits and . _ - (and @ + so an email address works as a username).
+USERNAME = re.compile(r"[a-z0-9._@+-]{3,100}")
 MIN_PASSWORD_LENGTH = 10
 
 
@@ -67,7 +68,8 @@ class IamUsers:
         username = normalize_username(username)
         if not USERNAME.fullmatch(username):
             raise Unprocessable(
-                "invalid_username", "Use 3-40 letters, digits, dots, dashes or underscores."
+                "invalid_username",
+                "Use 3-100 letters, digits, dots, dashes, underscores or an email address.",
             )
         if len(password) < MIN_PASSWORD_LENGTH:
             raise Unprocessable(

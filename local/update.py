@@ -35,6 +35,7 @@ WIN = os.name == "nt"
 KEEP = {
     ".env",
     "demo-logins.txt",
+    "owner-login.txt",
     "frontend-build",
     "local/data",
     "local/logs",
