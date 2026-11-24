@@ -54,6 +54,8 @@ describe("MallItems", () => {
     expect(screen.getByRole("button", { name: "Veg only" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Fast food" })).toBeTruthy();
     expect(screen.getByRole("searchbox", { name: "Search dishes" })).toBeTruthy();
+    // The add button names the store too: dishes from many stores sit side by side here.
+    expect(screen.getByRole("button", { name: "Add Cheese Burger from Burger Hub" })).toBeTruthy();
   });
 
   it("cannot add from a store that is not taking orders, or a sold-out dish", () => {
@@ -83,10 +85,10 @@ describe("MallItems", () => {
   it("adds a one-size dish in one tap (a visitor is sent to sign in first), and opens the sheet for a dish with sizes", () => {
     const simple = { variants: [{ id: "v", name: "Regular", price_paise: 3000, available: true }] } as never;
     show([item({ name: "Masala Chai", product: simple }), item({ name: "Cheese Burger" })]);
-    fireEvent.click(screen.getByRole("button", { name: "Add Masala Chai" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add Masala Chai from Burger Hub" }));
     expect(push).toHaveBeenCalledWith("/account/login?next=%2Fm%2Fphoenix");
     expect(screen.queryByRole("dialog")).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "Add Cheese Burger" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add Cheese Burger from Burger Hub" }));
     expect(screen.getByRole("dialog")).toBeTruthy();
     expect(screen.getByLabelText(/Large/)).toBeTruthy();
   });

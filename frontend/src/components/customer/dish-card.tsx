@@ -19,6 +19,7 @@ export const DishCard = memo(function DishCard({
   hint,
   canOrder,
   closedLabel = "Store not taking orders",
+  storeName,
   quantity,
   busy,
   onOpen,
@@ -29,6 +30,9 @@ export const DishCard = memo(function DishCard({
   hint: string;
   canOrder: boolean;
   closedLabel?: string;
+  /** On the mall page, where dishes from many stores sit together: names the store in the add
+   * button's label ("Add Cheese Burger from Burger Hub"). */
+  storeName?: string;
   quantity: number;
   busy: boolean;
   onOpen: (product: PublicProductOut) => void;
@@ -73,7 +77,7 @@ export const DishCard = memo(function DishCard({
           {choice && <span className="block text-[0.6875rem] font-normal text-muted-foreground">Customisable</span>}
         </span>
         <QuickAdd
-          name={product.name}
+          name={storeName ? `${product.name} from ${storeName}` : product.name}
           quantity={choice ? 0 : quantity}
           busy={busy}
           disabled={blocked}

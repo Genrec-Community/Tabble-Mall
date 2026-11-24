@@ -136,9 +136,9 @@ export function MallItems({
       )}
       {!items.isFetching && list.length === 0 && (
         <div className="py-12 text-center">
-          <p className="font-display text-lg font-semibold">{pristine ? "The menus are empty" : "No results"}</p>
+          <p className="font-display text-lg font-semibold">{pristine ? "The menus are empty" : "Nothing matches"}</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            {pristine ? "No dishes yet — check the stores above." : "Nothing matches. Try another word or clear the filters."}
+            {pristine ? "No dishes yet — check the stores above." : "Try another word or clear the filters."}
           </p>
         </div>
       )}
@@ -174,6 +174,7 @@ export function MallItems({
                     <DishCard
                       product={it.product}
                       hint={it.store_name}
+                      storeName={it.store_name}
                       canOrder={it.accepting_orders}
                       quantity={quick.quantities[it.product.id] ?? 0}
                       busy={quick.busy}
