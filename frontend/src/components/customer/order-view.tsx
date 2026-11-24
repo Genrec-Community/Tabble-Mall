@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import {
   ordersCancelMyOrder,
   ordersGetMyOrder,
+  type CustomerOrderOut,
   type CustomerStoreOrderOut,
 } from "@/lib/api";
 import { ApiError, unwrap } from "@/lib/api-error";
@@ -85,6 +86,7 @@ export function OrderView({ orderId }: { orderId: string }) {
         Your order · {formatPaise(data.total_paise)}
       </h1>
       <ConnectionNotice status={live} />
+      <OrderCode order={data} />
       {data.stores.some((s) => ["paid", "accepted", "preparing"].includes(s.status)) && <NotifyOptIn />}
       {data.status === "placed" && data.payment?.zoho && (
         <section
@@ -153,7 +155,6 @@ function StoreOrderCard({
   onCancel: () => void;
 }) {
   const ready = order.status === "ready";
-  const [big, setBig] = useState(false);
   const at = PROGRESS.indexOf(order.status as (typeof PROGRESS)[number]);
   return (
     <section
@@ -201,33 +202,6 @@ function StoreOrderCard({
           ))}
         </ol>
       )}
-      {SHOW_CODE.has(order.status) && (
-        <div
-          className={cn(
-            "rounded-2xl border p-4 text-center",
-            ready
-              ? "border-status-ready/50 bg-status-ready/10"
-              : "border-[#ffa500]/25 bg-black/40",
-          )}
-        >
-          <p className="text-xs tracking-[0.2em] text-muted-foreground uppercase">
-            Your pickup code
-          </p>
-          <p
-            className="font-mono text-5xl font-bold tracking-[0.3em] text-lux-orange"
-            aria-label={`Pickup code ${order.pickup_code.split("").join(" ")}`}
-          >
-            {order.pickup_code}
-          </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            {ready
-              ? `Show this at the ${order.store_name} counter now.`
-              : `Show this at the ${order.store_name} counter. Ready in about ${order.prep_minutes} min.`}
-          </p>
-          <FullScreenButton onClick={() => setBig(true)} />
-        </div>
-      )}
-      {big && <PickupCodeScreen order={order} onClose={() => setBig(false)} />}
       {order.reason && (
         <p className="text-sm text-muted-foreground">Reason: {order.reason}</p>
       )}
@@ -281,6 +255,46 @@ function StoreOrderCard({
             ))}
         </ol>
       </details>
+    </section>
+  );
+}
+
+/**
+ * The order's one pickup code (owner, 2026-11-24): the same four digits at every restaurant in the
+ * order, shown once at the top while any part of it is still to be collected.
+ */
+function OrderCode({ order }: { order: CustomerOrderOut }) {
+  const [big, setBig] = useState(false);
+  const open = order.stores.filter((s) => SHOW_CODE.has(s.status));
+  if (open.length === 0) return null;
+  const code = open[0].pickup_code;
+  const ready = open.filter((s) => s.status === "ready");
+  const where =
+    order.stores.length === 1
+      ? `the ${order.stores[0].store_name} counter`
+      : "every restaurant's counter";
+  return (
+    <section
+      aria-label="Code to collect your order"
+      className={cn(
+        "rounded-3xl border p-4 text-center",
+        ready.length > 0 ? "border-status-ready/50 bg-status-ready/10" : "border-[#ffa500]/25 bg-black/40",
+      )}
+    >
+      <p className="text-xs tracking-[0.2em] text-muted-foreground uppercase">Your pickup code</p>
+      <p
+        className="font-mono text-5xl font-bold tracking-[0.3em] text-lux-orange"
+        aria-label={`Pickup code ${code.split("").join(" ")}`}
+      >
+        {code}
+      </p>
+      <p className="mt-1 text-xs text-muted-foreground">
+        {ready.length > 0
+          ? `Ready now at ${ready.map((s) => s.store_name).join(", ")}. Show this code at the counter.`
+          : `One code for your whole order. Show it at ${where}.`}
+      </p>
+      <FullScreenButton onClick={() => setBig(true)} />
+      {big && <PickupCodeScreen code={code} stores={open} onClose={() => setBig(false)} />}
     </section>
   );
 }

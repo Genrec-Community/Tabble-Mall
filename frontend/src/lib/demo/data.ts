@@ -225,6 +225,7 @@ function placeOrder(byStore: { storeId: string; lines: CartLineOut[] }[], status
   const customerOrderId = uuid();
   const storeOrders: DemoOrder["storeOrders"] = [];
   const customerStores: CustomerStoreOrderOut[] = [];
+  const pickupCode = String(1000 + Math.floor(Math.random() * 9000)); // one code for the whole order
   for (const { storeId, lines } of byStore) {
     const store = stores.find((s) => s.id === storeId)!;
     const total = lines.reduce((sum, l) => sum + l.line_total_paise, 0);
@@ -242,7 +243,7 @@ function placeOrder(byStore: { storeId: string; lines: CartLineOut[] }[], status
     customerStores.push({
       id: order.id, store_name: store.name, store_slug: store.slug, order_no: order.order_no,
       status, created_at: created, accept_by: order.accept_by, lines: order.lines, note: null,
-      pickup_code: String(1000 + Math.floor(Math.random() * 9000)), prep_minutes: 15, reason: null,
+      pickup_code: pickupCode, prep_minutes: 15, reason: null,
       steps, tax_paise: order.tax_paise, total_paise: total,
     });
   }

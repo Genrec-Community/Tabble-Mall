@@ -93,3 +93,14 @@ async def test_my_orders_name_their_mall_so_they_can_be_reordered(
     assert [o["mall_slug"] for o in listed] == ["phoenix-pune"]
     one = (await client.get(f"/api/v1/orders/{order['id']}", headers=alice)).json()
     assert one["mall_slug"] == "phoenix-pune"
+
+
+async def test_one_pickup_code_for_every_restaurant_in_an_order(
+    client: httpx.AsyncClient, alice: dict, menu: Menu, payments: FakePaymentProvider
+) -> None:
+    await client.post(f"{CART}/lines", json=line(menu.burger), headers=alice)
+    await client.post(f"{CART}/lines", json=line(menu.chai), headers=alice)
+    order = (await checkout(client, alice)).json()
+    codes = {s["pickup_code"] for s in order["stores"]}
+    assert len(order["stores"]) == 2 and len(codes) == 1
+    assert len(codes.pop()) == 4

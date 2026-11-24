@@ -294,10 +294,15 @@ class OrderService:
         for p in priced:
             by_store.setdefault(p.line.store_id, []).append(p)
         store_orders: list[StoreOrder] = []
+        # One pickup code for the whole order (owner, 2026-11-24): the customer shows the same four
+        # digits at every counter. It must be free at each of the order's stores.
+        taken: set[str] = set()
+        for store_id in by_store:
+            taken |= await self.repo.open_pickup_codes(store_id)
+        pickup_code = self._new_code(taken)
         for store_id, rows in by_store.items():
             store = mall.stores[store_id]
             today = datetime.now(UTC).astimezone(ZoneInfo(store.timezone)).date()
-            codes = await self.repo.open_pickup_codes(store_id)
             subtotal = sum(r.total_paise for r in rows)
             lines = [self._order_line(store_id, i, r) for i, r in enumerate(rows)]
             so = StoreOrder(
@@ -310,7 +315,7 @@ class OrderService:
                 status=S.PENDING_PAYMENT,
                 order_date=today,
                 order_no=await self.repo.next_order_no(store_id, today),
-                pickup_code=self._new_code(codes),
+                pickup_code=pickup_code,
                 subtotal_paise=subtotal,
                 tax_paise=sum(ln.tax_paise for ln in lines),
                 total_paise=subtotal,

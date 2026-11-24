@@ -103,7 +103,15 @@ export function CountdownRing({ order }: { order: CustomerStoreOrderOut }) {
  * The pickup code over the whole screen, huge and bright, for showing across a busy counter. Keeps
  * the phone awake while it is open, where the browser allows it.
  */
-export function PickupCodeScreen({ order, onClose }: { order: CustomerStoreOrderOut; onClose: () => void }) {
+export function PickupCodeScreen({
+  code,
+  stores,
+  onClose,
+}: {
+  code: string;
+  stores: CustomerStoreOrderOut[];
+  onClose: () => void;
+}) {
   const close = useBackToClose(onClose);
   useEffect(() => {
     let lock: WakeLockSentinel | null = null;
@@ -119,7 +127,7 @@ export function PickupCodeScreen({ order, onClose }: { order: CustomerStoreOrder
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={`Code for ${order.store_name}`}
+      aria-label="Your pickup code, full screen"
       className="fixed inset-0 z-[60] flex flex-col items-center justify-center gap-6 bg-black px-6 text-center motion-safe:animate-[fade-in_200ms_ease-out]"
     >
       <button
@@ -132,12 +140,19 @@ export function PickupCodeScreen({ order, onClose }: { order: CustomerStoreOrder
         <X className="size-5" aria-hidden="true" />
       </button>
       <p className="text-sm tracking-[0.3em] text-muted-foreground uppercase">Show this at the counter</p>
-      <p className="font-display text-3xl font-semibold">{order.store_name}</p>
-      <p className="text-sm text-muted-foreground">Order #{order.order_no}</p>
+      <ul className="space-y-1">
+        {stores.map((s) => (
+          <li key={s.id} className="font-display text-xl font-semibold">
+            {s.store_name} <span className="text-sm font-normal text-muted-foreground">· #{s.order_no}</span>
+          </li>
+        ))}
+      </ul>
       <p className="rounded-3xl bg-gold px-8 py-6 font-mono text-[clamp(4rem,22vw,9rem)] leading-none font-bold tracking-[0.15em] text-on-gold shadow-[0_0_80px_rgb(247_181_56/0.35)]">
-        {order.pickup_code}
+        {code}
       </p>
-      <p className="max-w-xs text-sm text-muted-foreground">Turn your screen up. The staff type this code to hand over your food.</p>
+      <p className="max-w-xs text-sm text-muted-foreground">
+        The same code at every counter. Turn your screen up: the staff type it to hand over your food.
+      </p>
     </div>
   );
 }
