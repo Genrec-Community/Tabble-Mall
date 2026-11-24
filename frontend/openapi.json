@@ -334,6 +334,17 @@
             ],
             "title": "Is Available"
           },
+          "sold_out_today": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sold Out Today"
+          },
           "variants": {
             "anyOf": [
               {
@@ -3569,6 +3580,18 @@
           "prep_minutes": {
             "title": "Prep Minutes",
             "type": "integer"
+          },
+          "sold_out_until": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sold Out Until"
           },
           "stock_mode": {
             "$ref": "#/components/schemas/StockMode"

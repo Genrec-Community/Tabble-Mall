@@ -1,6 +1,6 @@
 """Pure opening-hours / availability-window logic (local time of the store)."""
 
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -41,3 +41,15 @@ def store_accepting(
     if not is_open or is_paused:
         return False
     return in_hours(hours, now.astimezone(ZoneInfo(timezone)), "open", "close")
+
+
+def next_local_midnight(now: datetime, timezone: str) -> datetime:
+    """The start of tomorrow in the store's own timezone: when 'sold out for today' ends."""
+    tz = ZoneInfo(timezone)
+    tomorrow = now.astimezone(tz).date() + timedelta(days=1)
+    return datetime(tomorrow.year, tomorrow.month, tomorrow.day, tzinfo=tz)
+
+
+def on_sale(is_available: bool, sold_out_until: datetime | None, now: datetime) -> bool:
+    """The store's own switch is on and any 'sold out for today' has run out."""
+    return is_available and (sold_out_until is None or sold_out_until <= now)

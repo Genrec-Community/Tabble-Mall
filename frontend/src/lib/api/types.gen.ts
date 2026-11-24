@@ -178,6 +178,10 @@ export type AvailabilityUpdate = {
      */
     is_available?: boolean | null;
     /**
+     * Sold Out Today
+     */
+    sold_out_today?: boolean | null;
+    /**
      * Variants
      */
     variants?: Array<AvailabilityVariant> | null;
@@ -1910,6 +1914,10 @@ export type ProductOut = {
      * Prep Minutes
      */
     prep_minutes: number;
+    /**
+     * Sold Out Until
+     */
+    sold_out_until?: string | null;
     stock_mode: StockMode;
     /**
      * Store Id

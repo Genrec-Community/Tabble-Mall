@@ -13,7 +13,12 @@ from mallt.core.kv import KV
 from mallt.core.rbac import P, Scope
 from mallt.core.storage import Storage
 from mallt.modules.audit.service import Actor, AuditService
-from mallt.modules.catalog.availability import in_hours, store_accepting
+from mallt.modules.catalog.availability import (
+    in_hours,
+    next_local_midnight,
+    on_sale,
+    store_accepting,
+)
 from mallt.modules.catalog.enums import StockMode
 from mallt.modules.catalog.models import (
     MenuCategory,
@@ -49,6 +54,7 @@ from mallt.modules.catalog.schemas import (
     theme_from,
 )
 from mallt.modules.iam.authz import AuthzService, Principal
+from mallt.modules.platform.service import FeatureService
 from mallt.modules.tenancy.models import Store
 from mallt.modules.tenancy.service import TenancyService
 
@@ -77,6 +83,7 @@ class CatalogService:
         self.tenancy = TenancyService(session, kv)
         self.authz = AuthzService(session, kv)
         self.audit = AuditService(session)
+        self.features = FeatureService(session)
         self.storage = storage
 
     # ---- access ----
@@ -396,6 +403,7 @@ class CatalogService:
                 "tax_bps",
                 "stock_mode",
                 "is_available",
+                "sold_out_until",
                 "image_key",
                 "position",
                 "windows",
@@ -472,6 +480,14 @@ class CatalogService:
         product = await self._product(store, product_id)
         if data.is_available is not None:
             product.is_available = data.is_available
+            if data.is_available:
+                product.sold_out_until = None
+        if data.sold_out_today:
+            await self.features.require("auto_sold_out")
+            row = await self._settings(store)
+            product.sold_out_until = next_local_midnight(datetime.now(UTC), row.timezone)
+        elif data.sold_out_today is False:
+            product.sold_out_until = None
         if data.variants:
             by_id = {v.id: v for v in product.variants}
             for item in data.variants:
@@ -510,7 +526,8 @@ class CatalogService:
             ready = [
                 p.prep_minutes
                 for p in products
-                if p.is_available and in_hours(p.windows, local, "start", "end")
+                if on_sale(p.is_available, p.sold_out_until, now)
+                and in_hours(p.windows, local, "start", "end")
             ]
             cards.append(
                 PublicStoreCardOut(
@@ -682,7 +699,7 @@ class CatalogService:
         counted = product.stock_mode == StockMode.COUNTED
         variants = [v for v in product.variants if v.is_active]
         reason: str | None = None
-        if not product.is_available or (
+        if not on_sale(product.is_available, product.sold_out_until, local_now) or (
             counted and all((v.stock_count or 0) <= 0 for v in variants)
         ):
             reason = "sold_out"
@@ -844,7 +861,7 @@ class OrderingCatalog:
                 counted=p.stock_mode == StockMode.COUNTED,
                 available_now=(
                     not p.is_archived
-                    and p.is_available
+                    and on_sale(p.is_available, p.sold_out_until, now)
                     and in_hours(p.windows, local, "start", "end")
                 ),
                 variants={

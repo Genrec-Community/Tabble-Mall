@@ -1,5 +1,6 @@
 import re
 import uuid
+from datetime import datetime
 from typing import Annotated, Any, Literal
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
@@ -118,6 +119,8 @@ class AvailabilityVariant(BaseModel):
 
 class AvailabilityUpdate(BaseModel):
     is_available: bool | None = None
+    # True: sold out until the store's next local midnight, then back by itself. False: undo.
+    sold_out_today: bool | None = None
     variants: list[AvailabilityVariant] | None = None
 
 
@@ -155,6 +158,7 @@ class ProductOut(_Out):
     tax_bps: int
     stock_mode: StockMode
     is_available: bool
+    sold_out_until: datetime | None = None
     image_key: str | None
     image_url: str | None = None
     position: int
