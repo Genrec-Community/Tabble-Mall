@@ -412,7 +412,7 @@ def start_kitchens() -> None:
 
     def run() -> None:
         token = ""
-        stores: list[str] = []
+        stores: list[tuple[str, str]] = []
         seen: dict[tuple[str, str], float] = {}
         while True:
             time.sleep(4)
@@ -423,12 +423,12 @@ def start_kitchens() -> None:
                     if mall is None:
                         return
                     stores = [
-                        s["id"]
+                        (s["id"], s["name"])
                         for s in seed_demo.call("GET", f"/malls/{mall}/stores", token)
                         if s["slug"] not in MANUAL_STORES
                     ]
                 now = time.monotonic()
-                for sid in stores:
+                for sid, name in stores:
                     page = seed_demo.call("GET", f"/stores/{sid}/orders?view=active", token)
                     for order in page["items"]:
                         step = KITCHEN_STEPS.get(order["status"].lower())
@@ -439,7 +439,7 @@ def start_kitchens() -> None:
                             seed_demo.call(
                                 "POST", f"/stores/{sid}/orders/{order['id']}/{step[0]}", token
                             )
-                            note(f"order #{order['order_no']}: {step[0]}")
+                            note(f"{name} order #{order['order_no']}: {step[0]}")
             except seed_demo.ApiFailed as exc:
                 if exc.status == 401:
                     token = ""  # the 15-minute access token ran out; sign in again
@@ -457,6 +457,131 @@ def start_kitchens() -> None:
 # ---- orchestration -------------------------------------------------------------------------------
 
 
+def _port_owners(ports: list[int]) -> dict[int, str]:
+    """PID -> program path of whatever listens on these ports (best effort, no extra packages)."""
+    owners: dict[int, str] = {}
+    if WIN:
+        ps = (
+            "Get-NetTCPConnection -State Listen -LocalPort "
+            + ",".join(map(str, ports))
+            + " -ErrorAction SilentlyContinue | ForEach-Object { $p = Get-CimInstance"
+            ' Win32_Process -Filter "ProcessId=$($_.OwningProcess)"; "$($p.ProcessId)|'
+            '$($p.ExecutablePath)|$($p.CommandLine)" }'
+        )
+        try:
+            _, out = pg_run(["powershell", "-NoProfile", "-Command", ps], timeout=60)
+        except OSError:
+            return owners
+        for line in out.splitlines():
+            pid, _, rest = line.strip().partition("|")
+            if pid.isdigit():
+                owners[int(pid)] = rest
+        return owners
+    for port in ports:
+        pids: list[str] = []
+        if shutil.which("lsof"):
+            _, out = pg_run(["lsof", "-nP", "-t", f"-iTCP:{port}", "-sTCP:LISTEN"], timeout=20)
+            pids = out.split()
+        if not pids and shutil.which("fuser"):
+            _, out = pg_run(["fuser", "-n", "tcp", str(port)], timeout=20)
+            pids = out.replace(f"{port}/tcp:", " ").split()
+        for pid in filter(str.isdigit, pids):
+            _, cmd = pg_run(["ps", "-o", "command=", "-p", pid], timeout=10)
+            # Next.js renames its process, so also look at where it runs from.
+            try:
+                cwd = os.readlink(f"/proc/{pid}/cwd")
+            except OSError:
+                cwd = ""
+                if shutil.which("lsof"):
+                    _, cwd = pg_run(["lsof", "-a", "-p", pid, "-d", "cwd", "-Fn"], timeout=10)
+            owners[int(pid)] = cmd.strip() + "|" + cwd.strip()
+    return owners
+
+
+def stop_leftovers(ports: list[int]) -> None:
+    """Stop a MallT left running by an earlier window (closing a window does not always stop
+    what it started). Only processes running from this MallT folder are touched."""
+    busy = [p for p in ports if port_busy(p)]
+    if not busy:
+        return
+    root = str(ROOT).lower()
+    ours = [
+        pid
+        for pid, what in _port_owners(busy).items()
+        if root in what.lower() and pid != os.getpid()
+    ]
+    if not ours:
+        return
+    say("  stopping an earlier MallT that was still running...")
+    for pid in ours:
+        if WIN:
+            pg_run(["taskkill", "/F", "/T", "/PID", str(pid)], timeout=30)
+        else:
+            try:
+                os.kill(pid, signal.SIGTERM)
+            except OSError:
+                pass
+    deadline = time.time() + 20
+    while time.time() < deadline and any(port_busy(p) for p in busy):
+        time.sleep(0.5)
+
+
+_job: object = None
+
+
+def stop_children_with_us() -> None:
+    """Windows: put this process in a job that ends its children when it ends, so closing the
+    window never leaves the API or website running in the background. The database is already
+    running by now and stays out of the job (the next start reuses it)."""
+    global _job
+    if sys.platform != "win32":
+        return
+    import ctypes
+    from ctypes import wintypes
+
+    class Basic(ctypes.Structure):
+        _fields_ = [
+            ("PerProcessUserTimeLimit", ctypes.c_int64),
+            ("PerJobUserTimeLimit", ctypes.c_int64),
+            ("LimitFlags", wintypes.DWORD),
+            ("MinimumWorkingSetSize", ctypes.c_size_t),
+            ("MaximumWorkingSetSize", ctypes.c_size_t),
+            ("ActiveProcessLimit", wintypes.DWORD),
+            ("Affinity", ctypes.c_size_t),
+            ("PriorityClass", wintypes.DWORD),
+            ("SchedulingClass", wintypes.DWORD),
+        ]
+
+    class Extended(ctypes.Structure):
+        _fields_ = [
+            ("BasicLimitInformation", Basic),
+            ("IoInfo", ctypes.c_ulonglong * 6),
+            ("ProcessMemoryLimit", ctypes.c_size_t),
+            ("JobMemoryLimit", ctypes.c_size_t),
+            ("PeakProcessMemoryUsed", ctypes.c_size_t),
+            ("PeakJobMemoryUsed", ctypes.c_size_t),
+        ]
+
+    k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    k32.CreateJobObjectW.restype = wintypes.HANDLE
+    k32.GetCurrentProcess.restype = wintypes.HANDLE
+    k32.SetInformationJobObject.argtypes = [
+        wintypes.HANDLE,
+        ctypes.c_int,
+        ctypes.c_void_p,
+        wintypes.DWORD,
+    ]
+    k32.AssignProcessToJobObject.argtypes = [wintypes.HANDLE, wintypes.HANDLE]
+    job = k32.CreateJobObjectW(None, None)
+    if not job:
+        return
+    info = Extended()
+    info.BasicLimitInformation.LimitFlags = 0x2000  # JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+    k32.SetInformationJobObject(job, 9, ctypes.byref(info), ctypes.sizeof(info))
+    if k32.AssignProcessToJobObject(job, k32.GetCurrentProcess()):
+        _job = job  # keep the handle open for as long as this process lives
+
+
 def stop_all() -> None:
     for p in children:
         if p.poll() is None:
@@ -470,6 +595,7 @@ def stop_all() -> None:
 
 def main() -> None:
     LOGS.mkdir(parents=True, exist_ok=True)
+    stop_leftovers([API_PORT, WEB_PORT, PROXY_PORT])
     for port, what in ((API_PORT, "the API"), (WEB_PORT, "the website"), (PROXY_PORT, "MallT")):
         if port_busy(port):
             fail(
@@ -479,6 +605,7 @@ def main() -> None:
 
     say("[1/4] Starting the database...")
     bin_dir = start_postgres()
+    stop_children_with_us()
     try:
         ensure_database()
 
@@ -559,6 +686,7 @@ def main() -> None:
 
 def stop_or_reset(reset: bool) -> None:
     """stop.bat: stop a database left running (e.g. the window was closed); optionally wipe."""
+    stop_leftovers([API_PORT, WEB_PORT, PROXY_PORT])
     if (DATA / "postmaster.pid").exists():
         stop_postgres(pg_bin())
         say("Database stopped.")
