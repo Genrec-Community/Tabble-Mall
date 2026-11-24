@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Clock, Heart, MapPin } from "lucide-react";
+import { BadgePercent, Clock, Heart, MapPin, Star } from "lucide-react";
 import { StoreLogo } from "@/components/customer/store-logo";
 import type { PublicStoreCardOut } from "@/lib/api";
 import { useFavourites } from "@/lib/customer/favourites";
@@ -10,6 +10,9 @@ import { cn } from "@/lib/utils";
 import { cuisines } from "@/components/customer/food-types";
 
 export { FOOD_TYPE_LABELS, cuisines } from "@/components/customer/food-types";
+
+/** What customers think of a restaurant and its best offer, shown small on its card. */
+export type StoreBadge = { rating?: { average: number; count: number }; offer?: string };
 
 /**
  * A restaurant on the mall's home page (after Swiggy's and Zomato's listing cards): a big photo,
@@ -21,12 +24,14 @@ export function RestaurantCard({
   store,
   priority = false,
   featuredTag = false,
+  badge,
 }: {
   mallSlug: string;
   store: PublicStoreCardOut;
   priority?: boolean;
   /** A small, muted "Featured" label for a store that paid to be listed first. */
   featuredTag?: boolean;
+  badge?: StoreBadge;
 }) {
   const open = store.accepting_orders;
   const { isFavourite, toggle } = useFavourites();
@@ -76,8 +81,24 @@ export function RestaurantCard({
           </span>
         </span>
         <span className="flex flex-1 flex-col gap-1 px-4 pt-2 pb-4">
-          {store.food_types.length > 0 && (
-            <span className="text-xs font-semibold text-lux-orange">{cuisines(store.food_types)}</span>
+          {(store.food_types.length > 0 || badge?.rating) && (
+            <span className="flex items-center gap-2 text-xs font-semibold">
+              {badge?.rating && (
+                <span
+                  className="flex items-center gap-0.5 rounded-md bg-status-ready/15 px-1.5 py-0.5 text-status-ready"
+                  aria-label={`Rated ${badge.rating.average.toFixed(1)} out of 5 by ${badge.rating.count} ${badge.rating.count === 1 ? "customer" : "customers"}`}
+                >
+                  <Star className="size-3 fill-current" aria-hidden="true" />
+                  {badge.rating.average.toFixed(1)}
+                </span>
+              )}
+              {store.food_types.length > 0 && <span className="text-lux-orange">{cuisines(store.food_types)}</span>}
+            </span>
+          )}
+          {badge?.offer && (
+            <span className="flex items-center gap-1 text-xs font-semibold text-gold">
+              <BadgePercent className="size-3.5" aria-hidden="true" /> {badge.offer}
+            </span>
           )}
           {store.top_dishes.length > 0 ? (
             <span className="line-clamp-1 text-sm text-muted-foreground">{store.top_dishes.join(", ")}</span>

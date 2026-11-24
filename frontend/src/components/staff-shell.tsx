@@ -49,7 +49,7 @@ function Frame({ title, nav, children }: { title: string; nav: NavItem[]; childr
 
   return (
     <div className="min-h-screen">
-      <header className="flex flex-wrap items-center gap-4 border-b px-6 py-3">
+      <header className="flex flex-wrap items-center gap-4 border-b px-6 py-3 print:hidden">
         <Link href="/" className="font-semibold">MallT</Link>
         <span className="text-muted-foreground">{title}</span>
         <nav className="flex gap-3 text-sm">
@@ -69,7 +69,7 @@ function Frame({ title, nav, children }: { title: string; nav: NavItem[]; childr
           <Button variant="outline" size="sm" onClick={signOut}>Sign out</Button>
         </div>
       </header>
-      <main className="mx-auto max-w-5xl space-y-6 p-6">{children}</main>
+      <main className="mx-auto max-w-5xl space-y-6 p-6 print:max-w-none print:p-0">{children}</main>
     </div>
   );
 }

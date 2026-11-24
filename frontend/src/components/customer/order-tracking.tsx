@@ -5,6 +5,7 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import type { CustomerStoreOrderOut } from "@/lib/api";
 import { progressOf, readyAt } from "@/lib/customer/use-my-orders";
 import { useBackToClose } from "@/lib/customer/use-back-close";
+import { enablePush } from "@/lib/push";
 import { cn } from "@/lib/utils";
 
 /** Whole minutes until `at`, never below zero. */
@@ -181,6 +182,10 @@ export function NotifyOptIn() {
     () => null,
   );
   const perm = asked ?? current;
+  // Already allowed: make sure this phone also gets alerts while the app is closed (Web Push).
+  useEffect(() => {
+    if (perm === "granted") void enablePush();
+  }, [perm]);
   if (perm !== "default") return null;
   return (
     <button

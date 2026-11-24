@@ -6,6 +6,8 @@ import { useParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import { CombosManager } from "@/components/org/combos-manager";
+import { MallQrCard } from "@/components/org/mall-qr";
 import { DataTable, type Column } from "@/components/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -132,6 +134,8 @@ export function MallDetail() {
         </p>
       </div>
 
+      {features.on("mall_qr") && <MallQrCard slug={m.slug} orgId={orgId} mallId={mallId} />}
+
       {canMall && <EditMallForm key={`${m.name}-${m.city}-${m.address}`} mall={m} onSaved={(updated) => { queryClient.setQueryData(["mall", mallId], updated); refreshPublic(updated.slug); }} />}
 
       <section className="space-y-3">
@@ -141,6 +145,10 @@ export function MallDetail() {
         </div>
         {stores.isLoading ? <p className="text-muted-foreground">Loading…</p> : <DataTable columns={columns} rows={stores.data ?? []} rowKey={(s) => s.id} empty="No stores yet." />}
       </section>
+
+      {features.on("offers") && canMall && (
+        <CombosManager mallId={mallId} stores={stores.data ?? []} canWrite={canMall && m.status === "active"} onChanged={() => refreshPublic(m.slug)} />
+      )}
     </div>
   );
 }

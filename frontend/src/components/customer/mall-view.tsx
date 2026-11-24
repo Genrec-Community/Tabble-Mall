@@ -1,5 +1,8 @@
-import type { PopularItemOut, PublicMallOut, PublicStoreCardOut } from "@/lib/api";
+import type { MallRatingsOut, PopularItemOut, PublicMallOut, PublicOffersOut, PublicStoreCardOut } from "@/lib/api";
+import { OffersStrip } from "@/components/customer/offers-strip";
+import { bestOffer, offerHeadline } from "@/lib/offers";
 import { MallBrowser, type FeaturedPlacement } from "@/components/customer/mall-browser";
+import type { StoreBadge } from "@/components/customer/restaurant-card";
 
 export { FOOD_TYPE_LABELS } from "@/components/customer/food-types";
 
@@ -34,13 +37,18 @@ export function MallView({
   stores,
   popular = [],
   featured,
+  offers,
+  ratings,
 }: {
   mall: PublicMallOut;
   stores: PublicStoreCardOut[];
   popular?: PopularItemOut[];
   featured?: FeaturedPlacement;
+  offers?: PublicOffersOut;
+  ratings?: MallRatingsOut;
 }) {
   const list = storeCards(mall, stores);
+  const badges = storeBadges(offers, ratings);
   const open = list.filter((s) => s.accepting_orders).length;
   return (
     <main className="mx-auto w-full max-w-6xl space-y-5 px-4 pt-5 pb-4">
@@ -62,8 +70,24 @@ export function MallView({
           No stores are open here yet. Please check back soon.
         </p>
       ) : (
-        <MallBrowser mallSlug={mall.slug} stores={list} popular={popular} featured={featured} />
+        <>
+          {offers && <OffersStrip mallSlug={mall.slug} data={offers} />}
+          <MallBrowser mallSlug={mall.slug} stores={list} popular={popular} featured={featured} badges={badges} />
+        </>
       )}
     </main>
   );
+}
+
+/** Per restaurant: its stars and its best offer, for the small badges on its card. */
+export function storeBadges(offers?: PublicOffersOut, ratings?: MallRatingsOut): Record<string, StoreBadge> {
+  const out: Record<string, StoreBadge> = {};
+  for (const [slug, r] of Object.entries(ratings?.stores ?? {})) out[slug] = { rating: r };
+  const bySlug = new Map<string, PublicOffersOut["offers"]>();
+  for (const o of offers?.offers ?? []) bySlug.set(o.store_slug, [...(bySlug.get(o.store_slug) ?? []), o]);
+  for (const [slug, list] of bySlug) {
+    const best = bestOffer(list);
+    if (best) out[slug] = { ...out[slug], offer: offerHeadline(best) };
+  }
+  return out;
 }

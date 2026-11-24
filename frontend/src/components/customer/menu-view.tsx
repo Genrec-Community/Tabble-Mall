@@ -9,6 +9,7 @@ import { SectionHeading } from "@/components/customer/lux";
 import { cuisines } from "@/components/customer/food-types";
 import { SectionStrip } from "@/components/customer/section-strip";
 import { StoreLogo } from "@/components/customer/store-logo";
+import { OfferChips, RatingChip, RecentReviews, type StoreExtras } from "@/components/customer/store-extras";
 import { useQuickAdd } from "@/components/customer/use-quick-add";
 import { publicPopular, type PublicCategoryOut, type PublicMenuOut, type PublicProductOut } from "@/lib/api";
 import { unwrap } from "@/lib/api-error";
@@ -46,9 +47,11 @@ export function filterMenu(
 export function MenuView({
   mallSlug,
   menu,
+  extras,
 }: {
   mallSlug: string;
   menu: PublicMenuOut;
+  extras?: StoreExtras;
 }) {
   const { store } = menu;
   const [open, setOpen] = useState<{
@@ -170,8 +173,11 @@ export function MenuView({
           <h1 className="font-display text-2xl leading-tight font-semibold sm:text-3xl">
             {store.name}
           </h1>
-          {store.food_types.length > 0 && (
-            <p className="text-sm text-lux-orange">{cuisines(store.food_types)}</p>
+          {(store.food_types.length > 0 || extras?.rating) && (
+            <p className="flex flex-wrap items-center gap-2 text-sm text-lux-orange">
+              {extras?.rating && <RatingChip rating={extras.rating} />}
+              {store.food_types.length > 0 && cuisines(store.food_types)}
+            </p>
           )}
           {store.description && (
             <p className="text-sm text-muted-foreground sm:text-base">
@@ -200,6 +206,8 @@ export function MenuView({
           </p>
         )}
       </header>
+
+      {extras && <OfferChips offers={extras.offers} />}
 
       {dishCount > 0 && (
         <div className="mt-4 flex items-center gap-2">
@@ -306,6 +314,8 @@ export function MenuView({
           </ul>
         </section>
       ))}
+
+      {!filtering && extras && <RecentReviews reviews={extras.reviews} />}
 
       {!filtering && sections.length > 2 && (
         <button

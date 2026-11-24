@@ -38,7 +38,7 @@ OWNER_ADMIN = "jaisamyukth@gmail.com"
 ORG_OWNER = "demo.owner"
 ORG_SLUG = "demo-foods"
 MALL_SLUG = "demo-mall"
-DEMO_VERSION = 3  # bump whenever demo_menu.py or the photos change
+DEMO_VERSION = 4  # bump whenever demo_menu.py, the photos or the demo offers change
 
 LOCAL = Path(__file__).resolve().parent
 ROOT = LOCAL.parent
@@ -272,11 +272,93 @@ def sync_store(
     return created_owner
 
 
+# A few running offers, so the mall page, menus and cart show how they work. Each store pays for
+# its own (it comes out of its share); MallT takes nothing.
+DEMO_OFFERS: dict[str, list[dict[str, Any]]] = {
+    "madras-tiffin": [
+        {"title": "Breakfast special", "kind": "percent", "value": 1000, "max_discount_paise": 4000}
+    ],
+    "biryani-darbar": [
+        {"title": "Feast deal", "kind": "flat", "value": 5000, "min_subtotal_paise": 39900}
+    ],
+    "chai-point": [
+        {
+            "title": "First chai on us",
+            "kind": "flat",
+            "value": 3000,
+            "min_subtotal_paise": 9900,
+            "code": "CHAI30",
+            "per_customer_limit": 1,
+        }
+    ],
+    "scoops-shakes": [
+        {
+            "title": "Sweet tooth",
+            "kind": "percent",
+            "value": 2000,
+            "max_discount_paise": 6000,
+            "min_subtotal_paise": 19900,
+        }
+    ],
+}
+# Mall-wide combos: (name, description, [(store slug, dish)], rupees off the dishes bought alone).
+DEMO_COMBOS: list[tuple[str, str, list[tuple[str, str]], int]] = [
+    (
+        "Burger and shake",
+        "A Cheese Burger from Burger Hub with a Mango Shake from Scoops & Shakes.",
+        [("burger-hub", "Cheese Burger"), ("scoops-shakes", "Mango Shake")],
+        40,
+    ),
+    (
+        "Biryani and kulfi",
+        "Chicken Dum Biryani with a Kulfi to finish.",
+        [("biryani-darbar", "Chicken Dum Biryani"), ("scoops-shakes", "Kulfi")],
+        30,
+    ),
+]
+
+
+def sync_offers(owner: str, mall_id: str) -> None:
+    """Adds the demo offers and combos that are missing (by name); never touches anything else."""
+    stores = {s["slug"]: s for s in call("GET", f"/malls/{mall_id}/stores", owner)}
+    products: dict[tuple[str, str], dict[str, Any]] = {}
+    for slug, store in stores.items():
+        for p in call("GET", f"/stores/{store['id']}/products", owner):
+            products[(slug, p["name"])] = p
+    for slug, offers in DEMO_OFFERS.items():
+        store = stores.get(slug)
+        if store is None:
+            continue
+        have = {o["title"] for o in call("GET", f"/stores/{store['id']}/offers", owner)}
+        for offer in offers:
+            if offer["title"] not in have:
+                call("POST", f"/stores/{store['id']}/offers", owner, offer)
+    have = {c["name"] for c in call("GET", f"/malls/{mall_id}/combos", owner)}
+    for name, description, dishes, off_rupees in DEMO_COMBOS:
+        picked = [products.get(d) for d in dishes]
+        if name in have or any(p is None for p in picked):
+            continue
+        regular = sum(min(v["price_paise"] for v in p["variants"]) for p in picked if p)
+        call(
+            "POST",
+            f"/malls/{mall_id}/combos",
+            owner,
+            {
+                "name": name,
+                "description": description,
+                "price_paise": regular - off_rupees * 100,
+                "items": [{"product_id": p["id"], "quantity": 1} for p in picked if p],
+            },
+        )
+
+
 def sync_demo(owner: str, mall_id: str) -> None:
     existing = {s["slug"]: s for s in call("GET", f"/malls/{mall_id}/stores", owner)}
     for spec in STORES:
         print(f"  {spec['name']}")
         sync_store(owner, mall_id, existing, spec)
+    print("  offers and combos")
+    sync_offers(owner, mall_id)
 
 
 def find_mall(owner: str) -> str | None:
@@ -302,6 +384,8 @@ def write_logins(secret: str | None, uri: str | None) -> None:
         "  Sign in with any 10-digit mobile number. The code is printed by show-otp.bat.",
         "  Burger Hub and Chai Kadai wait for you to accept orders in their dashboards;",
         "  the other restaurants' kitchens run on their own so you can watch an order go live.",
+        "  Offers are running at four restaurants (try the coupon CHAI30 at Chai Kadai), and two",
+        "  combos apply in the cart by themselves. Rate an order after pickup to see reviews.",
         "",
         "Staff sign-in:      http://localhost:8080/login",
         f"  {ORG_OWNER:<16} organization owner (all restaurants, malls and staff)",

@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
+import { InstallButton } from "@/components/customer/pwa";
 import { usePathname, useRouter } from "next/navigation";
 import { ChevronLeft, ClipboardList, ShoppingBag } from "lucide-react";
 import { useEffect, useSyncExternalStore } from "react";
@@ -82,6 +83,7 @@ export function CustomerHeader({ mallSlug }: { mallSlug?: string }) {
         >
           Mall<span className="text-lux-orange">T</span>
         </Link>
+        <InstallButton />
         {status === "authed" ? (
           <>
             <Link

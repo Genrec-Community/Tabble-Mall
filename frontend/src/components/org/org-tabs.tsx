@@ -20,7 +20,7 @@ export function OrgTabs() {
   ].filter((t) => t.show);
 
   return (
-    <nav className="flex gap-4 border-b">
+    <nav className="flex gap-4 border-b print:hidden">
       {tabs.map((t) => (
         <Link
           key={t.href}

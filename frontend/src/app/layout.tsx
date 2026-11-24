@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Montserrat } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
@@ -23,7 +23,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "MallT",
   description: "Order from every store in the mall with one QR.",
+  icons: { apple: "/icons/apple-touch-icon.png" },
+  appleWebApp: { capable: true, title: "MallT", statusBarStyle: "black" },
 };
+
+export const viewport: Viewport = { themeColor: "#000000" };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (

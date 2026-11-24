@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { LUX_PRIMARY, Skeleton, withVariant } from "@/components/customer/lux";
 import { ConnectionNotice } from "@/components/customer/order-alerts";
 import { CountdownRing, FullScreenButton, NotifyOptIn, PickupCodeScreen } from "@/components/customer/order-tracking";
+import { RateOrder } from "@/components/customer/rate-order";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -85,6 +86,13 @@ export function OrderView({ orderId }: { orderId: string }) {
       <h1 className="font-display text-2xl font-semibold">
         Your order · {formatPaise(data.total_paise)}
       </h1>
+      {data.pickup_at && (
+        <p className="rounded-2xl border border-gold/40 bg-gold/10 p-3 text-sm">
+          Scheduled for pickup at{" "}
+          <strong>{new Date(data.pickup_at).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" })}</strong>.
+          The stores will have it ready then.
+        </p>
+      )}
       <ConnectionNotice status={live} />
       <OrderCode order={data} />
       {data.stores.some((s) => ["paid", "accepted", "preparing"].includes(s.status)) && <NotifyOptIn />}
@@ -121,6 +129,7 @@ export function OrderView({ orderId }: { orderId: string }) {
       {data.stores.map((s) => (
         <StoreOrderCard
           key={s.id}
+          orderId={orderId}
           order={s}
           cancelling={cancel.isPending}
           onCancel={() => cancel.mutate(s.id)}
@@ -147,10 +156,12 @@ const PROGRESS_LABEL = {
 
 function StoreOrderCard({
   order,
+  orderId,
   cancelling,
   onCancel,
 }: {
   order: CustomerStoreOrderOut;
+  orderId: string;
   cancelling: boolean;
   onCancel: () => void;
 }) {
@@ -221,10 +232,17 @@ function StoreOrderCard({
           </li>
         ))}
       </ul>
+      {(order.discounts ?? []).map((d) => (
+        <p key={`${d.kind}-${d.name}`} className="flex justify-between text-sm text-status-ready">
+          <span>{d.kind === "combo" ? "Combo" : "Offer"}: {d.name}</span>
+          <span>−{formatPaise(d.amount_paise)}</span>
+        </p>
+      ))}
       <p className="flex justify-between text-sm font-semibold">
         <span>Total</span>
         <span>{formatPaise(order.total_paise)}</span>
       </p>
+      <RateOrder order={order} orderId={orderId} />
       {order.status === "paid" && (
         <div className="space-y-1">
           <Button

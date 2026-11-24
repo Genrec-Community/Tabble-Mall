@@ -3,11 +3,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { cartQueryKey, useCart } from "@/components/customer/customer-header";
 import { Clock, Lock, MapPin, Plus, ShoppingBag } from "lucide-react";
+import { CouponBox } from "@/components/customer/coupon-box";
 import { GoesWellWith } from "@/components/customer/goes-well-with";
+import { GroupOrderCard } from "@/components/customer/group-order-card";
+import { PickupTime } from "@/components/customer/pickup-time";
 import {
   FoodMark,
   LUX_PRIMARY,
@@ -43,6 +46,8 @@ export function CartView({ mallSlug }: { mallSlug: string }) {
   const cart = useCart(mallSlug);
   // One key per attempt, reused if the customer taps twice or the network drops mid-request.
   const idempotencyKey = useRef(crypto.randomUUID());
+  // Schedule ahead: null = as soon as it's ready.
+  const [pickupAt, setPickupAt] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === "anon")
@@ -90,7 +95,7 @@ export function CartView({ mallSlug }: { mallSlug: string }) {
         await ordersCheckout({
           path: { mall_slug: mallSlug },
           headers: { "idempotency-key": idempotencyKey.current },
-          body: {},
+          body: { pickup_at: pickupAt },
         }),
       ),
     onSuccess: async (order) => {
@@ -214,6 +219,12 @@ export function CartView({ mallSlug }: { mallSlug: string }) {
                   {formatPaise(store.subtotal_paise)}
                 </span>
               </p>
+              {(store.discounts ?? []).map((d) => (
+                <p key={`${d.kind}-${d.name}`} className="flex justify-between text-sm text-status-ready">
+                  <span>{d.kind === "combo" ? "Combo" : "Offer"}: {d.name}</span>
+                  <span>−{formatPaise(d.amount_paise)}</span>
+                </p>
+              ))}
             </section>
           ))}
           <Link
@@ -226,6 +237,14 @@ export function CartView({ mallSlug }: { mallSlug: string }) {
           <GoesWellWith mallSlug={mallSlug} cart={data} />
         </div>
         <aside className="space-y-4 lg:sticky lg:top-20">
+          <GroupOrderCard mallSlug={mallSlug} cart={data} />
+          <PickupTime
+            mallSlug={mallSlug}
+            cartVersion={count}
+            value={pickupAt}
+            onChange={setPickupAt}
+          />
+          <CouponBox mallSlug={mallSlug} cart={data} onCart={setCart} />
           <section
             aria-label="Bill"
             className="lux-card space-y-2 rounded-3xl p-4 text-sm"
@@ -242,8 +261,14 @@ export function CartView({ mallSlug }: { mallSlug: string }) {
               ))}
             <p className="flex justify-between text-muted-foreground">
               <span>Item total</span>
-              <span>{formatPaise(data.total_paise)}</span>
+              <span>{formatPaise(data.items_total_paise ?? data.total_paise)}</span>
             </p>
+            {!!data.discount_paise && (
+              <p className="flex justify-between font-semibold text-status-ready">
+                <span>Offers and combos</span>
+                <span>−{formatPaise(data.discount_paise)}</span>
+              </p>
+            )}
             <p className="flex justify-between text-muted-foreground">
               <span>Platform fee</span>
               <span>

@@ -10,7 +10,7 @@ import { DishSheet } from "@/components/customer/dish-sheet";
 import { FOOD_TYPE_LABELS, cuisines } from "@/components/customer/food-types";
 import { DishImage, FoodMark, SectionHeading, Skeleton } from "@/components/customer/lux";
 import { OrderAgain } from "@/components/customer/order-again";
-import { RestaurantCard } from "@/components/customer/restaurant-card";
+import { RestaurantCard, type StoreBadge } from "@/components/customer/restaurant-card";
 import { StoreLogo } from "@/components/customer/store-logo";
 import { useQuickAdd } from "@/components/customer/use-quick-add";
 import { publicPublicItems, type PopularItemOut, type PublicItemOut, type PublicProductOut, type PublicStoreCardOut } from "@/lib/api";
@@ -86,10 +86,13 @@ export function MallBrowser({
   stores,
   popular = [],
   featured = NO_FEATURED,
+  badges = {},
 }: {
   mallSlug: string;
   stores: PublicStoreCardOut[];
   popular?: PopularItemOut[];
+  /** Stars and best offer per restaurant slug. */
+  badges?: Record<string, StoreBadge>;
   /** Where paid featured spots show, as the owner switched them (rail row, top of the list). */
   featured?: FeaturedPlacement;
 }) {
@@ -368,7 +371,7 @@ export function MallBrowser({
           <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {restaurants.map((s, i) => (
               <li key={s.slug} className="motion-safe:animate-[rise-in_300ms_cubic-bezier(0.2,0,0.3,1)_both]" style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}>
-                <RestaurantCard mallSlug={mallSlug} store={s} priority={i < 2} featuredTag={featured.first && !!s.featured} />
+                <RestaurantCard mallSlug={mallSlug} store={s} priority={i < 2} featuredTag={featured.first && !!s.featured} badge={badges[s.slug]} />
               </li>
             ))}
           </ul>
