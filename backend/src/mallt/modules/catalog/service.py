@@ -914,3 +914,21 @@ async def print_prefs(session: AsyncSession, store_id: uuid.UUID) -> StorePrintP
     return StorePrintPrefs(
         row.auto_print, row.kot_when, row.bill_when, row.gstin, row.fssai, row.timezone
     )
+
+
+async def store_profiles(
+    session: AsyncSession, store_ids: list[uuid.UUID]
+) -> dict[uuid.UUID, StorePrintPrefs]:
+    """Timezone, GSTIN and FSSAI of several stores at once (defaults for unsaved settings)."""
+    rows = await CatalogRepository(session).settings_for_stores(store_ids)
+    out = {}
+    for store_id in store_ids:
+        row = rows.get(store_id)
+        out[store_id] = (
+            StorePrintPrefs(
+                row.auto_print, row.kot_when, row.bill_when, row.gstin, row.fssai, row.timezone
+            )
+            if row
+            else StorePrintPrefs(True, "accepted", "ready", None, None, "Asia/Kolkata")
+        )
+    return out

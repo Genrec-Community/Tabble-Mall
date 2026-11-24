@@ -262,3 +262,32 @@ class OrdersRepository:
     async def add(self, *objs: object) -> None:
         self.session.add_all(objs)
         await self.session.flush()
+
+    # ---- reports ----
+
+    async def sales_orders(
+        self,
+        *,
+        store_id: uuid.UUID | None = None,
+        mall_id: uuid.UUID | None = None,
+        start: date,
+        end: date,
+    ) -> list[StoreOrder]:
+        """Store orders of the given store-local days that were paid for (any later state)."""
+        stmt = (
+            select(StoreOrder)
+            .options(*_ORDER_LOAD)
+            .where(
+                StoreOrder.order_date >= start,
+                StoreOrder.order_date <= end,
+                StoreOrder.status.not_in(
+                    (StoreOrderStatus.PENDING_PAYMENT, StoreOrderStatus.PAYMENT_FAILED)
+                ),
+            )
+            .order_by(StoreOrder.order_date, StoreOrder.order_no, StoreOrder.id)
+        )
+        if store_id is not None:
+            stmt = stmt.where(StoreOrder.store_id == store_id)
+        if mall_id is not None:
+            stmt = stmt.where(StoreOrder.mall_id == mall_id)
+        return list((await self.session.execute(stmt)).scalars())

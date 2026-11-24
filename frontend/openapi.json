@@ -384,6 +384,39 @@
         "title": "AvailabilityVariant",
         "type": "object"
       },
+      "BestSellerOut": {
+        "properties": {
+          "gross_paise": {
+            "title": "Gross Paise",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "quantity": {
+            "title": "Quantity",
+            "type": "integer"
+          },
+          "store_name": {
+            "title": "Store Name",
+            "type": "string"
+          },
+          "variant_name": {
+            "title": "Variant Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "variant_name",
+          "store_name",
+          "quantity",
+          "gross_paise"
+        ],
+        "title": "BestSellerOut",
+        "type": "object"
+      },
       "CartLineIn": {
         "properties": {
           "note": {
@@ -982,6 +1015,30 @@
           }
         },
         "title": "CustomerUpdate",
+        "type": "object"
+      },
+      "DayOut": {
+        "properties": {
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "gross_paise": {
+            "title": "Gross Paise",
+            "type": "integer"
+          },
+          "orders": {
+            "title": "Orders",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "date",
+          "orders",
+          "gross_paise"
+        ],
+        "title": "DayOut",
         "type": "object"
       },
       "DesignIn": {
@@ -1622,6 +1679,44 @@
         "title": "GrantOut",
         "type": "object"
       },
+      "GstRateOut": {
+        "properties": {
+          "cgst_paise": {
+            "title": "Cgst Paise",
+            "type": "integer"
+          },
+          "gross_paise": {
+            "title": "Gross Paise",
+            "type": "integer"
+          },
+          "sgst_paise": {
+            "title": "Sgst Paise",
+            "type": "integer"
+          },
+          "tax_bps": {
+            "title": "Tax Bps",
+            "type": "integer"
+          },
+          "tax_paise": {
+            "title": "Tax Paise",
+            "type": "integer"
+          },
+          "taxable_paise": {
+            "title": "Taxable Paise",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "tax_bps",
+          "taxable_paise",
+          "cgst_paise",
+          "sgst_paise",
+          "tax_paise",
+          "gross_paise"
+        ],
+        "title": "GstRateOut",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -1633,6 +1728,29 @@
           }
         },
         "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HourOut": {
+        "properties": {
+          "gross_paise": {
+            "title": "Gross Paise",
+            "type": "integer"
+          },
+          "hour": {
+            "title": "Hour",
+            "type": "integer"
+          },
+          "orders": {
+            "title": "Orders",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "hour",
+          "orders",
+          "gross_paise"
+        ],
+        "title": "HourOut",
         "type": "object"
       },
       "HoursWindow": {
@@ -1729,6 +1847,175 @@
           "public_url"
         ],
         "title": "ImagePresignOut",
+        "type": "object"
+      },
+      "InvoiceLineOut": {
+        "properties": {
+          "cgst_paise": {
+            "title": "Cgst Paise",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "quantity": {
+            "title": "Quantity",
+            "type": "integer"
+          },
+          "sgst_paise": {
+            "title": "Sgst Paise",
+            "type": "integer"
+          },
+          "tax_bps": {
+            "title": "Tax Bps",
+            "type": "integer"
+          },
+          "taxable_paise": {
+            "title": "Taxable Paise",
+            "type": "integer"
+          },
+          "total_paise": {
+            "title": "Total Paise",
+            "type": "integer"
+          },
+          "unit_price_paise": {
+            "title": "Unit Price Paise",
+            "type": "integer"
+          },
+          "variant_name": {
+            "title": "Variant Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "variant_name",
+          "quantity",
+          "unit_price_paise",
+          "tax_bps",
+          "taxable_paise",
+          "cgst_paise",
+          "sgst_paise",
+          "total_paise"
+        ],
+        "title": "InvoiceLineOut",
+        "type": "object"
+      },
+      "InvoiceOut": {
+        "description": "A GST tax invoice for one store order. Never carries the pickup code.",
+        "properties": {
+          "cgst_paise": {
+            "title": "Cgst Paise",
+            "type": "integer"
+          },
+          "customer_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Name"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "invoice_no": {
+            "title": "Invoice No",
+            "type": "string"
+          },
+          "issued_at": {
+            "format": "date-time",
+            "title": "Issued At",
+            "type": "string"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/InvoiceLineOut"
+            },
+            "title": "Lines",
+            "type": "array"
+          },
+          "order_id": {
+            "format": "uuid",
+            "title": "Order Id",
+            "type": "string"
+          },
+          "order_no": {
+            "title": "Order No",
+            "type": "integer"
+          },
+          "sac": {
+            "title": "Sac",
+            "type": "string"
+          },
+          "sgst_paise": {
+            "title": "Sgst Paise",
+            "type": "integer"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "store_fssai": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Store Fssai"
+          },
+          "store_gstin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Store Gstin"
+          },
+          "store_name": {
+            "title": "Store Name",
+            "type": "string"
+          },
+          "taxable_paise": {
+            "title": "Taxable Paise",
+            "type": "integer"
+          },
+          "total_paise": {
+            "title": "Total Paise",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "invoice_no",
+          "order_id",
+          "order_no",
+          "date",
+          "issued_at",
+          "status",
+          "store_name",
+          "store_gstin",
+          "store_fssai",
+          "customer_name",
+          "sac",
+          "lines",
+          "taxable_paise",
+          "cgst_paise",
+          "sgst_paise",
+          "total_paise"
+        ],
+        "title": "InvoiceOut",
         "type": "object"
       },
       "JobKind": {
@@ -4138,6 +4425,64 @@
         "title": "ReorderOut",
         "type": "object"
       },
+      "ReportTotalsOut": {
+        "properties": {
+          "average_order_paise": {
+            "title": "Average Order Paise",
+            "type": "integer"
+          },
+          "cancelled_orders": {
+            "title": "Cancelled Orders",
+            "type": "integer"
+          },
+          "cancelled_paise": {
+            "title": "Cancelled Paise",
+            "type": "integer"
+          },
+          "gateway_fee_paise": {
+            "title": "Gateway Fee Paise",
+            "type": "integer"
+          },
+          "gross_paise": {
+            "title": "Gross Paise",
+            "type": "integer"
+          },
+          "items": {
+            "title": "Items",
+            "type": "integer"
+          },
+          "orders": {
+            "title": "Orders",
+            "type": "integer"
+          },
+          "payout_paise": {
+            "title": "Payout Paise",
+            "type": "integer"
+          },
+          "tax_paise": {
+            "title": "Tax Paise",
+            "type": "integer"
+          },
+          "taxable_paise": {
+            "title": "Taxable Paise",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "orders",
+          "items",
+          "gross_paise",
+          "tax_paise",
+          "taxable_paise",
+          "gateway_fee_paise",
+          "payout_paise",
+          "average_order_paise",
+          "cancelled_orders",
+          "cancelled_paise"
+        ],
+        "title": "ReportTotalsOut",
+        "type": "object"
+      },
       "ReprintIn": {
         "additionalProperties": false,
         "properties": {
@@ -4236,6 +4581,75 @@
           "grantable_by"
         ],
         "title": "RoleOut",
+        "type": "object"
+      },
+      "SalesReportOut": {
+        "properties": {
+          "best_sellers": {
+            "items": {
+              "$ref": "#/components/schemas/BestSellerOut"
+            },
+            "title": "Best Sellers",
+            "type": "array"
+          },
+          "days": {
+            "items": {
+              "$ref": "#/components/schemas/DayOut"
+            },
+            "title": "Days",
+            "type": "array"
+          },
+          "end": {
+            "format": "date",
+            "title": "End",
+            "type": "string"
+          },
+          "gst": {
+            "items": {
+              "$ref": "#/components/schemas/GstRateOut"
+            },
+            "title": "Gst",
+            "type": "array"
+          },
+          "hours": {
+            "items": {
+              "$ref": "#/components/schemas/HourOut"
+            },
+            "title": "Hours",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "start": {
+            "format": "date",
+            "title": "Start",
+            "type": "string"
+          },
+          "stores": {
+            "items": {
+              "$ref": "#/components/schemas/StoreTotalsOut"
+            },
+            "title": "Stores",
+            "type": "array"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/ReportTotalsOut"
+          }
+        },
+        "required": [
+          "start",
+          "end",
+          "name",
+          "totals",
+          "best_sellers",
+          "hours",
+          "days",
+          "gst",
+          "stores"
+        ],
+        "title": "SalesReportOut",
         "type": "object"
       },
       "ScanOut": {
@@ -5512,6 +5926,29 @@
           "items"
         ],
         "title": "StorePayoutsOut",
+        "type": "object"
+      },
+      "StoreTotalsOut": {
+        "properties": {
+          "store_id": {
+            "format": "uuid",
+            "title": "Store Id",
+            "type": "string"
+          },
+          "store_name": {
+            "title": "Store Name",
+            "type": "string"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/ReportTotalsOut"
+          }
+        },
+        "required": [
+          "store_id",
+          "store_name",
+          "totals"
+        ],
+        "title": "StoreTotalsOut",
         "type": "object"
       },
       "StoreUpdate": {
@@ -7150,6 +7587,84 @@
         "summary": "List Mall Orders",
         "tags": [
           "store-orders"
+        ]
+      }
+    },
+    "/api/v1/malls/{mall_id}/reports/sales": {
+      "get": {
+        "operationId": "store-orders_mall_sales_report",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mall_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Mall Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "start",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start"
+            }
+          },
+          {
+            "in": "query",
+            "name": "end",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalesReportOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Mall Sales Report",
+        "tags": [
+          "store-orders",
+          "reports"
         ]
       }
     },
@@ -11419,6 +11934,166 @@
         "summary": "Set Availability",
         "tags": [
           "catalog"
+        ]
+      }
+    },
+    "/api/v1/stores/{store_id}/reports/invoices": {
+      "get": {
+        "operationId": "store-orders_store_invoices",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "store_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Store Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "start",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start"
+            }
+          },
+          {
+            "in": "query",
+            "name": "end",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/InvoiceOut"
+                  },
+                  "title": "Response Store-Orders Store Invoices",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Store Invoices",
+        "tags": [
+          "store-orders",
+          "reports"
+        ]
+      }
+    },
+    "/api/v1/stores/{store_id}/reports/sales": {
+      "get": {
+        "operationId": "store-orders_store_sales_report",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "store_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Store Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "start",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start"
+            }
+          },
+          {
+            "in": "query",
+            "name": "end",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalesReportOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Store Sales Report",
+        "tags": [
+          "store-orders",
+          "reports"
         ]
       }
     },

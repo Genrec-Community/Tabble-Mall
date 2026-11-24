@@ -202,6 +202,32 @@ export type AvailabilityVariant = {
 };
 
 /**
+ * BestSellerOut
+ */
+export type BestSellerOut = {
+    /**
+     * Gross Paise
+     */
+    gross_paise: number;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Quantity
+     */
+    quantity: number;
+    /**
+     * Store Name
+     */
+    store_name: string;
+    /**
+     * Variant Name
+     */
+    variant_name: string;
+};
+
+/**
  * CartLineIn
  */
 export type CartLineIn = {
@@ -533,6 +559,24 @@ export type CustomerUpdate = {
      * Name
      */
     name?: string | null;
+};
+
+/**
+ * DayOut
+ */
+export type DayOut = {
+    /**
+     * Date
+     */
+    date: string;
+    /**
+     * Gross Paise
+     */
+    gross_paise: number;
+    /**
+     * Orders
+     */
+    orders: number;
 };
 
 /**
@@ -888,6 +932,36 @@ export type GrantOut = {
 };
 
 /**
+ * GstRateOut
+ */
+export type GstRateOut = {
+    /**
+     * Cgst Paise
+     */
+    cgst_paise: number;
+    /**
+     * Gross Paise
+     */
+    gross_paise: number;
+    /**
+     * Sgst Paise
+     */
+    sgst_paise: number;
+    /**
+     * Tax Bps
+     */
+    tax_bps: number;
+    /**
+     * Tax Paise
+     */
+    tax_paise: number;
+    /**
+     * Taxable Paise
+     */
+    taxable_paise: number;
+};
+
+/**
  * HTTPValidationError
  */
 export type HttpValidationError = {
@@ -895,6 +969,24 @@ export type HttpValidationError = {
      * Detail
      */
     detail?: Array<ValidationError>;
+};
+
+/**
+ * HourOut
+ */
+export type HourOut = {
+    /**
+     * Gross Paise
+     */
+    gross_paise: number;
+    /**
+     * Hour
+     */
+    hour: number;
+    /**
+     * Orders
+     */
+    orders: number;
 };
 
 /**
@@ -955,6 +1047,120 @@ export type ImagePresignOut = {
      * Url
      */
     url: string;
+};
+
+/**
+ * InvoiceLineOut
+ */
+export type InvoiceLineOut = {
+    /**
+     * Cgst Paise
+     */
+    cgst_paise: number;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Quantity
+     */
+    quantity: number;
+    /**
+     * Sgst Paise
+     */
+    sgst_paise: number;
+    /**
+     * Tax Bps
+     */
+    tax_bps: number;
+    /**
+     * Taxable Paise
+     */
+    taxable_paise: number;
+    /**
+     * Total Paise
+     */
+    total_paise: number;
+    /**
+     * Unit Price Paise
+     */
+    unit_price_paise: number;
+    /**
+     * Variant Name
+     */
+    variant_name: string;
+};
+
+/**
+ * InvoiceOut
+ *
+ * A GST tax invoice for one store order. Never carries the pickup code.
+ */
+export type InvoiceOut = {
+    /**
+     * Cgst Paise
+     */
+    cgst_paise: number;
+    /**
+     * Customer Name
+     */
+    customer_name: string | null;
+    /**
+     * Date
+     */
+    date: string;
+    /**
+     * Invoice No
+     */
+    invoice_no: string;
+    /**
+     * Issued At
+     */
+    issued_at: string;
+    /**
+     * Lines
+     */
+    lines: Array<InvoiceLineOut>;
+    /**
+     * Order Id
+     */
+    order_id: string;
+    /**
+     * Order No
+     */
+    order_no: number;
+    /**
+     * Sac
+     */
+    sac: string;
+    /**
+     * Sgst Paise
+     */
+    sgst_paise: number;
+    /**
+     * Status
+     */
+    status: string;
+    /**
+     * Store Fssai
+     */
+    store_fssai: string | null;
+    /**
+     * Store Gstin
+     */
+    store_gstin: string | null;
+    /**
+     * Store Name
+     */
+    store_name: string;
+    /**
+     * Taxable Paise
+     */
+    taxable_paise: number;
+    /**
+     * Total Paise
+     */
+    total_paise: number;
 };
 
 /**
@@ -2222,6 +2428,52 @@ export type ReorderOut = {
 };
 
 /**
+ * ReportTotalsOut
+ */
+export type ReportTotalsOut = {
+    /**
+     * Average Order Paise
+     */
+    average_order_paise: number;
+    /**
+     * Cancelled Orders
+     */
+    cancelled_orders: number;
+    /**
+     * Cancelled Paise
+     */
+    cancelled_paise: number;
+    /**
+     * Gateway Fee Paise
+     */
+    gateway_fee_paise: number;
+    /**
+     * Gross Paise
+     */
+    gross_paise: number;
+    /**
+     * Items
+     */
+    items: number;
+    /**
+     * Orders
+     */
+    orders: number;
+    /**
+     * Payout Paise
+     */
+    payout_paise: number;
+    /**
+     * Tax Paise
+     */
+    tax_paise: number;
+    /**
+     * Taxable Paise
+     */
+    taxable_paise: number;
+};
+
+/**
  * ReprintIn
  */
 export type ReprintIn = {
@@ -2277,6 +2529,45 @@ export type RoleOut = {
      */
     permissions: Array<string>;
     scope_type: ScopeType;
+};
+
+/**
+ * SalesReportOut
+ */
+export type SalesReportOut = {
+    /**
+     * Best Sellers
+     */
+    best_sellers: Array<BestSellerOut>;
+    /**
+     * Days
+     */
+    days: Array<DayOut>;
+    /**
+     * End
+     */
+    end: string;
+    /**
+     * Gst
+     */
+    gst: Array<GstRateOut>;
+    /**
+     * Hours
+     */
+    hours: Array<HourOut>;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Start
+     */
+    start: string;
+    /**
+     * Stores
+     */
+    stores: Array<StoreTotalsOut>;
+    totals: ReportTotalsOut;
 };
 
 /**
@@ -2895,6 +3186,21 @@ export type StorePayoutsOut = {
      */
     next_cursor?: string | null;
     summary: StorePayoutSummaryOut;
+};
+
+/**
+ * StoreTotalsOut
+ */
+export type StoreTotalsOut = {
+    /**
+     * Store Id
+     */
+    store_id: string;
+    /**
+     * Store Name
+     */
+    store_name: string;
+    totals: ReportTotalsOut;
 };
 
 /**
@@ -3942,6 +4248,45 @@ export type StoreOrdersListMallOrdersResponses = {
 };
 
 export type StoreOrdersListMallOrdersResponse = StoreOrdersListMallOrdersResponses[keyof StoreOrdersListMallOrdersResponses];
+
+export type StoreOrdersMallSalesReportData = {
+    body?: never;
+    path: {
+        /**
+         * Mall Id
+         */
+        mall_id: string;
+    };
+    query?: {
+        /**
+         * Start
+         */
+        start?: string | null;
+        /**
+         * End
+         */
+        end?: string | null;
+    };
+    url: '/api/v1/malls/{mall_id}/reports/sales';
+};
+
+export type StoreOrdersMallSalesReportErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type StoreOrdersMallSalesReportError = StoreOrdersMallSalesReportErrors[keyof StoreOrdersMallSalesReportErrors];
+
+export type StoreOrdersMallSalesReportResponses = {
+    /**
+     * Successful Response
+     */
+    200: SalesReportOut;
+};
+
+export type StoreOrdersMallSalesReportResponse = StoreOrdersMallSalesReportResponses[keyof StoreOrdersMallSalesReportResponses];
 
 export type StaffListMallStaffData = {
     body?: never;
@@ -6572,6 +6917,86 @@ export type CatalogSetAvailabilityResponses = {
 };
 
 export type CatalogSetAvailabilityResponse = CatalogSetAvailabilityResponses[keyof CatalogSetAvailabilityResponses];
+
+export type StoreOrdersStoreInvoicesData = {
+    body?: never;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+    };
+    query?: {
+        /**
+         * Start
+         */
+        start?: string | null;
+        /**
+         * End
+         */
+        end?: string | null;
+    };
+    url: '/api/v1/stores/{store_id}/reports/invoices';
+};
+
+export type StoreOrdersStoreInvoicesErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type StoreOrdersStoreInvoicesError = StoreOrdersStoreInvoicesErrors[keyof StoreOrdersStoreInvoicesErrors];
+
+export type StoreOrdersStoreInvoicesResponses = {
+    /**
+     * Response Store-Orders Store Invoices
+     *
+     * Successful Response
+     */
+    200: Array<InvoiceOut>;
+};
+
+export type StoreOrdersStoreInvoicesResponse = StoreOrdersStoreInvoicesResponses[keyof StoreOrdersStoreInvoicesResponses];
+
+export type StoreOrdersStoreSalesReportData = {
+    body?: never;
+    path: {
+        /**
+         * Store Id
+         */
+        store_id: string;
+    };
+    query?: {
+        /**
+         * Start
+         */
+        start?: string | null;
+        /**
+         * End
+         */
+        end?: string | null;
+    };
+    url: '/api/v1/stores/{store_id}/reports/sales';
+};
+
+export type StoreOrdersStoreSalesReportErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type StoreOrdersStoreSalesReportError = StoreOrdersStoreSalesReportErrors[keyof StoreOrdersStoreSalesReportErrors];
+
+export type StoreOrdersStoreSalesReportResponses = {
+    /**
+     * Successful Response
+     */
+    200: SalesReportOut;
+};
+
+export type StoreOrdersStoreSalesReportResponse = StoreOrdersStoreSalesReportResponses[keyof StoreOrdersStoreSalesReportResponses];
 
 export type CatalogGetSettingsData = {
     body?: never;

@@ -1,3 +1,4 @@
+import datetime as dt
 import uuid
 from datetime import datetime
 from typing import Annotated, Literal
@@ -178,3 +179,99 @@ class ReasonIn(BaseModel):
 
 class PickupIn(BaseModel):
     code: Annotated[str, StringConstraints(pattern=r"^\d{4}$")]
+
+
+# ---- reports ----
+
+
+class ReportTotalsOut(BaseModel):
+    orders: int
+    items: int
+    gross_paise: int  # what customers paid (GST-inclusive)
+    tax_paise: int  # the GST inside gross
+    taxable_paise: int  # gross minus GST
+    gateway_fee_paise: int
+    payout_paise: int  # gross minus the gateway fee: what the store receives
+    average_order_paise: int
+    cancelled_orders: int  # rejected, expired or cancelled after payment (refunded)
+    cancelled_paise: int
+
+
+class BestSellerOut(BaseModel):
+    name: str
+    variant_name: str
+    store_name: str
+    quantity: int
+    gross_paise: int
+
+
+class HourOut(BaseModel):
+    hour: int  # 0-23, store-local
+    orders: int
+    gross_paise: int
+
+
+class DayOut(BaseModel):
+    date: dt.date
+    orders: int
+    gross_paise: int
+
+
+class GstRateOut(BaseModel):
+    tax_bps: int
+    taxable_paise: int
+    cgst_paise: int
+    sgst_paise: int
+    tax_paise: int
+    gross_paise: int
+
+
+class StoreTotalsOut(BaseModel):
+    store_id: uuid.UUID
+    store_name: str
+    totals: ReportTotalsOut
+
+
+class SalesReportOut(BaseModel):
+    start: dt.date
+    end: dt.date
+    name: str  # the store's or the mall's
+    totals: ReportTotalsOut
+    best_sellers: list[BestSellerOut]
+    hours: list[HourOut]
+    days: list[DayOut]
+    gst: list[GstRateOut]
+    stores: list[StoreTotalsOut]  # one row per store (a store report has just its own)
+
+
+class InvoiceLineOut(BaseModel):
+    name: str
+    variant_name: str
+    quantity: int
+    unit_price_paise: int
+    tax_bps: int
+    taxable_paise: int
+    cgst_paise: int
+    sgst_paise: int
+    total_paise: int
+
+
+class InvoiceOut(BaseModel):
+    """A GST tax invoice for one store order. Never carries the pickup code."""
+
+    invoice_no: str
+    order_id: uuid.UUID
+    order_no: int
+    date: dt.date
+    issued_at: datetime
+    status: str
+    store_name: str
+    store_gstin: str | None
+    store_fssai: str | None
+    customer_name: str | None
+    sac: str  # 996331: restaurant and food services
+    lines: list[InvoiceLineOut]
+    taxable_paise: int
+    cgst_paise: int
+    sgst_paise: int
+    total_paise: int

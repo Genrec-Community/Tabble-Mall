@@ -1,4 +1,5 @@
 import uuid
+from datetime import date
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Header, Query, Request, Response, status
@@ -13,11 +14,14 @@ from mallt.modules.catalog.schemas import PopularOut
 from mallt.modules.iam.deps import CustomerId, KvDep, Staff
 from mallt.modules.orders.discovery import DiscoveryService
 from mallt.modules.orders.enums import StoreOrderStatus as S
+from mallt.modules.orders.reports import ReportService
 from mallt.modules.orders.schemas import (
     CheckoutIn,
     CustomerOrderOut,
+    InvoiceOut,
     PickupIn,
     ReasonIn,
+    SalesReportOut,
     StoreOrderOut,
 )
 from mallt.modules.orders.service import OrderService
@@ -188,6 +192,49 @@ async def reprint_order(
     store_id: uuid.UUID, order_id: uuid.UUID, body: ReprintIn, principal: Staff, svc: Svc
 ) -> ReprintOut:
     return ReprintOut(queued=await svc.reprint(principal, store_id, order_id, body.what))
+
+
+# ---- reports ----
+
+
+def _reports(session: SessionDep, kv: KvDep) -> ReportService:
+    return ReportService(session, kv)
+
+
+Reports = Annotated[ReportService, Depends(_reports)]
+
+
+@store_router.get("/stores/{store_id}/reports/sales", tags=["reports"])
+async def store_sales_report(
+    store_id: uuid.UUID,
+    principal: Staff,
+    svc: Reports,
+    start: date | None = None,
+    end: date | None = None,
+) -> SalesReportOut:
+    return await svc.store_sales(principal, store_id, start, end)
+
+
+@store_router.get("/stores/{store_id}/reports/invoices", tags=["reports"])
+async def store_invoices(
+    store_id: uuid.UUID,
+    principal: Staff,
+    svc: Reports,
+    start: date | None = None,
+    end: date | None = None,
+) -> list[InvoiceOut]:
+    return await svc.store_invoices(principal, store_id, start, end)
+
+
+@store_router.get("/malls/{mall_id}/reports/sales", tags=["reports"])
+async def mall_sales_report(
+    mall_id: uuid.UUID,
+    principal: Staff,
+    svc: Reports,
+    start: date | None = None,
+    end: date | None = None,
+) -> SalesReportOut:
+    return await svc.mall_sales(principal, mall_id, start, end)
 
 
 # ---- public: discovery ----
