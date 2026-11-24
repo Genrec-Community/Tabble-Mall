@@ -244,6 +244,45 @@ test("customer orders from a store; the kitchen ticket and bill really print", a
     await collect.getByRole("button", { name: "Confirm pickup" }).click();
     await expect(ownerPage.getByText("Order 1")).toHaveCount(0);
     await expect(customer.getByText("Collected").first()).toBeVisible({ timeout: 20_000 });
+
+    // ── The day's sales report counts the order and its GST ─────────────────────────────────
+    await ownerPage.getByRole("link", { name: "Sales report" }).click();
+    await expect(ownerPage.getByRole("heading", { name: /Sales report/ })).toBeVisible();
+    await expect(ownerPage.getByText("₹200.00").first()).toBeVisible();
+    await expect(ownerPage.getByRole("cell", { name: /Cheese Burger/ })).toBeVisible();
+    await expect(ownerPage.getByRole("cell", { name: "5%" })).toBeVisible();
+
+    // ── The platform owner features the store; the mall home shows a quiet Featured row ─────
+    const boss = await (await browser.newContext()).newPage();
+    await boss.goto("/login");
+    await boss.getByLabel("Username").fill(state.admin.username);
+    await boss.getByLabel("Password").fill(state.admin.password);
+    await boss.getByRole("button", { name: "Sign in" }).click();
+    await boss.getByLabel("Authenticator code").fill(new OTPAuth.TOTP({ secret: OTPAuth.Secret.fromBase32(state.totpSecret) }).generate());
+    await boss.getByRole("button", { name: "Sign in" }).click();
+    await expect(boss).toHaveURL(/\/admin$/);
+    await boss.getByRole("link", { name: "Owner controls" }).click();
+    await expect(boss.getByRole("heading", { name: "Owner controls" })).toBeVisible();
+    const featureSwitch = boss.locator(`#featured-${store.id}`);
+    await expect(featureSwitch).toHaveAttribute("aria-checked", "false");
+    await featureSwitch.click();
+    await expect(featureSwitch).toHaveAttribute("aria-checked", "true");
+    await expect(async () => {
+      await browse.goto(`/m/${mallSlug}`);
+      await expect(browse.getByRole("region", { name: "Featured restaurants" }).getByRole("link", { name: /Burger Hub/ })).toBeVisible({ timeout: 2_000 });
+    }).toPass({ timeout: 30_000 });
+
+    // ── Switching a feature off hides it from the store's dashboard ──────────────────────────
+    const reports = boss.locator("#feature-sales_reports");
+    await reports.click();
+    await expect(reports).toHaveAttribute("aria-checked", "false");
+    await ownerPage.goto(`/store/${store.id}`);
+    await expect(ownerPage.getByRole("link", { name: "Orders" })).toBeVisible();
+    await expect(ownerPage.getByRole("link", { name: "Sales report" })).toHaveCount(0);
+    await reports.click();
+    await expect(reports).toHaveAttribute("aria-checked", "true");
+    await featureSwitch.click();
+    await expect(featureSwitch).toHaveAttribute("aria-checked", "false");
   } finally {
     agent?.kill();
     kitchen.close();
