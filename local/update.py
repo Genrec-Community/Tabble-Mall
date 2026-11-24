@@ -174,6 +174,17 @@ def build_website() -> bool:
     return True
 
 
+def stop_running_mallt() -> None:
+    """Files a MallT left running still holds open cannot be replaced (Windows), so stop it."""
+    sys.path.insert(0, str(LOCAL))
+    try:
+        import run_local  # stdlib only at import time
+
+        run_local.stop_leftovers([run_local.API_PORT, run_local.WEB_PORT, run_local.PROXY_PORT])
+    except Exception as exc:  # noqa: BLE001 - never block an update on this
+        say(f"  (could not check for a running MallT: {exc})")
+
+
 def main() -> int:
     current = VERSION.read_text().strip() if VERSION.exists() else ""
     try:
@@ -204,6 +215,7 @@ def main() -> int:
         except Exception as exc:  # noqa: BLE001
             say(f"  The download failed ({exc}). Starting the version you have.")
             return 0
+        stop_running_mallt()
         remove_old(ROOT)
         copy_new(new_root, ROOT)
         update_env(new_root / ".env")
@@ -215,6 +227,7 @@ def main() -> int:
     stored = FRONTEND_HASH.read_text().strip() if FRONTEND_HASH.exists() else ""
     wanted = frontend_hash(ROOT / "frontend")
     if stored != wanted or not (ROOT / "frontend-build" / "server.js").exists():
+        stop_running_mallt()
         if build_website():
             FRONTEND_HASH.write_text(wanted + "\n")
             say("  Website rebuilt.")
