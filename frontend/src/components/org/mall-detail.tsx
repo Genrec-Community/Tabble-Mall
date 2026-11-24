@@ -28,6 +28,7 @@ import {
 import { refreshMallPage } from "@/app/actions/revalidate";
 import { ApiError, unwrap } from "@/lib/api-error";
 import { useStaffSession } from "@/lib/auth/staff-session";
+import { useFeatures } from "@/lib/features";
 import { slugify } from "@/lib/slug";
 
 /** Customers see the mall page from a cache; tell it something changed. Never blocks the UI. */
@@ -46,6 +47,7 @@ export function MallDetail() {
   const stores = useQuery({ queryKey: ["stores", mallId], queryFn: async () => unwrap(await storesListStores({ path: { mall_id: mallId } })) });
   const scope = { type: "mall", organization_id: orgId, mall_id: mallId, store_id: null } as const;
   const canMall = can("org.mall.manage", scope);
+  const features = useFeatures();
   const canStores = can("org.store.manage", scope);
 
   const refreshStores = () => {
@@ -120,6 +122,9 @@ export function MallDetail() {
           ) : (
             <Button variant="outline" size="sm" onClick={() => mallStatus.mutate(false)}>Activate</Button>
           ))}
+          {can("store.report.read", scope) && features.on("sales_reports") && (
+            <Button asChild variant="outline" size="sm"><Link href={`/org/${orgId}/malls/${mallId}/reports`}>Sales report</Link></Button>
+          )}
         </div>
         <p className="mt-2 text-sm">
           Customer page: <Link className="font-mono underline" href={publicPath} prefetch={false}>{publicPath}</Link>{" "}
